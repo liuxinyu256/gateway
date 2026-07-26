@@ -1,0 +1,37 @@
+{
+  "configurations": [
+    {
+      "name": "PC-SIM (Linux)",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+      "includePath": [
+        "${workspaceFolder}/src/**",
+        "${workspaceFolder}/sim",
+        "${workspaceFolder}/app",
+        "${workspaceFolder}/bsp/CH579/StdPeriphDriver/inc",
+        "${workspaceFolder}/lib/FreeRTOS/include",
+        "${workspaceFolder}/lib/FreeRTOS/Portable/RVDS/ARM_CM0",
+        "${workspaceFolder}/lib/CMSIS/Include"
+      ],
+      "defines": ["FAKE_FREERTOS"],
+      "cStandard": "c99",
+      "intelliSenseMode": "linux-gcc-x64",
+      "compilerPath": "/usr/bin/gcc"
+    },
+    {
+      "name": "CH579 (ARM Cortex-M0)",
+      "includePath": [
+        "${workspaceFolder}/src/**",
+        "${workspaceFolder}/app",
+        "${workspaceFolder}/bsp/CH579/StdPeriphDriver/inc",
+        "${workspaceFolder}/lib/FreeRTOS/include",
+        "${workspaceFolder}/lib/FreeRTOS/Portable/RVDS/ARM_CM0",
+        "${workspaceFolder}/lib/CMSIS/Include"
+      ],
+      "defines": ["__CH579__"],
+      "cStandard": "c99",
+      "intelliSenseMode": "linux-gcc-arm",
+      "compilerPath": "/usr/bin/arm-none-eabi-gcc"
+    }
+  ],
+  "version": 4
+}
