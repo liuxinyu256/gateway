@@ -11,8 +11,13 @@
 typedef struct module module_t;
 
 typedef struct {
-    uint8_t power, mode, set_temp, room_temp;
-    uint8_t fan, swing, error_code;
+    uint8_t power;
+    uint8_t mode;
+    uint8_t set_temp;
+    uint8_t room_temp;
+    uint8_t fan;
+    uint8_t swing;
+    uint8_t error_code;
 } gateway_state_t;
 
 typedef void (*state_change_cb)(const gateway_state_t *s, void *ctx);

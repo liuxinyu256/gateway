@@ -33,14 +33,88 @@ static inline QueueHandle_t xQueueCreate(int len, int sz) { (void)len;(void)sz; 
 static inline BaseType_t xQueueSend(QueueHandle_t q, const void *p, TickType_t t) { (void)q;(void)p;(void)t; return pdPASS; }
 static inline BaseType_t xQueueReceive(QueueHandle_t q, void *p, TickType_t t) { (void)q;(void)p;(void)t; return pdTRUE; }
 
-/* Timer */
+/* Timer — 统一定时器接口 (FreeRTOS software timer)
+ * 共享数据见 sim/fake_freertos_timer.c, 测试可推进时钟驱动到期 */
 typedef void (*TimerCallbackFunction_t)(TimerHandle_t);
-static inline TimerHandle_t xTimerCreate(const char*n,TickType_t t,int autoReload,void*id,TimerCallbackFunction_t cb){
-    (void)n;(void)t;(void)autoReload;(void)id;(void)cb; return (TimerHandle_t)1;
+
+typedef struct {
+    const char             *name;
+    TickType_t              period;
+    int                     auto_reload;
+    void                   *id;
+    TimerCallbackFunction_t cb;
+    int                     active;
+    TickType_t              deadline;
+} fake_timer_t;
+
+#define FAKE_TIMER_MAX 8
+extern fake_timer_t fake_timers[FAKE_TIMER_MAX];
+extern int          fake_timer_count;
+extern TickType_t   fake_now;
+
+static inline TimerHandle_t xTimerCreate(const char *n, TickType_t p, int ar, void *id, TimerCallbackFunction_t cb)
+{
+    if (fake_timer_count >= FAKE_TIMER_MAX) return NULL;
+    fake_timer_t *ft = &fake_timers[fake_timer_count++];
+    ft->name = n; ft->period = p; ft->auto_reload = ar;
+    ft->id = id; ft->cb = cb; ft->active = 0; ft->deadline = 0;
+    return (TimerHandle_t)ft;
 }
-static inline BaseType_t xTimerStart(TimerHandle_t t, TickType_t w) { (void)t;(void)w; return pdPASS; }
-static inline BaseType_t xTimerChangePeriod(TimerHandle_t t, TickType_t p, TickType_t w) { (void)t;(void)p;(void)w; return pdPASS; }
-static inline void *pvTimerGetTimerID(TimerHandle_t t) { (void)t; return NULL; }
+static inline BaseType_t xTimerStart(TimerHandle_t t, TickType_t w)
+{
+    (void)w;
+    fake_timer_t *ft = (fake_timer_t *)t;
+    ft->active = 1; ft->deadline = fake_now + ft->period;
+    return pdPASS;
+}
+static inline BaseType_t xTimerReset(TimerHandle_t t, TickType_t w)
+{
+    (void)w;
+    fake_timer_t *ft = (fake_timer_t *)t;
+    ft->active = 1; ft->deadline = fake_now + ft->period;
+    return pdPASS;
+}
+static inline BaseType_t xTimerStop(TimerHandle_t t, TickType_t w)
+{
+    (void)w;
+    fake_timer_t *ft = (fake_timer_t *)t;
+    ft->active = 0;
+    return pdPASS;
+}
+static inline BaseType_t xTimerChangePeriod(TimerHandle_t t, TickType_t p, TickType_t w)
+{
+    (void)w;
+    fake_timer_t *ft = (fake_timer_t *)t;
+    ft->period = p;
+    return pdPASS;
+}
+static inline BaseType_t xTimerDelete(TimerHandle_t t, TickType_t w)
+{
+    (void)w;
+    fake_timer_t *ft = (fake_timer_t *)t;
+    ft->active = 0; ft->cb = NULL;
+    return pdPASS;
+}
+static inline void *pvTimerGetTimerID(TimerHandle_t t)
+{
+    return ((fake_timer_t *)t)->id;
+}
+
+/* 测试辅助: 推进时钟 / 到期触发 / 复位注册表 */
+static inline void fake_timer_advance(TickType_t d) { fake_now += d; }
+static inline void fake_timer_fire(TimerHandle_t t)
+{
+    fake_timer_t *ft = (fake_timer_t *)t;
+    if (!ft->active || !ft->cb) return;
+    if (fake_now < ft->deadline) return;
+    ft->active = 0;
+    ft->cb(t);
+}
+static inline void fake_timer_reset(void)
+{
+    fake_timer_count = 0; fake_now = 0;
+    memset(fake_timers, 0, sizeof(fake_timers));
+}
 
 /* Semaphore */
 static inline SemaphoreHandle_t xSemaphoreCreateMutex(void) { return (SemaphoreHandle_t)1; }

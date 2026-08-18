@@ -1,21 +1,20 @@
 #ifndef SENDER_H
 #define SENDER_H
 #include "ring.h"
-#include "phy.h"
 #include "bus.h"
 
 typedef struct {
     ring_t           ring;
     uint8_t         *buf;
     uint16_t         buf_size;
-    phy_driver_t    *phy;
+    void           (*write_byte)(uint8_t byte);
     bus_t  *bus;
     void           (*on_done)(void *ctx);
     void            *done_ctx;
-    uint8_t          idle;
+    volatile uint8_t idle;
 } sender_t;
 
-void sender_init(sender_t *tx, phy_driver_t *phy,
+void sender_init(sender_t *tx, void (*write_byte)(uint8_t byte),
                       bus_t *bus,
                       uint8_t *buf, uint16_t buf_size);
 int  sender_send(sender_t *tx, const uint8_t *frame, uint16_t len);

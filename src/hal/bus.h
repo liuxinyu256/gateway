@@ -3,9 +3,9 @@
 #include <stdint.h>
 
 typedef struct {
-    volatile uint8_t busy;
-    uint16_t         gap_ms;
-    uint32_t         gap_until;
+    volatile uint8_t  busy;
+    uint16_t          gap_ms;
+    volatile uint32_t gap_until;
 } bus_t;
 
 void bus_init(bus_t *la, uint32_t baudrate);

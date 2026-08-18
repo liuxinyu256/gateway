@@ -20,10 +20,9 @@ typedef struct {
 } event_t;
 
 typedef struct {
-    void (*on_rx_byte)      (uint8_t byte, void *ctx);
+    void (*on_activate)     (void *ctx);
     void (*on_periodic_send)(void *ctx);
     int  (*on_rx_frame)     (void *ctx, uint8_t *data, uint16_t len);
-    int  (*on_rx_isr)       (void *ctx, uint8_t *data, uint16_t len);
     void (*on_control_cmd)  (void *ctx, uint8_t cmd, uint8_t val);
     void (*on_need_ack)     (void *ctx);
     void (*on_scan)         (void *ctx);

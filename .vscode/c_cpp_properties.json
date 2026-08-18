@@ -1,37 +1,53 @@
 {
-  "configurations": [
-    {
-      "name": "PC-SIM (Linux)",
-      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
-      "includePath": [
-        "${workspaceFolder}/src/**",
-        "${workspaceFolder}/sim",
-        "${workspaceFolder}/app",
-        "${workspaceFolder}/bsp/CH579/StdPeriphDriver/inc",
-        "${workspaceFolder}/lib/FreeRTOS/include",
-        "${workspaceFolder}/lib/FreeRTOS/Portable/RVDS/ARM_CM0",
-        "${workspaceFolder}/lib/CMSIS/Include"
-      ],
-      "defines": ["FAKE_FREERTOS"],
-      "cStandard": "c99",
-      "intelliSenseMode": "linux-gcc-x64",
-      "compilerPath": "/usr/bin/gcc"
-    },
-    {
-      "name": "CH579 (ARM Cortex-M0)",
-      "includePath": [
-        "${workspaceFolder}/src/**",
-        "${workspaceFolder}/app",
-        "${workspaceFolder}/bsp/CH579/StdPeriphDriver/inc",
-        "${workspaceFolder}/lib/FreeRTOS/include",
-        "${workspaceFolder}/lib/FreeRTOS/Portable/RVDS/ARM_CM0",
-        "${workspaceFolder}/lib/CMSIS/Include"
-      ],
-      "defines": ["__CH579__"],
-      "cStandard": "c99",
-      "intelliSenseMode": "linux-gcc-arm",
-      "compilerPath": "/usr/bin/arm-none-eabi-gcc"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "PC-SIM (Linux)",
+            "compileCommands": [
+                "d:\\github_for_lxy\\gateway/build/compile_commands.json"
+            ],
+            "includePath": [
+                "d:/github_for_lxy/gateway/src/**",
+                "d:/github_for_lxy/gateway/sim",
+                "d:/github_for_lxy/gateway/app",
+                "d:/github_for_lxy/gateway/bsp/CH579/StdPeriphDriver/inc",
+                "d:/github_for_lxy/gateway/lib/FreeRTOS/include",
+                "d:/github_for_lxy/gateway/lib/FreeRTOS/Portable/RVDS/ARM_CM0",
+                "d:/github_for_lxy/gateway/lib/CMSIS/Include"
+            ],
+            "defines": [
+                "FAKE_FREERTOS"
+            ],
+            "cStandard": "c99",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "compilerPathInCppPropertiesJson": "/usr/bin/gcc",
+            "compileCommandsInCppPropertiesJson": [
+                "${workspaceFolder}/build/compile_commands.json"
+            ],
+            "mergeConfigurations": false,
+            "recursiveIncludes": {},
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "cppStandard": "c++26"
+        },
+        {
+            "name": "CH579 (ARM Cortex-M0)",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/app",
+                "${workspaceFolder}/bsp/CH579/StdPeriphDriver/inc",
+                "${workspaceFolder}/lib/FreeRTOS/include",
+                "${workspaceFolder}/lib/FreeRTOS/Portable/RVDS/ARM_CM0",
+                "${workspaceFolder}/lib/CMSIS/Include"
+            ],
+            "defines": [
+                "__CH579__"
+            ],
+            "cStandard": "c99",
+            "intelliSenseMode": "linux-gcc-arm",
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc"
+        }
+    ],
+    "version": 4
 }

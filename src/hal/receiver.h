@@ -3,7 +3,6 @@
 #include "ring.h"
 
 typedef struct receiver receiver_t;
-typedef struct frame_timer frame_timer_t;
 
 typedef void (*frame_finish_callback)(receiver_t *rx, uint16_t len);
 
@@ -17,6 +16,7 @@ struct receiver {
     const receiver_ops_t  *ops;
     ring_t                 ring;
     frame_finish_callback  on_frame_finish;
+    uint16_t               frame_len;   /* 当前已完成帧的长度 */
 };
 
 void     receiver_init(receiver_t *rx);

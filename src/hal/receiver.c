@@ -6,8 +6,13 @@ void receiver_init(receiver_t *rx) {
 }
 
 void receiver_reset(receiver_t *rx) {
-    if (!rx || !rx->ops) return;
-    rx->ops->reset(rx);
+    if (!rx) return;
+    rx->frame_len = 0;
+    if (rx->ops && rx->ops->reset) {
+        rx->ops->reset(rx);
+    } else {
+        ring_reset(&rx->ring);
+    }
 }
 
 uint8_t receiver_put_byte(receiver_t *rx, uint8_t byte) {
@@ -19,11 +24,16 @@ uint8_t receiver_put_byte(receiver_t *rx, uint8_t byte) {
 
 uint16_t receiver_read_frame(receiver_t *rx, uint8_t *buf, uint16_t max) {
     if (!rx || !buf || !max) return 0;
-    uint16_t n = ring_count(&rx->ring);
+
+    uint16_t n = rx->frame_len;
+    uint16_t cnt = ring_count(&rx->ring);
+    if (n > cnt) n = cnt;   /* 防止 frame_len 超过实际数据 */
     if (n > max) n = max;
     if (!n) return 0;
+
     ring_peek(&rx->ring, buf, n);
     ring_skip(&rx->ring, n);
+    rx->frame_len = 0;      /* 帧已读走 */
     return n;
 }
 

@@ -5,11 +5,11 @@
 #include "sender.h"
 #include <string.h>
 
-void sender_init(sender_t *tx, phy_driver_t *phy,
+void sender_init(sender_t *tx, void (*write_byte)(uint8_t byte),
                       bus_t *bus,
                       uint8_t *buf, uint16_t buf_size) {
     memset(tx, 0, sizeof(*tx));
-    tx->phy = phy;
+    tx->write_byte = write_byte;
     tx->bus = bus;
     tx->buf = buf;
     tx->buf_size = buf_size;
@@ -29,7 +29,7 @@ int sender_send(sender_t *tx, const uint8_t *frame, uint16_t len) {
         bus_mark_busy(tx->bus);
         uint8_t byte;
         ring_get(&tx->ring, &byte);
-        tx->phy->write(tx->phy, byte);
+        if (tx->write_byte) tx->write_byte(byte);
     }
     return 0;
 }
@@ -40,9 +40,8 @@ void sender_on_thr_empty(sender_t *tx) {
     if (!ring_empty(&tx->ring)) {
         uint8_t byte;
         ring_get(&tx->ring, &byte);
-        tx->phy->write(tx->phy, byte);
+        if (tx->write_byte) tx->write_byte(byte);
     } else {
-        tx->phy->sending = 0;
         tx->idle = 1;
         bus_mark_idle(tx->bus);
         if (tx->on_done) tx->on_done(tx->done_ctx);
