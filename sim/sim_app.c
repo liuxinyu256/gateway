@@ -113,7 +113,10 @@ int main(void)
 
     printf("=== Gateway Simulator v1.1 ===\n");
 
-#ifndef FAKE_FREERTOS
+#ifdef FAKE_FREERTOS
+    /* PC 模拟：绑定软件定时器 0 */
+    timer_sw_bind(&rx_timer, 0);
+#else
     /* 真实硬件：独占硬件定时器 0 */
     if (timer_hw_create(&rx_timer, 0) != 0) {
         printf("[FAIL] timer_hw_create\n");

@@ -1,96 +1,196 @@
 /**
- * timer_ch579.c —— 定时器驱动实现 (CH579)
- * 16 个硬件操作函数名与其它芯片实现一致 (接口名固定, 不同芯片文件不同时编译),
- * 体按芯片写; 注册表 timer_hw_regs 由本文件提供。
- * 整个文件由 __CH579__ 宏包住: 未定义时编译为空, 误加进源列表也不生效。
+ * timer_ch579.c —— CH579 硬件定时器驱动实现
+ *
+ * 与 uart_ch579.c 同风格：提供 timer_ops_t + drv 私有数据，
+ * 并通过 timer_hw_bind/unbind/get/clear_it 给通用层使用。
+ * 整个文件由 __CH579__ 宏包住: 未定义时编译为空。
  */
 #include "timer.h"
 
 #ifdef __CH579__
 #include "CH57x_common.h"
 
-static void t0_init(void)
-{
-    TMR0_TimerInit(FREQ_SYS / 1000);
-    TMR0_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
-    NVIC_EnableIRQ(TMR0_IRQn);
-}
-static void t0_restart(void)
-{
-    TMR0_Disable();
-    TMR0_Enable();
-}
-static void t0_clear_count(void)
-{
-    R8_TMR0_CTRL_MOD = RB_TMR_ALL_CLEAR; /* 清空硬件计数寄存器 */
-    R8_TMR0_CTRL_MOD = RB_TMR_COUNT_EN;
-}
-static void t0_stop(void) { TMR0_Disable(); }
-static void t0_clear(void) { TMR0_ClearITFlag(TMR0_3_IT_CYC_END); }
+#define TIMER_HW_MAX 4
 
-static void t1_init(void)
-{
-    TMR1_TimerInit(FREQ_SYS / 1000);
-    TMR1_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
-    NVIC_EnableIRQ(TMR1_IRQn);
-}
-static void t1_restart(void)
-{
-    TMR1_Disable();
-    TMR1_Enable();
-}
-static void t1_clear_count(void)
-{
-    R8_TMR1_CTRL_MOD = RB_TMR_ALL_CLEAR; /* 清空硬件计数寄存器 */
-    R8_TMR1_CTRL_MOD = RB_TMR_COUNT_EN;
-}
-static void t1_stop(void) { TMR1_Disable(); }
-static void t1_clear(void) { TMR1_ClearITFlag(TMR0_3_IT_CYC_END); }
+typedef struct {
+    uint8_t hw_id;
+} ch579_timer_drv_t;
 
-static void t2_init(void)
-{
-    TMR2_TimerInit(FREQ_SYS / 1000);
-    TMR2_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
-    NVIC_EnableIRQ(TMR2_IRQn);
-}
-static void t2_restart(void)
-{
-    TMR2_Disable();
-    TMR2_Enable();
-}
-static void t2_clear_count(void)
-{
-    R8_TMR2_CTRL_MOD = RB_TMR_ALL_CLEAR; /* 清空硬件计数寄存器 */
-    R8_TMR2_CTRL_MOD = RB_TMR_COUNT_EN;
-}
-static void t2_stop(void) { TMR2_Disable(); }
-static void t2_clear(void) { TMR2_ClearITFlag(TMR0_3_IT_CYC_END); }
-
-static void t3_init(void)
-{
-    TMR3_TimerInit(FREQ_SYS / 1000);
-    TMR3_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
-    NVIC_EnableIRQ(TMR3_IRQn);
-}
-static void t3_restart(void)
-{
-    TMR3_Disable();
-    TMR3_Enable();
-}
-static void t3_clear_count(void)
-{
-    R8_TMR3_CTRL_MOD = RB_TMR_ALL_CLEAR; /* 清空硬件计数寄存器 */
-    R8_TMR3_CTRL_MOD = RB_TMR_COUNT_EN;
-}
-static void t3_stop(void) { TMR3_Disable(); }
-static void t3_clear(void) { TMR3_ClearITFlag(TMR0_3_IT_CYC_END); }
-
-/* CH579 硬件注册表 */
-timer_reg_t timer_hw_regs[TIMER_HW_MAX] = {
-    { .period = 1000, .init = t0_init, .restart = t0_restart, .stop = t0_stop, .clear_count = t0_clear_count, .clear_it = t0_clear },
-    { .period = 1000, .init = t1_init, .restart = t1_restart, .stop = t1_stop, .clear_count = t1_clear_count, .clear_it = t1_clear },
-    { .period = 1000, .init = t2_init, .restart = t2_restart, .stop = t2_stop, .clear_count = t2_clear_count, .clear_it = t2_clear },
-    { .period = 1000, .init = t3_init, .restart = t3_restart, .stop = t3_stop, .clear_count = t3_clear_count, .clear_it = t3_clear },
+static ch579_timer_drv_t drvs[TIMER_HW_MAX] = {
+    { .hw_id = 0 },
+    { .hw_id = 1 },
+    { .hw_id = 2 },
+    { .hw_id = 3 },
 };
+
+static timer_t *owners[TIMER_HW_MAX];
+
+static void ch579_hw_init(uint8_t id)
+{
+    switch (id) {
+    case 0:
+        TMR0_TimerInit(FREQ_SYS / 1000);
+        TMR0_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
+        NVIC_EnableIRQ(TMR0_IRQn);
+        break;
+    case 1:
+        TMR1_TimerInit(FREQ_SYS / 1000);
+        TMR1_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
+        NVIC_EnableIRQ(TMR1_IRQn);
+        break;
+    case 2:
+        TMR2_TimerInit(FREQ_SYS / 1000);
+        TMR2_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
+        NVIC_EnableIRQ(TMR2_IRQn);
+        break;
+    case 3:
+        TMR3_TimerInit(FREQ_SYS / 1000);
+        TMR3_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
+        NVIC_EnableIRQ(TMR3_IRQn);
+        break;
+    default:
+        break;
+    }
+}
+
+static void ch579_hw_restart(uint8_t id)
+{
+    switch (id) {
+    case 0: TMR0_Disable(); TMR0_Enable(); break;
+    case 1: TMR1_Disable(); TMR1_Enable(); break;
+    case 2: TMR2_Disable(); TMR2_Enable(); break;
+    case 3: TMR3_Disable(); TMR3_Enable(); break;
+    default: break;
+    }
+}
+
+static void ch579_hw_clear_count(uint8_t id)
+{
+    switch (id) {
+    case 0:
+        R8_TMR0_CTRL_MOD = RB_TMR_ALL_CLEAR;
+        R8_TMR0_CTRL_MOD = RB_TMR_COUNT_EN;
+        break;
+    case 1:
+        R8_TMR1_CTRL_MOD = RB_TMR_ALL_CLEAR;
+        R8_TMR1_CTRL_MOD = RB_TMR_COUNT_EN;
+        break;
+    case 2:
+        R8_TMR2_CTRL_MOD = RB_TMR_ALL_CLEAR;
+        R8_TMR2_CTRL_MOD = RB_TMR_COUNT_EN;
+        break;
+    case 3:
+        R8_TMR3_CTRL_MOD = RB_TMR_ALL_CLEAR;
+        R8_TMR3_CTRL_MOD = RB_TMR_COUNT_EN;
+        break;
+    default:
+        break;
+    }
+}
+
+static void ch579_hw_stop(uint8_t id)
+{
+    switch (id) {
+    case 0: TMR0_Disable(); break;
+    case 1: TMR1_Disable(); break;
+    case 2: TMR2_Disable(); break;
+    case 3: TMR3_Disable(); break;
+    default: break;
+    }
+}
+
+static void ch579_hw_clear_it(uint8_t id)
+{
+    switch (id) {
+    case 0: TMR0_ClearITFlag(TMR0_3_IT_CYC_END); break;
+    case 1: TMR1_ClearITFlag(TMR0_3_IT_CYC_END); break;
+    case 2: TMR2_ClearITFlag(TMR0_3_IT_CYC_END); break;
+    case 3: TMR3_ClearITFlag(TMR0_3_IT_CYC_END); break;
+    default: break;
+    }
+}
+
+static int ch579_init(timer_t *t)
+{
+    ch579_timer_drv_t *d = t ? (ch579_timer_drv_t *)t->drv : NULL;
+    if (!d || d->hw_id >= TIMER_HW_MAX)
+        return -1;
+
+    if (owners[d->hw_id] && owners[d->hw_id] != t)
+        return -1; /* 已被别的实例占用 */
+
+    owners[d->hw_id] = t;
+    t->counter = 0;
+    t->period  = 1000;
+    t->running = 1;
+    ch579_hw_init(d->hw_id);
+    return 0;
+}
+
+static int ch579_reset(timer_t *t)
+{
+    ch579_timer_drv_t *d = t ? (ch579_timer_drv_t *)t->drv : NULL;
+    if (!d || d->hw_id >= TIMER_HW_MAX)
+        return -1;
+
+    t->counter = 0;
+    t->running = 1;
+    ch579_hw_clear_count(d->hw_id);
+    return 0;
+}
+
+static int ch579_stop(timer_t *t)
+{
+    ch579_timer_drv_t *d = t ? (ch579_timer_drv_t *)t->drv : NULL;
+    if (!d || d->hw_id >= TIMER_HW_MAX)
+        return -1;
+
+    ch579_hw_stop(d->hw_id);
+    t->counter = 0;
+    t->running = 0;
+    return 0;
+}
+
+static const timer_ops_t ch579_timer_ops = {
+    .init  = ch579_init,
+    .reset = ch579_reset,
+    .stop  = ch579_stop,
+};
+
+int timer_hw_bind(timer_t *t, uint8_t hw_id)
+{
+    if (!t || hw_id >= TIMER_HW_MAX)
+        return -1;
+    if (owners[hw_id])
+        return -1;
+
+    t->id  = hw_id;
+    t->ops = &ch579_timer_ops;
+    t->drv = &drvs[hw_id];
+    return 0;
+}
+
+void timer_hw_unbind(timer_t *t)
+{
+    ch579_timer_drv_t *d = t ? (ch579_timer_drv_t *)t->drv : NULL;
+    if (!d || d->hw_id >= TIMER_HW_MAX)
+        return;
+
+    if (owners[d->hw_id] == t)
+        owners[d->hw_id] = NULL;
+}
+
+timer_t *timer_hw_get(uint8_t id)
+{
+    if (id >= TIMER_HW_MAX)
+        return NULL;
+    return owners[id];
+}
+
+void timer_hw_clear_it(uint8_t id)
+{
+    if (id < TIMER_HW_MAX)
+        ch579_hw_clear_it(id);
+}
 
 #endif /* __CH579__ */
