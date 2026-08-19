@@ -14,6 +14,10 @@ option(PC_SIM "Build for PC simulation" ON)
 # ============================================================
 add_library(hal_core STATIC
     src/hal/ring.c
+    src/hal/decoder.c
+    src/hal/uart_decoder.c
+    src/hal/uart.c
+    src/hal/uart_instance.c
     src/hal/receiver.c
     src/hal/receiver_timeout.c
     src/hal/sender.c

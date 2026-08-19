@@ -132,6 +132,8 @@ typedef struct
 /* AC 模块初始化参数 (通过 module_init 的 cfg 传入) */
 typedef struct {
     uint32_t baudrate;
+    uart_t *uart;           /* 可选: 设置后由模块挂接 UART+decoder 接收路径 */
+    uart_cfg_t uart_cfg;    /* 当 uart != NULL 时生效 */
     void (*write_byte)(uint8_t byte);
     const ac_brand_config_t *const *brand_table;
     uint8_t brand_count;
@@ -140,6 +142,7 @@ typedef struct {
 extern const module_ops_t ac_module_ops;
 
 /* write_byte: 底层串口写字节回调;
+ * uart/uart_cfg: 可选 UART 物理层, 设置后 module_init 内部自动 attach;
  * brand_table/brand_count: 品牌注册表地址与长度 (编译期静态表)
  * 注意: 接收器实例由上层创建后通过 m->rx 注入, 模块层不持有 */
 void ac_module_init(ac_module_t *self, module_t *m,

@@ -168,6 +168,27 @@ int module_base_init(module_t *m, uint32_t baudrate)
     return -1;
 }
 
+/* 挂接 UART + decoder 到模块的接收路径:
+ * 调用前必须已设置 m->rx (例如 receiver_timeout_init 后注入)。
+ * 之后 UART 中断里 uart_decoder 会把收到的字节喂给 receiver。 */
+int module_attach_uart(module_t *m, uart_t *port, const uart_cfg_t *cfg)
+{
+    if (!m || !port || !cfg || !m->rx)
+        return -1;
+
+    uart_decoder_cfg_t dcfg;
+    dcfg.port     = port;
+    dcfg.uart_cfg = *cfg;
+
+    if (uart_decoder_init(&m->uart_decoder, &dcfg) != 0)
+        return -1;
+
+    uart_decoder_attach_receiver(&m->uart_decoder, m->rx);
+    uart_irq_rx_enable(port);
+
+    return 0;
+}
+
 /* 统一入口: 只负责调用本模块自己的 init */
 int module_init(module_t *m, void *cfg)
 {

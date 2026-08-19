@@ -43,7 +43,8 @@ void sender_on_thr_empty(sender_t *tx) {
         if (tx->write_byte) tx->write_byte(byte);
     } else {
         tx->idle = 1;
-        bus_mark_idle(tx->bus);
+        if (tx->bus)
+            bus_on_thr_empty(tx->bus);   /* 总线自己决定是否等 TX 完成 */
         if (tx->on_done) tx->on_done(tx->done_ctx);
     }
 }

@@ -45,6 +45,13 @@ static int ac_ops_init(module_t *m, void *cfg)
 
     ac_module_init(self, m, c->write_byte,
                    c->brand_table, c->brand_count);
+
+    if (c->uart) {
+        /* 挂 UART+decoder: 要求上层已把 m->rx 注入好 */
+        if (module_attach_uart(m, c->uart, &c->uart_cfg) != 0)
+            return -1;
+    }
+
     return 0;
 }
 

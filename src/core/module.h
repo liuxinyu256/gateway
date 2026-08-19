@@ -5,6 +5,7 @@
 #include "receiver_timeout.h"
 #include "sender.h"
 #include "bus.h"
+#include "uart_decoder.h"
 #include "event_handler.h"
 #ifdef FAKE_FREERTOS
 #include "fake_freertos.h"
@@ -34,6 +35,7 @@ typedef struct module
     const module_ops_t *ops;     /* 本模块操作表 */
     bus_t bus;
     sender_t sender;
+    uart_decoder_t uart_decoder; /* UART 解码器: module_attach_uart() 初始化 */
     receiver_t *rx;              /* 接收器指针 (指向子类提供的接收器实例, 可替换) */
     TaskHandle_t rx_task;        // 接收任务
     TaskHandle_t send_task;      // 发送任务
@@ -60,6 +62,7 @@ typedef struct module
  */
 int  module_init(module_t *m, void *cfg);
 int  module_base_init(module_t *m, uint32_t baudrate);
+int  module_attach_uart(module_t *m, uart_t *port, const uart_cfg_t *cfg);
 void module_set_handler(module_t *m, const event_handler_t *handler, void *ctx);
 void module_start(module_t *m);
 int  module_send_cmd(module_t *m, uint8_t cmd, uint8_t val);
