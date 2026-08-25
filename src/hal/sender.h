@@ -29,8 +29,8 @@ typedef struct {
     frame_queue_t cmd_q;      /* CMD 帧：优先发 */
     frame_queue_t norm_q;     /* 普通帧 */
 
-    encoder_t    *encoder;
-    bus_t        *bus;
+    encoder_t    *encoder;   /* 物理层编码器 (UART / 定时器 bit-bang) */
+    bus_t        *bus;       /* 绑定的发送总线: 与 module 共享同一总线状态机 */
 
     tx_frame_t    current;    /* 当前正在发送的帧 */
     uint16_t      current_pos;
@@ -46,8 +46,8 @@ typedef struct {
 } sender_t;
 
 typedef struct {
-    encoder_t *encoder;
-    bus_t     *bus;
+    encoder_t *encoder;   /* 物理层编码器 */
+    bus_t     *bus;       /* 要绑定的发送总线 (通常是 module->bus) */
 } sender_cfg_t;
 
 uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg);
