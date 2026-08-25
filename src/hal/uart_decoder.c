@@ -7,6 +7,11 @@ static void uart_decoder_irq_cb(uart_t *u, void *ctx)
     uart_decoder_poll((uart_decoder_t *)ctx);
 }
 
+static void decoder_to_receiver(uint8_t byte, void *ctx)
+{
+    receiver_put_byte((receiver_t *)ctx, byte);
+}
+
 static int uart_ops_init(decoder_t *d, const void *cfg)
 {
     uart_decoder_t          *u = (uart_decoder_t *)d;
@@ -72,5 +77,5 @@ void uart_decoder_attach_receiver(uart_decoder_t *d, receiver_t *rx)
     if (!d || !rx)
         return;
 
-    receiver_set_decoder(rx, &d->base);
+    decoder_set_rx_callback(&d->base, decoder_to_receiver, rx);
 }

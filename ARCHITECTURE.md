@@ -93,13 +93,16 @@ TX:  Timer到期 / BLE命令 / 跨模块控制
      event_handler→on_periodic / on_control / on_timeout
        │
        ▼
-     sender_send(frame, len)      ← 帧入环, 总线空闲发首字节
+     sender_send(frame, len, priority)  ← 帧入队, 总线空闲时 pump 启动
        │
        ▼
-     UART THR_EMPTY ISR → sender_on_thr_empty
+     sender_pump()              ← bus 空闲才出队
        │
        ▼
-     逐字节 phy→write → 队列空 → idle
+     UART ISR / timer tick → sender_isr
+       │
+       ▼
+     逐字节 encoder→write → 帧完 → gap → EVENT_BUS_IDLE
 ```
 
 ## 事件表

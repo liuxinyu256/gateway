@@ -3,7 +3,6 @@
 #include "gateway.h"
 #include "ac_module.h"
 #include "sender.h"
-#include "frame_sender.h"
 #include "encoder.h"
 #include "decoder.h"
 #include "fake_freertos.h"
@@ -45,8 +44,8 @@ static const encoder_ops_t sim_encoder_ops = {
     .tx_complete  = sim_encoder_tx_complete,
 };
 
-static encoder_t      sim_encoder = { .ops = &sim_encoder_ops };
-static frame_sender_t sim_sender;
+static encoder_t sim_encoder = { .ops = &sim_encoder_ops };
+static sender_t  sim_sender;
 
 /* ---- 模拟解码器：字节原样转发给接收器 ---- */
 static int sim_decoder_init(decoder_t *d, const void *cfg)
@@ -70,20 +69,19 @@ static const decoder_ops_t sim_decoder_ops = {
 
 static decoder_t sim_decoder = { .ops = &sim_decoder_ops };
 
-/* 模拟 UART THR_EMPTY 中断链: 把当前帧按字节发完 */
+/* 模拟解码器回调: 字节原样喂给接收器 */
+static void sim_decoder_to_receiver(uint8_t byte, void *ctx)
+{
+    receiver_put_byte((receiver_t *)ctx, byte);
+}
+
+/* 模拟 ISR 链: 把当前帧按字节发完 */
 static void sim_drain_tx(sender_t *s)
 {
-    frame_sender_t *tx = (frame_sender_t *)s;
-
     sender_pump(s);
 
-    while (tx->sending) {
-        sender_on_thr_empty(s);
-
-        if (tx->wait_tx_complete &&
-            encoder_tx_complete(tx->encoder))
-            sender_on_tx_complete(s);
-    }
+    while (s->sending)
+        sender_isr(s);
 }
 
 /* ---- 测试用品牌事件表 ---- */
@@ -93,8 +91,8 @@ static void test_on_periodic(void *ctx)
     uint8_t f[] = { 0xAA, 0x01, 0x20, 0x00, 0xDE, 0x55 };
 
     g_tx_len = 0;
-    sender_send(&sim_sender.base, f, sizeof(f));
-    sim_drain_tx(&sim_sender.base);
+    sender_send(&sim_sender, f, sizeof(f), SENDER_PRIO_NORM);
+    sim_drain_tx(&sim_sender);
     printf("  [periodic] query frame -> %u bytes\n", g_tx_len);
 }
 
@@ -115,8 +113,8 @@ static void test_on_control(void *ctx, uint8_t cmd, uint8_t val)
     f[4] = (uint8_t)~(0xAA + 0x01 + cmd + val);
 
     g_tx_len = 0;
-    sender_send_cmd(&sim_sender.base, f, sizeof(f));
-    sim_drain_tx(&sim_sender.base);
+    sender_send(&sim_sender, f, sizeof(f), SENDER_PRIO_CMD);
+    sim_drain_tx(&sim_sender);
     printf("  [control] cmd=%u val=%u -> %u bytes\n", cmd, val, g_tx_len);
 }
 
@@ -189,20 +187,22 @@ int main(void)
     }
 #endif
 
-    /* 接收器实例由上层创建并注入 (持有解码器指针) */
+    /* 接收器实例由上层创建并注入 */
     receiver_timeout_init(&rx_timeout, &rx_timer,
-                          test_brand.receiver_timeout_ticks,
-                          &sim_decoder, NULL,
+                          test_brand.receiver_timeout_ticks, NULL,
                           rx_ring_buf, sizeof(rx_ring_buf));
+    /* 解码器通过回调把字节喂给接收器 */
+    decoder_set_rx_callback(&sim_decoder, sim_decoder_to_receiver,
+                            &rx_timeout.base);
     m->receiver = &rx_timeout.base;
 
     /* 发送器由上层创建并注入 */
-    frame_sender_cfg_t sender_cfg = {
+    sender_cfg_t sender_cfg = {
         .encoder = &sim_encoder,
         .bus     = &m->bus,
     };
-    frame_sender_init(&sim_sender, &sender_cfg);
-    m->sender = &sim_sender.base;
+    sender_init(&sim_sender, &sender_cfg);
+    m->sender = &sim_sender;
 
     if (module_init(m, &cfg) != 0) {
         printf("[FAIL] module_init\n");

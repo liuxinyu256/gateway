@@ -13,12 +13,12 @@
 #include "uart_encoder.h"
 #include "uart_decoder.h"
 #include "uart_instance.h"
-#include "frame_sender.h"
+#include "sender.h"
 #include "receiver_timeout.h"
 #include "timer.h"
 
 static ac_module_t        g_ac = { .base.ops = &ac_module_ops };
-static frame_sender_t     g_hvac_sender;
+static sender_t           g_hvac_sender;
 static uart_encoder_t     g_hvac_enc;
 static uart_decoder_t     g_hvac_dec;
 static timer_t            g_rx_timer;
@@ -42,12 +42,12 @@ void hvac_start(void) {
     };
     uart_encoder_init(&g_hvac_enc, &enc_cfg);
 
-    frame_sender_cfg_t sender_cfg = {
+    sender_cfg_t sender_cfg = {
         .encoder = &g_hvac_enc.base,
         .bus     = &g_ac.base.bus,
     };
-    frame_sender_init(&g_hvac_sender, &sender_cfg);
-    g_ac.base.sender = &g_hvac_sender.base;
+    sender_init(&g_hvac_sender, &sender_cfg);
+    g_ac.base.sender = &g_hvac_sender;
 
     /* RX：上层创建 UART 解码器 + 超时接收器并注入
      * 放在 encoder 之后: 最后一次 uart_configure 会开启 RX 中断 */
@@ -64,9 +64,9 @@ void hvac_start(void) {
 
     timer_hw_create(&g_rx_timer, 0);
 
-    receiver_timeout_init(&g_hvac_rx, &g_rx_timer, 5,
-                          &g_hvac_dec.base, NULL,
+    receiver_timeout_init(&g_hvac_rx, &g_rx_timer, 5, NULL,
                           g_hvac_rx_buf, sizeof(g_hvac_rx_buf));
+    uart_decoder_attach_receiver(&g_hvac_dec, &g_hvac_rx.base);
     g_ac.base.receiver = &g_hvac_rx.base;
 
     ac_init_cfg_t cfg = {

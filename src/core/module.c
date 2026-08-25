@@ -196,10 +196,8 @@ static void tx_poll_timer_cb(TimerHandle_t t)
     if (!m || !m->sender)
         return;
 
-    sender_poll_tx_complete(m->sender);
-
-    /* 还没发完，下一毫秒继续看 */
-    if (sender_is_wait_tx_complete(m->sender))
+    /* 返回 1 = 还在等 TX_COMPLETE，下一毫秒继续看 */
+    if (sender_poll_tx_complete(m->sender))
         xTimerStart(m->tx_poll_timer, 0);
 }
 
@@ -297,9 +295,13 @@ void module_start(module_t *m)
         receiver_set_callback(m->receiver, frame_done_cb);
 
     if (m->sender) {
-        sender_set_done_callback(m->sender, tx_done_cb, m);
-        sender_set_wait_tx_complete_callback(m->sender,
-                                             wait_tx_complete_cb, m);
+        sender_callbacks_t cbs = {
+            .done             = tx_done_cb,
+            .done_ctx         = m,
+            .wait_tx_complete = wait_tx_complete_cb,
+            .wait_ctx         = m,
+        };
+        sender_set_callbacks(m->sender, &cbs);
     }
 
     m->poll_timer = xTimerCreate("poll", pdMS_TO_TICKS(200), pdTRUE,

@@ -29,7 +29,7 @@ void UART1_IRQHandler(void) {
 
     module_t *m = gateway_module(0);
     if (m && m->sender)
-        sender_uart_isr(m->sender);
+        sender_isr(m->sender);
 }
 
 void UART2_IRQHandler(void) { ch579_uart_irq_handler(2); }

@@ -62,7 +62,6 @@ static void on_timeout(void *ctx)
 void receiver_timeout_init(receiver_timeout_t *self,
                            timer_t *timer,
                            uint16_t timeout_ticks,
-                           decoder_t *decoder,
                            frame_finish_callback cb,
                            uint8_t *ring_buf, uint16_t ring_size)
 {
@@ -72,8 +71,6 @@ void receiver_timeout_init(receiver_timeout_t *self,
     ring_init(&self->base.ring, ring_buf, ring_size);
     self->timer = timer;
     self->timeout_ticks = timeout_ticks;
-
-    receiver_set_decoder(&self->base, decoder);
 
     if (timer)
         timer_set_callback(timer, on_timeout, self);

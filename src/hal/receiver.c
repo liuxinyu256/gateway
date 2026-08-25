@@ -1,19 +1,5 @@
 #include "receiver.h"
 
-/* 解码器回调: 解码出的字节直接进入接收器 */
-static void decoder_to_receiver(uint8_t byte, void *ctx)
-{
-    receiver_put_byte((receiver_t *)ctx, byte);
-}
-
-void receiver_set_decoder(receiver_t *rx, decoder_t *decoder)
-{
-    if (!rx) return;
-    rx->decoder = decoder;
-    if (decoder)
-        decoder_set_rx_callback(decoder, decoder_to_receiver, rx);
-}
-
 void receiver_init(receiver_t *rx) {
     if (!rx || !rx->ops) return;
     rx->ops->init(rx);
