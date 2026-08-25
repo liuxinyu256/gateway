@@ -34,7 +34,7 @@ typedef struct gateway_device {
 } gateway_device_t;
 
 void gateway_init(void);
-int  gateway_send_cmd(uint8_t module_id, uint8_t cmd, uint8_t val);
+uint8_t gateway_send_cmd(uint8_t module_id, uint8_t cmd, uint8_t val);
 void gateway_state_update(const gateway_state_t *s);
 void gateway_state_get(gateway_state_t *out);
 void gateway_on_state_change(state_change_cb cb, void *ctx);

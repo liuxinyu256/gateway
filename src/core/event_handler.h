@@ -9,6 +9,7 @@ typedef enum {
     EVENT_NEED_ACK,
     EVENT_SCAN_AC,
     EVENT_TIMEOUT,
+    EVENT_BUS_IDLE,
 } event_type_t;
 
 typedef struct {

@@ -19,7 +19,8 @@ typedef uint32_t        TickType_t;
 #define eNoAction       0
 #define eSetValueWithoutOverwrite 0
 
-static inline TickType_t xTaskGetTickCount(void) { return 0; }
+extern TickType_t fake_now;
+static inline TickType_t xTaskGetTickCount(void) { return fake_now; }
 #define pdMS_TO_TICKS(ms) ((TickType_t)(ms))
 #define portYIELD_FROM_ISR(x) ((void)(x))
 
@@ -32,6 +33,7 @@ static inline BaseType_t xTaskCreate(void(*fn)(void*),const char*n,uint16_t s,vo
 static inline QueueHandle_t xQueueCreate(int len, int sz) { (void)len;(void)sz; return (QueueHandle_t)1; }
 static inline BaseType_t xQueueSend(QueueHandle_t q, const void *p, TickType_t t) { (void)q;(void)p;(void)t; return pdPASS; }
 static inline BaseType_t xQueueReceive(QueueHandle_t q, void *p, TickType_t t) { (void)q;(void)p;(void)t; return pdTRUE; }
+static inline BaseType_t xQueueSendFromISR(QueueHandle_t q, const void *p, BaseType_t *w) { (void)q;(void)p; if(w)*w=pdFALSE; return pdPASS; }
 
 /* Timer — 统一定时器接口 (FreeRTOS software timer)
  * 共享数据见 sim/fake_freertos_timer.c, 测试可推进时钟驱动到期 */
@@ -50,7 +52,6 @@ typedef struct {
 #define FAKE_TIMER_MAX 8
 extern fake_timer_t fake_timers[FAKE_TIMER_MAX];
 extern int          fake_timer_count;
-extern TickType_t   fake_now;
 
 static inline TimerHandle_t xTimerCreate(const char *n, TickType_t p, int ar, void *id, TimerCallbackFunction_t cb)
 {
@@ -66,6 +67,11 @@ static inline BaseType_t xTimerStart(TimerHandle_t t, TickType_t w)
     fake_timer_t *ft = (fake_timer_t *)t;
     ft->active = 1; ft->deadline = fake_now + ft->period;
     return pdPASS;
+}
+static inline BaseType_t xTimerStartFromISR(TimerHandle_t t, BaseType_t *w)
+{
+    if (w) *w = pdFALSE;
+    return xTimerStart(t, 0);
 }
 static inline BaseType_t xTimerReset(TimerHandle_t t, TickType_t w)
 {

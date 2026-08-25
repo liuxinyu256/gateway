@@ -7,11 +7,6 @@ static void uart_decoder_irq_cb(uart_t *u, void *ctx)
     uart_decoder_poll((uart_decoder_t *)ctx);
 }
 
-static void decoder_to_receiver(uint8_t byte, void *ctx)
-{
-    receiver_put_byte((receiver_t *)ctx, byte);
-}
-
 static int uart_ops_init(decoder_t *d, const void *cfg)
 {
     uart_decoder_t          *u = (uart_decoder_t *)d;
@@ -28,6 +23,9 @@ static int uart_ops_init(decoder_t *d, const void *cfg)
 
     /* 解码器注册到 UART：UART 中断回调指向解码器 */
     uart_irq_callback_set(c->port, uart_decoder_irq_cb, u);
+
+    /* 开启接收中断，收到字节后由解码器喂给接收器 */
+    uart_irq_rx_enable(c->port);
 
     return 0;
 }
@@ -74,5 +72,5 @@ void uart_decoder_attach_receiver(uart_decoder_t *d, receiver_t *rx)
     if (!d || !rx)
         return;
 
-    decoder_set_rx_callback(&d->base, decoder_to_receiver, rx);
+    receiver_set_decoder(rx, &d->base);
 }

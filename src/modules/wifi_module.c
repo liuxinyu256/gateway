@@ -4,13 +4,13 @@
  */
 #include "wifi_module.h"
 
-static int wifi_ops_init(module_t *m, void *cfg)
+static uint8_t wifi_ops_init(module_t *m, void *cfg)
 {
     const wifi_init_cfg_t *c = (const wifi_init_cfg_t *)cfg;
-    if (!m || !c) return -1;
+    if (!m || !c) return 1;
 
     if (module_base_init(m, c->baudrate) != 0)
-        return -1;
+        return 1;
 
     wifi_module_init(m, c->gw);
     return 0;
