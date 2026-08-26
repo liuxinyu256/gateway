@@ -6,6 +6,7 @@
 #include "sender.h"
 #include "bus.h"
 #include "event_handler.h"
+#include "gateway_device.h"
 #ifdef FAKE_FREERTOS
 #include "fake_freertos.h"
 #else
@@ -30,6 +31,8 @@ typedef struct module
 {
     const module_ops_t *ops;   /* 本模块操作表 */
     uint8_t    module_id;      /* 注册后的模块编号 (0~MODULE_MAX-1) */
+
+    gateway_state_t state;     /* 模块自己的完整状态 */
 
     bus_t      bus;            /* 总线状态 */
     sender_t   *sender;        /* 发送抽象：指针注入 */
@@ -76,6 +79,10 @@ void    module_set_handler(module_t *m, const event_handler_t *handler, void *ct
 void    module_start(module_t *m);
 uint8_t module_send_cmd(module_t *m, uint8_t cmd, uint8_t val);
 void    module_set_poll_period(module_t *m, uint16_t period_ms);
+
+/* 模块状态更新/上报：统一走网关状态事件队列 */
+void module_update_state(module_t *m, const gateway_state_t *new_state);
+void module_publish_state(module_t *m);
 
 #ifdef FAKE_FREERTOS
 /* PC 模拟轮询: 处理一次 RX / 发送队列事件 */

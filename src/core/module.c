@@ -299,6 +299,27 @@ void module_set_handler(module_t *m, const event_handler_t *handler, void *ctx)
     m->handler_ctx = ctx;
 }
 
+/* 模块状态变化后上报网关（统一走状态事件队列） */
+void module_publish_state(module_t *m)
+{
+    if (!m) return;
+    gateway_module_state_update(m->module_id, &m->state);
+}
+
+/* 更新模块完整状态：
+ * new_state 必须是由调用方“读当前完整状态 → 只改本协议支持字段”得到的完整状态
+ */
+void module_update_state(module_t *m, const gateway_state_t *new_state)
+{
+    if (!m || !new_state) return;
+
+    if (memcmp(&m->state, new_state, sizeof(m->state)) == 0)
+        return;
+
+    m->state = *new_state;
+    module_publish_state(m);
+}
+
 void module_start(module_t *m)
 {
     if (!m) return;
@@ -380,6 +401,8 @@ uint8_t module_poll(module_t *m)
         module_handle_event(m, &ev);
         processed = 1;
     }
+
+    gateway_poll_state_events();
 
     return processed;
 }

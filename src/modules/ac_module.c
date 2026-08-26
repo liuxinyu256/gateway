@@ -94,7 +94,7 @@ void ac_module_publish_state(ac_module_t *self)
 {
     if (!self) return;
 
-    gateway_module_state_update(self->base.module_id, &self->ac_state);
+    module_publish_state(&self->base);
 }
 
 /* 更新 AC 模块状态。
@@ -105,9 +105,5 @@ void ac_module_update_state(ac_module_t *self, const gateway_state_t *new_state)
 {
     if (!self || !new_state) return;
 
-    if (memcmp(&self->ac_state, new_state, sizeof(self->ac_state)) == 0)
-        return;
-
-    self->ac_state = *new_state;
-    ac_module_publish_state(self);
+    module_update_state(&self->base, new_state);
 }

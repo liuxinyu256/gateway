@@ -106,7 +106,6 @@ extern const ac_brand_config_t *const brand_table[AC_BRAND_NUM];
 typedef struct
 {
     module_t base;                               /* ac_module_t 自己就是 module_t 的子类 */
-    gateway_state_t ac_state;                    /* AC 模块的完整状态 */
     const ac_brand_config_t *const *brand_table; /* 品牌注册表地址 (init 传入) */
     uint8_t brand_count;                         /* 注册表长度 */
     const ac_brand_config_t *current;            /* 当前激活品牌 */
