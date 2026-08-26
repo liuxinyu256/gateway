@@ -4,6 +4,7 @@
  * sender / receiver 都由上层指针注入，本模块只管理品牌状态机。
  */
 #include "ac_module.h"
+#include <string.h>
 
 /* 品牌注册表: 由清单生成 (单一数据源, 见 ac_module.h)
  * 新建品牌两步: ① 品牌文件定义 cfg → ② 清单加一行 BRAND(枚举名, &cfg) */
@@ -86,4 +87,27 @@ void ac_module_set_poll_period(ac_module_t *self, uint16_t period_ms)
 {
     (void)self;
     (void)period_ms;
+}
+
+/* 把 AC 模块当前完整状态发布到网关 */
+void ac_module_publish_state(ac_module_t *self)
+{
+    if (!self) return;
+
+    gateway_module_state_update(self->base.module_id, &self->ac_state);
+}
+
+/* 更新 AC 模块状态。
+ * new_state 必须是由调用方“读当前完整状态 → 只改本协议支持字段”得到的完整状态，
+ * 这样才能保证不同协议都只是完整状态的子集。
+ */
+void ac_module_update_state(ac_module_t *self, const gateway_state_t *new_state)
+{
+    if (!self || !new_state) return;
+
+    if (memcmp(&self->ac_state, new_state, sizeof(self->ac_state)) == 0)
+        return;
+
+    self->ac_state = *new_state;
+    ac_module_publish_state(self);
 }

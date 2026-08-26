@@ -1,5 +1,5 @@
 /**
- * gateway_device.c —— 网关顶层 (全局状态 + 观察者链)
+ * gateway_device.c —— 网关顶层 (每模块独立状态 + 观察者链)
  * 单例模式, 所有接口不传 gw 指针
  */
 
@@ -14,29 +14,38 @@ void gateway_init(void) {
     g_gw.state_mutex = xSemaphoreCreateMutex();
 }
 
-void gateway_state_update(const gateway_state_t *s) {
-    if (!s) return;
+/* 模块上报自己的完整状态 */
+void gateway_module_state_update(uint8_t module_id,
+                                 const gateway_state_t *s)
+{
+    if (module_id >= GATEWAY_MODULE_MAX || !s)
+        return;
 
     if (g_gw.state_mutex)
         xSemaphoreTake(g_gw.state_mutex, portMAX_DELAY);
-    g_gw.state = *s;
+    g_gw.module_states[module_id] = *s;
     if (g_gw.state_mutex)
         xSemaphoreGive(g_gw.state_mutex);
 
     for (uint8_t i = 0; i < g_gw.observer_count; i++) {
         if (g_gw.on_change[i])
-            g_gw.on_change[i](s, g_gw.on_change_ctx[i]);
+            g_gw.on_change[i](module_id, s, g_gw.on_change_ctx[i]);
     }
 }
 
-void gateway_state_get(gateway_state_t *out) {
-    if (!out) return;
+uint8_t gateway_module_state_get(uint8_t module_id,
+                                 gateway_state_t *out)
+{
+    if (module_id >= GATEWAY_MODULE_MAX || !out)
+        return 1;
 
     if (g_gw.state_mutex)
         xSemaphoreTake(g_gw.state_mutex, portMAX_DELAY);
-    *out = g_gw.state;
+    *out = g_gw.module_states[module_id];
     if (g_gw.state_mutex)
         xSemaphoreGive(g_gw.state_mutex);
+
+    return 0;
 }
 
 void gateway_on_state_change(state_change_cb cb, void *ctx) {
@@ -53,10 +62,10 @@ uint8_t gateway_send_cmd(uint8_t module_id, uint8_t cmd, uint8_t val) {
 }
 
 module_t *gateway_module(uint8_t id) {
-    if (id >= 5) return NULL;
+    if (id >= GATEWAY_MODULE_MAX) return NULL;
     return g_gw.modules[id];
 }
 
 void gateway_set_module(uint8_t id, module_t *m) {
-    if (id < 5) g_gw.modules[id] = m;
+    if (id < GATEWAY_MODULE_MAX) g_gw.modules[id] = m;
 }

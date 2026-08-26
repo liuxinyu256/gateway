@@ -29,6 +29,7 @@ typedef struct module_ops
 typedef struct module
 {
     const module_ops_t *ops;   /* 本模块操作表 */
+    uint8_t    module_id;      /* 注册后的模块编号 (0~MODULE_MAX-1) */
 
     bus_t      bus;            /* 总线状态 */
     sender_t   *sender;        /* 发送抽象：指针注入 */

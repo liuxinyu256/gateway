@@ -102,24 +102,11 @@ typedef struct
 /* 品牌注册表: 由清单生成 (定义在 ac_module.c), 按下标 id 索引,
  * 两层 const 住 ROM; 未登记槽位为 NULL */
 extern const ac_brand_config_t *const brand_table[AC_BRAND_NUM];
-// AC状态
-typedef struct
-{
-    uint8_t power;
-    uint8_t mode;
-    uint8_t set_temp;
-    uint8_t room_temp;
-    uint8_t fan_speed;
-    uint8_t swing;
-    uint8_t error_code;
-
-} ac_state_t;
-
 /* ---- AC 模块 ---- */
 typedef struct
 {
     module_t base;                               /* ac_module_t 自己就是 module_t 的子类 */
-    ac_state_t ac_state;                         /* ac状态 */
+    gateway_state_t ac_state;                    /* AC 模块的完整状态 */
     const ac_brand_config_t *const *brand_table; /* 品牌注册表地址 (init 传入) */
     uint8_t brand_count;                         /* 注册表长度 */
     const ac_brand_config_t *current;            /* 当前激活品牌 */
@@ -146,4 +133,9 @@ void ac_module_lock(ac_module_t *self);
 uint8_t ac_module_locked(ac_module_t *self);
 const ac_brand_config_t *ac_module_current(ac_module_t *self);
 void ac_module_set_poll_period(ac_module_t *self, uint16_t period_ms);
+
+/* 状态上报：AC 模块状态变化后同步到网关 */
+void ac_module_publish_state(ac_module_t *self);
+/* 更新 AC 模块状态：new_state 必须是“读当前完整状态 → 改支持字段”后的完整状态 */
+void ac_module_update_state(ac_module_t *self, const gateway_state_t *new_state);
 #endif

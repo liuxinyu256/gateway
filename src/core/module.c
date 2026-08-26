@@ -262,7 +262,8 @@ uint8_t module_base_init(module_t *m, uint32_t baudrate)
 
     for (uint8_t i = 0; i < MODULE_MAX; i++) {
         if (!g_modules[i]) {
-            g_modules[i] = m;
+            g_modules[i]  = m;
+            m->module_id  = i;
             return 0;
         }
     }
