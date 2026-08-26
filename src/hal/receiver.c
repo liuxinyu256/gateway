@@ -41,3 +41,8 @@ void receiver_set_callback(receiver_t *rx, frame_finish_callback cb) {
     if (!rx) return;
     rx->on_frame_finish = cb;
 }
+
+void receiver_set_bus(receiver_t *rx, bus_t *bus) {
+    if (!rx) return;
+    rx->bus = bus;
+}

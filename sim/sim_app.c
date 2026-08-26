@@ -191,6 +191,7 @@ int main(void)
     receiver_timeout_init(&rx_timeout, &rx_timer,
                           test_brand.receiver_timeout_ticks, NULL,
                           rx_ring_buf, sizeof(rx_ring_buf));
+    receiver_set_bus(&rx_timeout.base, &m->bus);
     /* 解码器通过回调把字节喂给接收器 */
     decoder_set_rx_callback(&sim_decoder, sim_decoder_to_receiver,
                             &rx_timeout.base);
@@ -229,6 +230,7 @@ int main(void)
     rx->frame_len = (uint16_t)sizeof(frame);
     if (rx->on_frame_finish)
         rx->on_frame_finish(rx, (uint16_t)sizeof(frame));
+    bus_on_rx_complete(&m->bus);   /* 模拟超时封包完成 → 总线空闲 */
     module_poll(m);
 
     /* 3. 轮询定时器 → on_periodic_send → 查询帧 */

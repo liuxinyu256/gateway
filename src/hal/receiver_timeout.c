@@ -21,6 +21,8 @@ static void to_reset(receiver_t *pkt)
     receiver_timeout_t *s = (receiver_timeout_t *)pkt;
     if (s->timer)
         timer_stop(s->timer); /* 放弃当前帧, 关闭定时器 */
+    if (s->timer_running && pkt->bus)
+        bus_on_rx_complete(pkt->bus);
     s->timer_running = 0;
     pkt->frame_len   = 0;
     ring_reset(&pkt->ring);
@@ -33,7 +35,9 @@ static void to_on_byte(receiver_t *pkt)
         return; /* 未绑定定时器或超时禁用: 纯缓冲 */
     if (!s->timer_running)
     {
-        timer_init(s->timer); /* 首字节: 开启定时中断 */
+        if (pkt->bus)
+            bus_mark_rx_busy(pkt->bus); /* 首字节: 接收占用总线 */
+        timer_init(s->timer);           /* 首字节: 开启定时中断 */
         s->timer_running = 1;
     }
     else
@@ -56,6 +60,8 @@ static void on_timeout(void *ctx)
     s->base.frame_len = ring_count(&s->base.ring);
     if (s->base.on_frame_finish)
         s->base.on_frame_finish(&s->base, s->base.frame_len);
+    if (s->base.bus)
+        bus_on_rx_complete(s->base.bus); /* 接收完成: 总线进入空闲/gap */
     s->timer_running = 0;
 }
 

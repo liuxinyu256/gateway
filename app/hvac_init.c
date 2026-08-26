@@ -66,6 +66,7 @@ void hvac_start(void) {
 
     receiver_timeout_init(&g_hvac_rx, &g_rx_timer, 5, NULL,
                           g_hvac_rx_buf, sizeof(g_hvac_rx_buf));
+    receiver_set_bus(&g_hvac_rx.base, &g_ac.base.bus);
     uart_decoder_attach_receiver(&g_hvac_dec, &g_hvac_rx.base);
     g_ac.base.receiver = &g_hvac_rx.base;
 

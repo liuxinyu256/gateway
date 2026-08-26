@@ -68,6 +68,20 @@ void bus_mark_idle(bus_t *la) {
 #endif
 }
 
+/* 接收侧占用总线：标记忙，但保持接收方向 */
+void bus_mark_rx_busy(bus_t *la) {
+    if (!la) return;
+    la->busy = 1;
+    if (la->set_dir)
+        la->set_dir(0, la->dir_ctx);   /* RS485: 保持接收方向 */
+}
+
+/* 接收完成：释放总线并进入帧间静默 */
+void bus_on_rx_complete(bus_t *la) {
+    if (!la) return;
+    bus_mark_idle(la);
+}
+
 /* sender 发送队列空时上报 */
 void bus_on_thr_empty(bus_t *la)
 {

@@ -29,6 +29,8 @@ void bus_set_rs485_enable(bus_t *la, uint8_t enable);
 void bus_set_dir_callback(bus_t *la, bus_dir_cb cb, void *ctx);
 void bus_mark_busy(bus_t *la);
 void bus_mark_idle(bus_t *la);
+void bus_mark_rx_busy(bus_t *la);     /* 接收侧占用总线（不切发送方向） */
+void bus_on_rx_complete(bus_t *la);   /* 接收完成，释放总线并进入 gap */
 void bus_on_thr_empty(bus_t *la);     /* sender 发送队列空时上报 */
 void bus_on_tx_complete(bus_t *la);   /* UART TX 完成中断里调用 */
 int  bus_is_idle(const bus_t *la);

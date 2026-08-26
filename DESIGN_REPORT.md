@@ -109,6 +109,15 @@ uart_decoder_attach_receiver(&dec, &rx.base);
 // decoder_set_rx_callback(decoder, decoder_to_receiver, rx)
 ```
 
+### 4.4 接收也维护总线状态
+
+接收器绑定同一根 `bus_t`：
+
+- 收到首字节：`bus_mark_rx_busy()`
+- 接收完成/超时封包完成：`bus_on_rx_complete()` → 总线进入空闲/gap
+
+这样半双工总线上，接收期间发送器不会误判总线空闲而抢发。
+
 ## 5. 发送侧设计
 
 ### 5.1 数据流
