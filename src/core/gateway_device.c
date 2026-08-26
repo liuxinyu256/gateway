@@ -1,5 +1,5 @@
 /**
- * gateway_device.c —— 网关顶层 (每模块独立状态 + 观察者链)
+ * gateway_device.c —— 网关顶层 (每模块独立状态 + 状态事件队列 + 观察者链)
  * 单例模式, 所有接口不传 gw 指针
  */
 
@@ -7,14 +7,90 @@
 #include "module.h"
 #include <string.h>
 
+#ifdef FAKE_FREERTOS
+#define GW_ENTER_CRITICAL()
+#define GW_EXIT_CRITICAL()
+#else
+#define GW_ENTER_CRITICAL() taskENTER_CRITICAL()
+#define GW_EXIT_CRITICAL()  taskEXIT_CRITICAL()
+#endif
+
 static gateway_device_t g_gw;
+
+static uint8_t gateway_state_enqueue(uint8_t module_id)
+{
+#ifdef FAKE_FREERTOS
+    if (g_gw.state_q_count >= GATEWAY_MODULE_MAX)
+        return 1;
+
+    g_gw.state_q_data[g_gw.state_q_tail] = module_id;
+    g_gw.state_q_tail = (uint8_t)((g_gw.state_q_tail + 1) % GATEWAY_MODULE_MAX);
+    g_gw.state_q_count++;
+    return 0;
+#else
+    return (xQueueSend(g_gw.state_event_queue, &module_id, 0) == pdPASS) ? 0 : 1;
+#endif
+}
+
+static uint8_t gateway_state_dequeue(uint8_t *module_id)
+{
+#ifdef FAKE_FREERTOS
+    if (g_gw.state_q_count == 0)
+        return 1;
+
+    *module_id = g_gw.state_q_data[g_gw.state_q_head];
+    g_gw.state_q_head = (uint8_t)((g_gw.state_q_head + 1) % GATEWAY_MODULE_MAX);
+    g_gw.state_q_count--;
+    return 0;
+#else
+    return (xQueueReceive(g_gw.state_event_queue, module_id, 0) == pdPASS) ? 0 : 1;
+#endif
+}
+
+static void gateway_state_process_event(uint8_t module_id)
+{
+    gateway_state_t s;
+
+    if (gateway_module_state_get(module_id, &s) != 0)
+        return;
+
+    for (uint8_t i = 0; i < g_gw.observer_count; i++) {
+        if (g_gw.on_change[i])
+            g_gw.on_change[i](module_id, &s, g_gw.on_change_ctx[i]);
+    }
+}
+
+#ifndef FAKE_FREERTOS
+static void gateway_state_task_fn(void *pv)
+{
+    (void)pv;
+    uint8_t module_id;
+
+    for (;;) {
+        if (xQueueReceive(g_gw.state_event_queue, &module_id, portMAX_DELAY) == pdPASS) {
+            GW_ENTER_CRITICAL();
+            g_gw.state_pending[module_id] = 0;
+            GW_EXIT_CRITICAL();
+
+            gateway_state_process_event(module_id);
+        }
+    }
+}
+#endif
 
 void gateway_init(void) {
     memset(&g_gw, 0, sizeof(g_gw));
     g_gw.state_mutex = xSemaphoreCreateMutex();
+
+#ifndef FAKE_FREERTOS
+    g_gw.state_event_queue = xQueueCreate(GATEWAY_MODULE_MAX, sizeof(uint8_t));
+    if (g_gw.state_event_queue)
+        xTaskCreate(gateway_state_task_fn, "gwstate", 256, NULL, 2,
+                    &g_gw.state_task);
+#endif
 }
 
-/* 模块上报自己的完整状态 */
+/* 模块上报自己的完整状态：先存状态，再投递状态事件（pending 合并） */
 void gateway_module_state_update(uint8_t module_id,
                                  const gateway_state_t *s)
 {
@@ -27,10 +103,17 @@ void gateway_module_state_update(uint8_t module_id,
     if (g_gw.state_mutex)
         xSemaphoreGive(g_gw.state_mutex);
 
-    for (uint8_t i = 0; i < g_gw.observer_count; i++) {
-        if (g_gw.on_change[i])
-            g_gw.on_change[i](module_id, s, g_gw.on_change_ctx[i]);
+    GW_ENTER_CRITICAL();
+
+    if (!g_gw.state_pending[module_id]) {
+        g_gw.state_pending[module_id] = 1;
+        if (gateway_state_enqueue(module_id) != 0) {
+            g_gw.state_event_drop_cnt++;
+            g_gw.state_pending[module_id] = 0;
+        }
     }
+
+    GW_EXIT_CRITICAL();
 }
 
 uint8_t gateway_module_state_get(uint8_t module_id,
@@ -47,6 +130,18 @@ uint8_t gateway_module_state_get(uint8_t module_id,
 
     return 0;
 }
+
+#ifdef FAKE_FREERTOS
+void gateway_poll_state_events(void)
+{
+    uint8_t module_id;
+
+    while (gateway_state_dequeue(&module_id) == 0) {
+        g_gw.state_pending[module_id] = 0;
+        gateway_state_process_event(module_id);
+    }
+}
+#endif
 
 void gateway_on_state_change(state_change_cb cb, void *ctx) {
     if (g_gw.observer_count >= 8) return;

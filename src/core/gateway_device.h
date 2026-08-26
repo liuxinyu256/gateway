@@ -5,7 +5,9 @@
 #include "fake_freertos.h"
 #else
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "semphr.h"
+#include "task.h"
 #endif
 
 typedef struct module module_t;
@@ -49,6 +51,20 @@ typedef struct gateway_device {
 
     module_t          *modules[GATEWAY_MODULE_MAX];
 
+    /* 状态变化事件队列：同一模块最多一个 pending 事件 */
+    uint8_t            state_pending[GATEWAY_MODULE_MAX];
+    volatile uint16_t  state_event_drop_cnt;
+
+#ifdef FAKE_FREERTOS
+    uint8_t            state_q_data[GATEWAY_MODULE_MAX];
+    uint8_t            state_q_head;
+    uint8_t            state_q_tail;
+    uint8_t            state_q_count;
+#else
+    QueueHandle_t      state_event_queue;
+    TaskHandle_t       state_task;
+#endif
+
     state_change_cb    on_change[8];
     void              *on_change_ctx[8];
     uint8_t            observer_count;
@@ -66,4 +82,9 @@ uint8_t gateway_module_state_get(uint8_t module_id,
 void     gateway_on_state_change(state_change_cb cb, void *ctx);
 module_t *gateway_module(uint8_t id);
 void      gateway_set_module(uint8_t id, module_t *m);
+
+#ifdef FAKE_FREERTOS
+/* PC 模拟：手动处理状态事件队列 */
+void gateway_poll_state_events(void);
+#endif
 #endif

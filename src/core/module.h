@@ -41,6 +41,9 @@ typedef struct module
     QueueHandle_t send_queue;    /* 发送事件队列 */
     QueueHandle_t receive_queue; /* 接收事件队列 */
 
+    volatile uint16_t send_queue_drop_cnt;    /* send_queue 满导致事件丢弃 */
+    volatile uint16_t receive_queue_drop_cnt; /* receive_queue 满导致事件丢弃 */
+
     TimerHandle_t poll_timer;    /* 轮询软件定时器 */
     TimerHandle_t timeout_timer; /* 超时软件定时器 */
     TimerHandle_t gap_timer;     /* 帧间 gap 软件定时器 */

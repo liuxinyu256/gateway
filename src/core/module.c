@@ -31,13 +31,20 @@ static uint8_t module_enqueue_send_event(module_t *m, const event_t *ev)
     if (!m || !ev) return 1;
 
 #ifdef FAKE_FREERTOS
-    if (m->send_q_count >= MODULE_EVENT_QUEUE_LEN) return 1;
+    if (m->send_q_count >= MODULE_EVENT_QUEUE_LEN) {
+        m->send_queue_drop_cnt++;
+        return 1;
+    }
     m->send_q_data[m->send_q_tail] = *ev;
     m->send_q_tail = (uint8_t)((m->send_q_tail + 1) % MODULE_EVENT_QUEUE_LEN);
     m->send_q_count++;
     return 0;
 #else
-    return (xQueueSend(m->send_queue, ev, 0) == pdPASS) ? 0 : 1;
+    if (xQueueSend(m->send_queue, ev, 0) != pdPASS) {
+        m->send_queue_drop_cnt++;
+        return 1;
+    }
+    return 0;
 #endif
 }
 
@@ -46,13 +53,20 @@ static uint8_t module_enqueue_receive_event(module_t *m, const event_t *ev)
     if (!m || !ev) return 1;
 
 #ifdef FAKE_FREERTOS
-    if (m->receive_q_count >= MODULE_EVENT_QUEUE_LEN) return 1;
+    if (m->receive_q_count >= MODULE_EVENT_QUEUE_LEN) {
+        m->receive_queue_drop_cnt++;
+        return 1;
+    }
     m->receive_q_data[m->receive_q_tail] = *ev;
     m->receive_q_tail = (uint8_t)((m->receive_q_tail + 1) % MODULE_EVENT_QUEUE_LEN);
     m->receive_q_count++;
     return 0;
 #else
-    return (xQueueSend(m->receive_queue, ev, 0) == pdPASS) ? 0 : 1;
+    if (xQueueSend(m->receive_queue, ev, 0) != pdPASS) {
+        m->receive_queue_drop_cnt++;
+        return 1;
+    }
+    return 0;
 #endif
 }
 

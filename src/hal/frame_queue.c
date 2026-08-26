@@ -26,8 +26,9 @@ uint8_t frame_queue_push(frame_queue_t *q,
     FQ_ENTER_CRITICAL();
 
     if (q->count >= TX_FRAME_QUEUE_LEN) {
+        q->drop_cnt++;            /* 队列满: 整帧丢弃，不写半帧 */
         FQ_EXIT_CRITICAL();
-        return 1;                 /* 队列满: 整帧丢弃，不写半帧 */
+        return 1;
     }
 
     tx_frame_t *slot = &q->pool[q->tail];
@@ -65,4 +66,9 @@ uint8_t frame_queue_pop(frame_queue_t *q, tx_frame_t *out)
 uint8_t frame_queue_empty(const frame_queue_t *q)
 {
     return (!q || q->count == 0) ? 1 : 0;
+}
+
+uint16_t frame_queue_drop_count(const frame_queue_t *q)
+{
+    return q ? q->drop_cnt : 0;
 }
