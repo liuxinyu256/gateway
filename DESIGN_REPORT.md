@@ -114,7 +114,7 @@ uart_decoder_attach_receiver(&dec, &rx.base);
 ### 5.1 数据流
 
 ```text
-发送任务组帧 → sender_send() → 帧队列 → bus 空闲 → encoder → 物理输出
+发送任务组帧 → sender_send() → 帧队列 → EVENT_BUS_IDLE 触发 sender_pump() → encoder → 物理输出
 ```
 
 ### 5.2 发送器
@@ -149,7 +149,8 @@ sender_set_callbacks()
 ### 5.4 发送状态机
 
 - `send` 只入队，不保证立即发送
-- `pump` 检查 bus 空闲后才出队启动
+- 帧等待发送时，由 `EVENT_BUS_IDLE` 触发发送任务调用 `sender_pump()`
+- `sender_pump()` 内部再确认 bus 空闲，空闲才出队启动
 - CMD 队列优先于普通队列
 - 物理层差异通过 encoder 注入
 
