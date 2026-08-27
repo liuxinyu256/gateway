@@ -8,8 +8,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "hvac_init.h"
+#include "debug.h"
 
 int main(void) {
+    debug_init();
+    debug_puts("[GW] boot\r\n");
     hvac_start();
     vTaskStartScheduler();
     for (;;);

@@ -393,6 +393,11 @@
           <FileName>hvac_init.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\app\hvac_init.c</FilePath>
+        <File>
+          <FileName>debug.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\app\debug.c</FilePath>
+        </File>
         </File>
                 </Files>
 </Group>
