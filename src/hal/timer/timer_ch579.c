@@ -28,21 +28,25 @@ static void ch579_hw_init(uint8_t id)
     case 0:
         TMR0_TimerInit(FREQ_SYS / 1000);
         TMR0_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
+        NVIC_SetPriority(TMR0_IRQn, 1);
         NVIC_EnableIRQ(TMR0_IRQn);
         break;
     case 1:
         TMR1_TimerInit(FREQ_SYS / 1000);
         TMR1_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
+        NVIC_SetPriority(TMR1_IRQn, 1);
         NVIC_EnableIRQ(TMR1_IRQn);
         break;
     case 2:
         TMR2_TimerInit(FREQ_SYS / 1000);
         TMR2_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
+        NVIC_SetPriority(TMR2_IRQn, 1);
         NVIC_EnableIRQ(TMR2_IRQn);
         break;
     case 3:
         TMR3_TimerInit(FREQ_SYS / 1000);
         TMR3_ITCfg(ENABLE, TMR0_3_IT_CYC_END);
+        NVIC_SetPriority(TMR3_IRQn, 1);
         NVIC_EnableIRQ(TMR3_IRQn);
         break;
     default:
