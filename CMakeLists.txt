@@ -135,14 +135,7 @@ if(CH579)
         bsp/CH579/StdPeriphDriver/CH57x_uart1.c
         bsp/CH579/StdPeriphDriver/CH57x_uart2.c
         bsp/CH579/StdPeriphDriver/CH57x_uart3.c
-        lib/FreeRTOS/Source/tasks.c
-        lib/FreeRTOS/Source/queue.c
-        lib/FreeRTOS/Source/list.c
-        lib/FreeRTOS/Source/timers.c
-        lib/FreeRTOS/Source/event_groups.c
-        lib/FreeRTOS/Source/stream_buffer.c
-        lib/FreeRTOS/Portable/RVDS/ARM_CM0/port.c
-        lib/FreeRTOS/Portable/MemMang/heap_4.c
+        lib/FreeRTOS/freertos_port.c
     )
     target_include_directories(gateway_ch579 PRIVATE
         ${HAL_INCLUDE_DIRS}
