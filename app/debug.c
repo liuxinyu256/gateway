@@ -23,6 +23,8 @@ void debug_init(void)
     GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
 #endif
     uart_configure(&uart1, &cfg);
+    uart_irq_tx_disable(&uart1);
+    uart_irq_rx_disable(&uart1);
 }
 
 void debug_putc(char c)
