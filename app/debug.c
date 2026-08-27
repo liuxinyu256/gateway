@@ -1,6 +1,9 @@
 #include "debug.h"
 #include "uart.h"
 #include "uart_instance.h"
+#ifdef __CH579__
+#include "CH57x_common.h"
+#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,6 +16,11 @@ void debug_init(void)
         .stop_bits = 1,
         .parity    = 0,
     };
+#ifdef __CH579__
+    /* UART1 默认 PA8(RX)/PA9(TX) */
+    GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
+    GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
+#endif
     uart_configure(&uart1, &cfg);
 }
 
