@@ -8,6 +8,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Options
 # ============================================================
 option(PC_SIM "Build for PC simulation" ON)
+option(CH579 "Build for CH579 target" OFF)
 
 # ============================================================
 # HAL (平台无关)
@@ -29,6 +30,18 @@ add_library(hal_core STATIC
 target_include_directories(hal_core PUBLIC ${CMAKE_SOURCE_DIR}/src/hal)
 if(PC_SIM)
     target_sources(hal_core PRIVATE src/hal/timer_sw.c)
+endif()
+
+if(CH579)
+    target_compile_definitions(hal_core PUBLIC __CH579__)
+    target_sources(hal_core PRIVATE
+        src/hal/uart_ch579.c
+        src/hal/timer_ch579.c
+        src/hal/timer_hw.c
+    )
+    target_include_directories(hal_core PUBLIC
+        ${CMAKE_SOURCE_DIR}/bsp/CH579/StdPeriphDriver/inc
+    )
 endif()
 
 # ============================================================
@@ -83,4 +96,38 @@ if(PC_SIM)
         ${CMAKE_SOURCE_DIR}/app
     )
     target_link_libraries(sim_app PRIVATE hal_core gateway_core gateway_brands)
+endif()
+
+# ============================================================
+# CH579 实机目标
+# ============================================================
+if(CH579)
+    add_executable(gateway_ch579
+        app/main.c
+        app/hvac_init.c
+        bsp/CH579/startup_ARMCM0.s
+        bsp/CH579/StdPeriphDriver/CH57x_clk.c
+        bsp/CH579/StdPeriphDriver/CH57x_flash.c
+        bsp/CH579/StdPeriphDriver/CH57x_gpio.c
+        bsp/CH579/StdPeriphDriver/CH57x_int.c
+        bsp/CH579/StdPeriphDriver/CH57x_pwr.c
+        bsp/CH579/StdPeriphDriver/CH57x_sys.c
+        bsp/CH579/StdPeriphDriver/CH57x_timer0.c
+        bsp/CH579/StdPeriphDriver/CH57x_timer1.c
+        bsp/CH579/StdPeriphDriver/CH57x_timer2.c
+        bsp/CH579/StdPeriphDriver/CH57x_timer3.c
+        bsp/CH579/StdPeriphDriver/CH57x_uart0.c
+        bsp/CH579/StdPeriphDriver/CH57x_uart1.c
+        bsp/CH579/StdPeriphDriver/CH57x_uart2.c
+        bsp/CH579/StdPeriphDriver/CH57x_uart3.c
+    )
+    target_include_directories(gateway_ch579 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/hal
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/src/modules
+        ${CMAKE_SOURCE_DIR}/src/brands
+        ${CMAKE_SOURCE_DIR}/app
+        ${CMAKE_SOURCE_DIR}/bsp/CH579/StdPeriphDriver/inc
+    )
+    target_link_libraries(gateway_ch579 PRIVATE hal_core gateway_core gateway_brands)
 endif()

@@ -16,6 +16,21 @@
 #include "sender.h"
 #include "receiver_timeout.h"
 #include "timer.h"
+#ifdef __CH579__
+#include "CH57x_common.h"
+#endif
+
+#ifdef __CH579__
+/* RS485 DE 方向控制：PA0 高电平=发送，低电平=接收 */
+static void hvac_rs485_dir(uint8_t tx, void *ctx)
+{
+    (void)ctx;
+    if (tx)
+        GPIOA_SetBits(GPIO_Pin_0);
+    else
+        GPIOA_ResetBits(GPIO_Pin_0);
+}
+#endif
 
 static ac_module_t        g_ac = { .base.ops = &ac_module_ops };
 static sender_t           g_hvac_sender;
@@ -29,6 +44,15 @@ void hvac_start(void) {
     gateway_init();
 
     /* RS485, UART1, 9600bps, tx=9, rx=8, de=0 */
+#ifdef __CH579__
+    /* 绑定 CH579 GPIO：UART1 默认 PA8(RX)/PA9(TX)，PA0 作为 RS485 DE */
+    GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
+    GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
+    GPIOA_ModeCfg(GPIO_Pin_0, GPIO_ModeOut_PP_5mA);
+    GPIOA_ResetBits(GPIO_Pin_0);
+    bus_set_rs485_enable(&g_ac.base.bus, 1);
+    bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, NULL);
+#endif
 
     /* TX：上层创建 UART 编码器和 sender 并注入 */
     uart_encoder_cfg_t enc_cfg = {
