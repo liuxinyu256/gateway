@@ -16,6 +16,7 @@
 #include "sender.h"
 #include "receiver_timeout.h"
 #include "timer.h"
+#include "timer_instance.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
@@ -36,7 +37,6 @@ static ac_module_t        g_ac = { .base.ops = &ac_module_ops };
 static sender_t           g_hvac_sender;
 static uart_encoder_t     g_hvac_enc;
 static uart_decoder_t     g_hvac_dec;
-static timer_t            g_rx_timer;
 static receiver_timeout_t g_hvac_rx;
 static uint8_t            g_hvac_rx_buf[128];
 
@@ -86,9 +86,10 @@ void hvac_start(void) {
     };
     uart_decoder_init(&g_hvac_dec, &dec_cfg);
 
-    timer_hw_create(&g_rx_timer, 0);
+    timer_t *rx_timer = timer_get(0);
+    timer_hw_create(rx_timer, 0);
 
-    receiver_timeout_init(&g_hvac_rx, &g_rx_timer, 5, NULL,
+    receiver_timeout_init(&g_hvac_rx, rx_timer, 5, NULL,
                           g_hvac_rx_buf, sizeof(g_hvac_rx_buf));
     receiver_set_bus(&g_hvac_rx.base, &g_ac.base.bus);
     uart_decoder_attach_receiver(&g_hvac_dec, &g_hvac_rx.base);

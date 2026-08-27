@@ -26,6 +26,7 @@ add_library(hal_core STATIC
     src/hal/receiver_timeout.c
     src/hal/sender.c
     src/hal/timer.c
+    src/hal/timer_instance.c
 )
 target_include_directories(hal_core PUBLIC ${CMAKE_SOURCE_DIR}/src/hal)
 if(PC_SIM)

@@ -6,17 +6,14 @@
  * 整个文件由 __CH579__ 宏包住: 未定义时编译为空。
  */
 #include "timer.h"
+#include "timer_ch579.h"
 
 #ifdef __CH579__
 #include "CH57x_common.h"
 
 #define TIMER_HW_MAX 4
 
-typedef struct {
-    uint8_t hw_id;
-} ch579_timer_drv_t;
-
-static ch579_timer_drv_t drvs[TIMER_HW_MAX] = {
+ch579_timer_drv_t ch579_timer_drvs[TIMER_HW_MAX] = {
     { .hw_id = 0 },
     { .hw_id = 1 },
     { .hw_id = 2 },
@@ -151,7 +148,7 @@ static int ch579_stop(timer_t *t)
     return 0;
 }
 
-static const timer_ops_t ch579_timer_ops = {
+const timer_ops_t ch579_timer_ops = {
     .init  = ch579_init,
     .reset = ch579_reset,
     .stop  = ch579_stop,
@@ -166,7 +163,7 @@ int timer_hw_bind(timer_t *t, uint8_t hw_id)
 
     t->id  = hw_id;
     t->ops = &ch579_timer_ops;
-    t->drv = &drvs[hw_id];
+    t->drv = &ch579_timer_drvs[hw_id];
     return 0;
 }
 
