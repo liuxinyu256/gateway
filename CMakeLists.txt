@@ -120,6 +120,7 @@ if(CH579)
         bsp/CH579/StdPeriphDriver/CH57x_uart1.c
         bsp/CH579/StdPeriphDriver/CH57x_uart2.c
         bsp/CH579/StdPeriphDriver/CH57x_uart3.c
+        lib/FreeRTOS/freertos_port.c
     )
     target_include_directories(gateway_ch579 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/hal
@@ -128,6 +129,10 @@ if(CH579)
         ${CMAKE_SOURCE_DIR}/src/brands
         ${CMAKE_SOURCE_DIR}/app
         ${CMAKE_SOURCE_DIR}/bsp/CH579/StdPeriphDriver/inc
+        ${CMAKE_SOURCE_DIR}/lib/CMSIS/Include
+        ${CMAKE_SOURCE_DIR}/lib/FreeRTOS/include
+        ${CMAKE_SOURCE_DIR}/lib/FreeRTOS
+        ${CMAKE_SOURCE_DIR}/lib/FreeRTOS/Portable/RVDS/ARM_CM0
     )
     target_link_libraries(gateway_ch579 PRIVATE hal_core gateway_core gateway_brands)
 endif()
