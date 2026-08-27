@@ -32,9 +32,9 @@ static uint8_t gateway_state_enqueue(uint8_t module_id)
 #endif
 }
 
+#ifdef FAKE_FREERTOS
 static uint8_t gateway_state_dequeue(uint8_t *module_id)
 {
-#ifdef FAKE_FREERTOS
     if (g_gw.state_q_count == 0)
         return 1;
 
@@ -42,10 +42,8 @@ static uint8_t gateway_state_dequeue(uint8_t *module_id)
     g_gw.state_q_head = (uint8_t)((g_gw.state_q_head + 1) % GATEWAY_MODULE_MAX);
     g_gw.state_q_count--;
     return 0;
-#else
-    return (xQueueReceive(g_gw.state_event_queue, module_id, 0) == pdPASS) ? 0 : 1;
-#endif
 }
+#endif
 
 static void gateway_state_process_event(uint8_t module_id)
 {

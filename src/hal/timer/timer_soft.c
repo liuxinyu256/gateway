@@ -5,11 +5,11 @@
  * 回调在定时中断上下文, 须轻量。
  */
 #include "timer_soft.h"
+#include <stddef.h>
 
 #define SOFT_MAX 8
 
 static soft_timer_t *soft_regs[SOFT_MAX]; /* 软实例注册表 */
-static timer_t      *tick;                /* 共享 tick 源 */
 
 /* 硬件定时中断 → 分发到所有软实例 */
 static void soft_tick(void *ctx)
@@ -27,7 +27,6 @@ static void soft_tick(void *ctx)
 void soft_timer_bind_tick(timer_t *t)
 {
     if (!t) return;
-    tick = t;
     timer_set_callback(t, soft_tick, NULL);
     timer_init(t);              /* 复用硬件注册表: 开启定时中断 */
 }

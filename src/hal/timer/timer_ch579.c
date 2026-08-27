@@ -50,17 +50,6 @@ static void ch579_hw_init(uint8_t id)
     }
 }
 
-static void ch579_hw_restart(uint8_t id)
-{
-    switch (id) {
-    case 0: TMR0_Disable(); TMR0_Enable(); break;
-    case 1: TMR1_Disable(); TMR1_Enable(); break;
-    case 2: TMR2_Disable(); TMR2_Enable(); break;
-    case 3: TMR3_Disable(); TMR3_Enable(); break;
-    default: break;
-    }
-}
-
 static void ch579_hw_clear_count(uint8_t id)
 {
     switch (id) {

@@ -48,11 +48,11 @@ static uint8_t module_enqueue_send_event(module_t *m, const event_t *ev)
 #endif
 }
 
+#ifdef FAKE_FREERTOS
 static uint8_t module_enqueue_receive_event(module_t *m, const event_t *ev)
 {
     if (!m || !ev) return 1;
 
-#ifdef FAKE_FREERTOS
     if (m->receive_q_count >= MODULE_EVENT_QUEUE_LEN) {
         m->receive_queue_drop_cnt++;
         return 1;
@@ -61,14 +61,8 @@ static uint8_t module_enqueue_receive_event(module_t *m, const event_t *ev)
     m->receive_q_tail = (uint8_t)((m->receive_q_tail + 1) % MODULE_EVENT_QUEUE_LEN);
     m->receive_q_count++;
     return 0;
-#else
-    if (xQueueSend(m->receive_queue, ev, 0) != pdPASS) {
-        m->receive_queue_drop_cnt++;
-        return 1;
-    }
-    return 0;
-#endif
 }
+#endif
 
 /* ---- 事件分发 (任务 / PC 轮询共用) ---- */
 static void module_handle_rx(module_t *m);

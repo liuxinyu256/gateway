@@ -6,11 +6,11 @@
  * 只需在 Keil 中添加这一个文件。
  *******************************************************************************/
 
-#include "FreeRTOS/Source/tasks.c"
-#include "FreeRTOS/Source/queue.c"
-#include "FreeRTOS/Source/list.c"
-#include "FreeRTOS/Source/timers.c"
-#include "FreeRTOS/Source/event_groups.c"
-#include "FreeRTOS/Source/stream_buffer.c"
-#include "FreeRTOS/Portable/RVDS/ARM_CM0/port.c"
-#include "FreeRTOS/Portable/MemMang/heap_4.c"
+#include "Source/tasks.c"
+#include "Source/queue.c"
+#include "Source/list.c"
+#include "Source/timers.c"
+#include "Source/event_groups.c"
+#include "Source/stream_buffer.c"
+#include "Portable/RVDS/ARM_CM0/port.c"
+#include "Portable/MemMang/heap_4.c"

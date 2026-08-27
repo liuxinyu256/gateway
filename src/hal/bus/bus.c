@@ -24,6 +24,7 @@
 #include "fake_freertos.h"
 #else
 #include "FreeRTOS.h"
+#include "task.h"
 #endif
 #include <string.h>
 
