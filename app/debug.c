@@ -22,6 +22,7 @@ void debug_init(void)
     /* UART1 默认 PA8(RX)/PA9(TX) */
     GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
     GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
+    GPIOA_SetBits(GPIO_Pin_9);
 #endif
     uart_configure(&uart1, &cfg);
     uart_irq_tx_disable(&uart1);
