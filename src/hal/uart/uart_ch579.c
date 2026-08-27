@@ -225,10 +225,20 @@ const uart_ops_t ch579_uart_ops = {
 void ch579_uart_irq_handler(uint8_t id)
 {
     uart_t *u = uart_get(id);
-    if (!u || !u->irq_cb)
+    if (!u)
         return;
 
-    u->irq_cb(u, u->irq_user_data);
+    /* 读 IIR 清中断标志，即使没有回调也不会挂死 */
+    switch (id) {
+    case 0: (void)UART0_GetITFlag(); break;
+    case 1: (void)UART1_GetITFlag(); break;
+    case 2: (void)UART2_GetITFlag(); break;
+    case 3: (void)UART3_GetITFlag(); break;
+    default: break;
+    }
+
+    if (u->irq_cb)
+        u->irq_cb(u, u->irq_user_data);
 }
 
 #endif /* __CH579__ */
