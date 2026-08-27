@@ -1,6 +1,7 @@
 /**
  * isr.c —— 中断入口
  * 集中放定时器/UART 中断处理，保持 main.c 干净。
+ * 未使用的外设中断全部提供空实现，避免进入默认死循环 B .
  */
 #include "CH57x_common.h"
 #include "timer.h"
@@ -27,3 +28,17 @@ void UART1_IRQHandler(void) { ch579_uart_irq_handler(1); }
 
 void UART2_IRQHandler(void) { ch579_uart_irq_handler(2); }
 void UART3_IRQHandler(void) { ch579_uart_irq_handler(3); }
+
+/* ---- 未使用外设中断：空实现，防止默认 B . 死循环 ---- */
+void GPIO_IRQHandler(void)  { }
+void SLAVE_IRQHandler(void) { }
+void SPI0_IRQHandler(void)  { }
+void BB_IRQHandler(void)    { }
+void LLE_IRQHandler(void)   { }
+void USB_IRQHandler(void)   { }
+void ETH_IRQHandler(void)   { }
+void RTC_IRQHandler(void)   { }
+void ADC_IRQHandler(void)   { }
+void SPI1_IRQHandler(void)  { }
+void LED_IRQHandler(void)   { }
+void WDT_IRQHandler(void)   { }
