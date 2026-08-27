@@ -44,3 +44,10 @@ desktop.ini
 
 # Local agent worktrees
 .claude/
+
+# Keil generated
+*.uvguix.*
+*.uvoptx
+obj/
+*.build_log.htm
+*.dep
