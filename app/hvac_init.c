@@ -86,8 +86,7 @@ void hvac_start(void) {
     };
     uart_decoder_init(&g_hvac_dec, &dec_cfg);
 
-    timer_t *rx_timer = timer_get(0);
-    timer_hw_create(rx_timer, 0);
+    timer_t *rx_timer = timer_hw_create(0);
 
     receiver_timeout_init(&g_hvac_rx, rx_timer, 5, NULL,
                           g_hvac_rx_buf, sizeof(g_hvac_rx_buf));

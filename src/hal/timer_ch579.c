@@ -2,7 +2,7 @@
  * timer_ch579.c —— CH579 硬件定时器驱动实现
  *
  * 与 uart_ch579.c 同风格：提供 timer_ops_t + drv 私有数据，
- * 并通过 timer_hw_bind/unbind/get/clear_it 给通用层使用。
+ * 全局实例由 timer_instance.c 绑定，timer_hw_get/clear_it 供通用层使用。
  * 整个文件由 __CH579__ 宏包住: 未定义时编译为空。
  */
 #include "timer.h"
@@ -153,29 +153,6 @@ const timer_ops_t ch579_timer_ops = {
     .reset = ch579_reset,
     .stop  = ch579_stop,
 };
-
-int timer_hw_bind(timer_t *t, uint8_t hw_id)
-{
-    if (!t || hw_id >= TIMER_HW_MAX)
-        return -1;
-    if (owners[hw_id])
-        return -1;
-
-    t->id  = hw_id;
-    t->ops = &ch579_timer_ops;
-    t->drv = &ch579_timer_drvs[hw_id];
-    return 0;
-}
-
-void timer_hw_unbind(timer_t *t)
-{
-    ch579_timer_drv_t *d = t ? (ch579_timer_drv_t *)t->drv : NULL;
-    if (!d || d->hw_id >= TIMER_HW_MAX)
-        return;
-
-    if (owners[d->hw_id] == t)
-        owners[d->hw_id] = NULL;
-}
 
 timer_t *timer_hw_get(uint8_t id)
 {

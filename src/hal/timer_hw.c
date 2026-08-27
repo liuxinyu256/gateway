@@ -1,26 +1,29 @@
 /**
  * timer_hw.c —— 硬件定时器通用封装 (平台无关)
  *
- * 与 uart.c 的角色一致：只做通用分发。
- * 平台绑定/解绑/查实例/清中断由 timer_ch579.c 等实现。
+ * 基于全局实例 timer0..timer3，与 uart_get() 同样式。
  */
 #include "timer.h"
+#include "timer_instance.h"
+#include <stddef.h>
 
-int timer_hw_create(timer_t *t, uint8_t hw_id)
+timer_t *timer_hw_create(uint8_t hw_id)
 {
-    if (!t || timer_hw_bind(t, hw_id) != 0)
-        return -1;
+    timer_t *t = timer_get(hw_id);
+    if (!t)
+        return NULL;
 
-    return timer_init(t);
+    if (timer_init(t) != 0)
+        return NULL;
+
+    return t;
 }
 
-void timer_hw_destroy(timer_t *t)
+void timer_hw_destroy(uint8_t hw_id)
 {
-    if (!t)
-        return;
-
-    timer_stop(t);
-    timer_hw_unbind(t);
+    timer_t *t = timer_get(hw_id);
+    if (t)
+        timer_stop(t);
 }
 
 /* 定时中断统一入口 (平台 TMR 中断处理调用) */

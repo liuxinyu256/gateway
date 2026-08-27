@@ -45,13 +45,11 @@ void timer_set_callback(timer_t *t, timer_callback cb, void *ctx);
 void timer_sw_bind(timer_t *t, uint8_t id);
 void timer_poll_all(void);
 #else
-/* 硬件定时器创建/释放 */
-int  timer_hw_create(timer_t *t, uint8_t hw_id);
-void timer_hw_destroy(timer_t *t);
+/* 硬件定时器创建/释放：基于全局实例 timer0..timer3 */
+timer_t *timer_hw_create(uint8_t hw_id);
+void     timer_hw_destroy(uint8_t hw_id);
 
 /* 平台实现 (timer_ch579.c 等) 提供 */
-int      timer_hw_bind(timer_t *t, uint8_t hw_id);
-void     timer_hw_unbind(timer_t *t);
 timer_t *timer_hw_get(uint8_t id);
 void     timer_hw_clear_it(uint8_t id);
 
