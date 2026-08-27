@@ -2,7 +2,6 @@
  * main.c —— 入口
  */
 #include "hvac_init.h"
-#include "task.h"
 #include "debug.h"
 
 int main(void) {
