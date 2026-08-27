@@ -120,6 +120,7 @@ if(CH579)
     add_executable(gateway_ch579
         app/main.c
         app/hvac_init.c
+        app/isr.c
         bsp/CH579/startup_ARMCM0.s
         bsp/CH579/StdPeriphDriver/CH57x_clk.c
         bsp/CH579/StdPeriphDriver/CH57x_flash.c
