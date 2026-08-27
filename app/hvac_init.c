@@ -17,6 +17,7 @@
 #include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
+#include "debug.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
@@ -40,8 +41,20 @@ static uart_decoder_t     g_hvac_dec;
 static receiver_timeout_t g_hvac_rx;
 static uint8_t            g_hvac_rx_buf[128];
 
+/* 临时 bring-up 心跳：验证 FreeRTOS 调度存活 */
+static void debug_heartbeat_task(void *arg)
+{
+    (void)arg;
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        debug_puts("alive\r\n");
+    }
+}
+
 void hvac_start(void) {
     gateway_init();
+
+    xTaskCreate(debug_heartbeat_task, "dbg", 128, NULL, 1, NULL);
 
     /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA0 */
 #ifdef __CH579__
