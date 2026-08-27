@@ -10,13 +10,13 @@
       <TargetName>CH579</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
+      <pCCUsed>5060528::V5.06 update 5 (build 528)::ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>CH579F</Device>
           <Vendor>WCH</Vendor>
-          <PackID>Keil.WCH57x_DFP.1.1.0</PackID>
+          <PackID>Keil.WCH57x_DFP.1.0.0</PackID>
           <PackURL>http://wch.cn/pack</PackURL>
           <Cpu>IRAM(0x20000000,0x8000) IROM(0x00000000,0x3E800) CPUTYPE("Cortex-M0") CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -185,6 +185,8 @@
             <uocXRam>0</uocXRam>
             <RvdsVP>0</RvdsVP>
             <RvdsMve>0</RvdsMve>
+            <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -351,7 +353,7 @@
             <NoWarn>0</NoWarn>
             <uSurpInc>0</uSurpInc>
             <useXO>0</useXO>
-            <uClangAs>0</uClangAs>
+            <ClangAsOpt>4</ClangAsOpt>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define></Define>
@@ -384,12 +386,12 @@
         <File>
           <FileName>main.c</FileName>
           <FileType>1</FileType>
-          <FilePath>app/main.c</FilePath>
+          <FilePath>.\app\main.c</FilePath>
         </File>
         <File>
           <FileName>hvac_init.c</FileName>
           <FileType>1</FileType>
-          <FilePath>app/hvac_init.c</FilePath>
+          <FilePath>.\app\hvac_init.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -397,12 +399,12 @@
         <File>
           <FileName>ring.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/queue/ring.c</FilePath>
+          <FilePath>.\src\hal\queue\ring.c</FilePath>
         </File>
         <File>
           <FileName>frame_queue.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/queue/frame_queue.c</FilePath>
+          <FilePath>.\src\hal\queue\frame_queue.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -410,7 +412,7 @@
         <File>
           <FileName>bus.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/bus/bus.c</FilePath>
+          <FilePath>.\src\hal\bus\bus.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -418,22 +420,22 @@
         <File>
           <FileName>decoder.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/comm/decoder.c</FilePath>
+          <FilePath>.\src\hal\comm\decoder.c</FilePath>
         </File>
         <File>
           <FileName>encoder.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/comm/encoder.c</FilePath>
+          <FilePath>.\src\hal\comm\encoder.c</FilePath>
         </File>
         <File>
           <FileName>uart_decoder.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/comm/uart_decoder.c</FilePath>
+          <FilePath>.\src\hal\comm\uart_decoder.c</FilePath>
         </File>
         <File>
           <FileName>uart_encoder.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/comm/uart_encoder.c</FilePath>
+          <FilePath>.\src\hal\comm\uart_encoder.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -441,17 +443,17 @@
         <File>
           <FileName>receiver.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/frame/receiver.c</FilePath>
+          <FilePath>.\src\hal\frame\receiver.c</FilePath>
         </File>
         <File>
           <FileName>receiver_timeout.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/frame/receiver_timeout.c</FilePath>
+          <FilePath>.\src\hal\frame\receiver_timeout.c</FilePath>
         </File>
         <File>
           <FileName>sender.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/frame/sender.c</FilePath>
+          <FilePath>.\src\hal\frame\sender.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -459,17 +461,17 @@
         <File>
           <FileName>uart.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/uart/uart.c</FilePath>
+          <FilePath>.\src\hal\uart\uart.c</FilePath>
         </File>
         <File>
           <FileName>uart_instance.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/uart/uart_instance.c</FilePath>
+          <FilePath>.\src\hal\uart\uart_instance.c</FilePath>
         </File>
         <File>
           <FileName>uart_ch579.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/uart/uart_ch579.c</FilePath>
+          <FilePath>.\src\hal\uart\uart_ch579.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -477,27 +479,27 @@
         <File>
           <FileName>timer.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/timer/timer.c</FilePath>
+          <FilePath>.\src\hal\timer\timer.c</FilePath>
         </File>
         <File>
           <FileName>timer_instance.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/timer/timer_instance.c</FilePath>
+          <FilePath>.\src\hal\timer\timer_instance.c</FilePath>
         </File>
         <File>
           <FileName>timer_ch579.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/timer/timer_ch579.c</FilePath>
+          <FilePath>.\src\hal\timer\timer_ch579.c</FilePath>
         </File>
         <File>
           <FileName>timer_hw.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/timer/timer_hw.c</FilePath>
+          <FilePath>.\src\hal\timer\timer_hw.c</FilePath>
         </File>
         <File>
           <FileName>timer_soft.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/hal/timer/timer_soft.c</FilePath>
+          <FilePath>.\src\hal\timer\timer_soft.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -505,12 +507,12 @@
         <File>
           <FileName>module.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/core/module.c</FilePath>
+          <FilePath>.\src\core\module.c</FilePath>
         </File>
         <File>
           <FileName>gateway_device.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/core/gateway_device.c</FilePath>
+          <FilePath>.\src\core\gateway_device.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -518,22 +520,22 @@
         <File>
           <FileName>ac_module.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/modules/ac_module.c</FilePath>
+          <FilePath>.\src\modules\ac_module.c</FilePath>
         </File>
         <File>
           <FileName>wireless_module.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/modules/wireless_module.c</FilePath>
+          <FilePath>.\src\modules\wireless_module.c</FilePath>
         </File>
         <File>
           <FileName>third_party_module.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/modules/third_party_module.c</FilePath>
+          <FilePath>.\src\modules\third_party_module.c</FilePath>
         </File>
         <File>
           <FileName>wifi_module.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/modules/wifi_module.c</FilePath>
+          <FilePath>.\src\modules\wifi_module.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -541,7 +543,7 @@
         <File>
           <FileName>ac_gree.c</FileName>
           <FileType>1</FileType>
-          <FilePath>src/brands/ac_gree.c</FilePath>
+          <FilePath>.\src\brands\ac_gree.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -549,72 +551,82 @@
         <File>
           <FileName>CH57x_clk.c</FileName>
           <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_clk.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_flash.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_flash.c</FilePath>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_clk.c</FilePath>
         </File>
         <File>
           <FileName>CH57x_gpio.c</FileName>
           <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_gpio.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_int.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_int.c</FilePath>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_gpio.c</FilePath>
         </File>
         <File>
           <FileName>CH57x_pwr.c</FileName>
           <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_pwr.c</FilePath>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwr.c</FilePath>
         </File>
         <File>
           <FileName>CH57x_sys.c</FileName>
           <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_sys.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_timer0.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_timer0.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_timer1.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_timer1.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_timer2.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_timer2.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_timer3.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_timer3.c</FilePath>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_sys.c</FilePath>
         </File>
         <File>
           <FileName>CH57x_uart0.c</FileName>
           <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_uart0.c</FilePath>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart0.c</FilePath>
         </File>
         <File>
           <FileName>CH57x_uart1.c</FileName>
           <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_uart1.c</FilePath>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart1.c</FilePath>
         </File>
         <File>
           <FileName>CH57x_uart2.c</FileName>
           <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_uart2.c</FilePath>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart2.c</FilePath>
         </File>
         <File>
           <FileName>CH57x_uart3.c</FileName>
           <FileType>1</FileType>
-          <FilePath>bsp/CH579/StdPeriphDriver/CH57x_uart3.c</FilePath>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart3.c</FilePath>
+        </File>
+        <File>
+          <FileName>CH57x_int.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_int.c</FilePath>
+        </File>
+        <File>
+          <FileName>CH57x_flash.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_flash.c</FilePath>
+        </File>
+        <File>
+          <FileName>CH57x_adc.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_adc.c</FilePath>
+        </File>
+        <File>
+          <FileName>CH57x_timer0.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer0.c</FilePath>
+        </File>
+        <File>
+          <FileName>CH57x_timer1.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer1.c</FilePath>
+        </File>
+        <File>
+          <FileName>CH57x_timer2.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer2.c</FilePath>
+        </File>
+        <File>
+          <FileName>CH57x_timer3.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer3.c</FilePath>
+        </File>
+        <File>
+          <FileName>CH57x_pwm.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwm.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -622,7 +634,7 @@
         <File>
           <FileName>freertos_port.c</FileName>
           <FileType>1</FileType>
-          <FilePath>lib/FreeRTOS/freertos_port.c</FilePath>
+          <FilePath>.\lib\FreeRTOS\freertos_port.c</FilePath>
         </File>
         </Group>
         <Group>
@@ -630,7 +642,7 @@
         <File>
           <FileName>startup_ARMCM0.s</FileName>
           <FileType>2</FileType>
-          <FilePath>bsp/CH579/startup_ARMCM0.s</FilePath>
+          <FilePath>.\bsp\CH579\startup_ARMCM0.s</FilePath>
         </File>
         </Group>
       </Groups>
