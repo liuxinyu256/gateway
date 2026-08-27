@@ -6,7 +6,7 @@
 
 int main(void) {
     debug_init();
-    debug_puts("OK\r\n");
+    debug_puts("OK\n");
     hvac_start();
     vTaskStartScheduler();
     for (;;);
