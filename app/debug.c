@@ -25,6 +25,10 @@ void debug_init(void)
     uart_configure(&uart1, &cfg);
     uart_irq_tx_disable(&uart1);
     uart_irq_rx_disable(&uart1);
+#ifdef __CH579__
+    UART1_CLR_TXFIFO();
+    UART1_CLR_RXFIFO();
+#endif
 }
 
 void debug_putc(char c)
