@@ -13,15 +13,15 @@ void debug_init(void)
         .stop_bits = 1,
         .parity    = 0,
     };
-    uart_configure(&uart0, &cfg);
+    uart_configure(&uart1, &cfg);
 }
 
 void debug_putc(char c)
 {
     if (c == '\n') {
-        uart_write(&uart0, (uint8_t)'\r');
+        uart_write(&uart1, (uint8_t)'\r');
     }
-    uart_write(&uart0, (uint8_t)c);
+    uart_write(&uart1, (uint8_t)c);
 }
 
 void debug_puts(const char *s)

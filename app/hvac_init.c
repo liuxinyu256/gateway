@@ -43,11 +43,11 @@ static uint8_t            g_hvac_rx_buf[128];
 void hvac_start(void) {
     gateway_init();
 
-    /* RS485, UART1, 9600bps, tx=9, rx=8, de=0 */
+    /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA0 */
 #ifdef __CH579__
-    /* 绑定 CH579 GPIO：UART1 默认 PA8(RX)/PA9(TX)，PA0 作为 RS485 DE */
-    GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
-    GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
+    /* 绑定 CH579 GPIO：UART0 默认 PB4(RX)/PB7(TX)，PA0 作为 RS485 DE */
+    GPIOB_ModeCfg(GPIO_Pin_4, GPIO_ModeIN_PU);
+    GPIOB_ModeCfg(GPIO_Pin_7, GPIO_ModeOut_PP_5mA);
     GPIOA_ModeCfg(GPIO_Pin_0, GPIO_ModeOut_PP_5mA);
     GPIOA_ResetBits(GPIO_Pin_0);
     bus_set_rs485_enable(&g_ac.base.bus, 1);
@@ -56,7 +56,7 @@ void hvac_start(void) {
 
     /* TX：上层创建 UART 编码器和 sender 并注入 */
     uart_encoder_cfg_t enc_cfg = {
-        .port     = &uart1,
+        .port     = &uart0,
         .uart_cfg = {
             .baudrate  = 9600,
             .data_bits = 8,
@@ -76,7 +76,7 @@ void hvac_start(void) {
     /* RX：上层创建 UART 解码器 + 超时接收器并注入
      * 放在 encoder 之后: 最后一次 uart_configure 会开启 RX 中断 */
     uart_decoder_cfg_t dec_cfg = {
-        .port     = &uart1,
+        .port     = &uart0,
         .uart_cfg = {
             .baudrate  = 9600,
             .data_bits = 8,
