@@ -383,8 +383,8 @@
       <Groups>
         <Group>
           <GroupName>app</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>main.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\app\main.c</FilePath>
@@ -393,18 +393,18 @@
           <FileName>hvac_init.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\app\hvac_init.c</FilePath>
+        </File>
         <File>
           <FileName>debug.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\app\debug.c</FilePath>
         </File>
-        </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>HAL/queue</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>ring.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\hal\queue\ring.c</FilePath>
@@ -414,22 +414,22 @@
           <FileType>1</FileType>
           <FilePath>.\src\hal\queue\frame_queue.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>HAL/bus</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>bus.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\hal\bus\bus.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>HAL/comm</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>decoder.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\hal\comm\decoder.c</FilePath>
@@ -449,12 +449,12 @@
           <FileType>1</FileType>
           <FilePath>.\src\hal\comm\uart_encoder.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>HAL/frame</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>receiver.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\hal\frame\receiver.c</FilePath>
@@ -469,12 +469,12 @@
           <FileType>1</FileType>
           <FilePath>.\src\hal\frame\sender.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>HAL/uart</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>uart.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\hal\uart\uart.c</FilePath>
@@ -489,12 +489,12 @@
           <FileType>1</FileType>
           <FilePath>.\src\hal\uart\uart_ch579.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>HAL/timer</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>timer.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\hal\timer\timer.c</FilePath>
@@ -519,12 +519,12 @@
           <FileType>1</FileType>
           <FilePath>.\src\hal\timer\timer_soft.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>core</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>module.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\core\module.c</FilePath>
@@ -534,12 +534,12 @@
           <FileType>1</FileType>
           <FilePath>.\src\core\gateway_device.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>modules</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>ac_module.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\modules\ac_module.c</FilePath>
@@ -559,22 +559,42 @@
           <FileType>1</FileType>
           <FilePath>.\src\modules\wifi_module.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
           <GroupName>brands</GroupName>
-        <Files>
-<File>
+          <Files>
+        <File>
           <FileName>ac_gree.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\brands\ac_gree.c</FilePath>
         </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
         <Group>
-          <GroupName>CH579 BSP</GroupName>
-        <Files>
-<File>
+          <GroupName>FreeRTOS</GroupName>
+          <Files>
+        <File>
+          <FileName>freertos_port.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\lib\FreeRTOS\freertos_port.c</FilePath>
+        </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>SRC/Startup</GroupName>
+          <Files>
+        <File>
+          <FileName>startup_ARMCM0.s</FileName>
+          <FileType>2</FileType>
+          <FilePath>.\bsp\CH579\startup_ARMCM0.s</FilePath>
+        </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>SRC/StdPeriphDriver</GroupName>
+          <Files>
+        <File>
           <FileName>CH57x_clk.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_clk.c</FilePath>
@@ -654,29 +674,10 @@
           <FileType>1</FileType>
           <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwm.c</FilePath>
         </File>
-                </Files>
-</Group>
-        <Group>
-          <GroupName>FreeRTOS</GroupName>
-        <Files>
-        <File>
-          <FileName>freertos_port.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\lib\FreeRTOS\freertos_port.c</FilePath>
-        </File>
-        </Files>
-</Group>
-        <Group>
-          <GroupName>startup</GroupName>
-        <Files>
-<File>
-          <FileName>startup_ARMCM0.s</FileName>
-          <FileType>2</FileType>
-          <FilePath>.\bsp\CH579\startup_ARMCM0.s</FilePath>
-        </File>
-                </Files>
-</Group>
+          </Files>
+        </Group>
       </Groups>
+
 
     </Target>
   </Targets>
