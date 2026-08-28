@@ -403,11 +403,6 @@
           <FileName>isr.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\app\isr.c</FilePath>
-            <File>
-              <FileName>debug_module.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\app\debug_module.c</FilePath>
-            </File>
         </File>
           </Files>
         </Group>
@@ -569,6 +564,11 @@
           <FileType>1</FileType>
           <FilePath>.\src\modules\wifi_module.c</FilePath>
         </File>
+            <File>
+              <FileName>debug_module.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\modules\debug_module.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
