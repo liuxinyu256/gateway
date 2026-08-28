@@ -28,8 +28,10 @@ static uint8_t            g_dbg_rx_buf[128];
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
     (void)ctx;
-    if (g_dbg_base.sender)
+    if (g_dbg_base.sender) {
         sender_send(g_dbg_base.sender, data, len, SENDER_PRIO_CMD);
+        sender_send(g_dbg_base.sender, (const uint8_t *)"\r\n", 2, SENDER_PRIO_CMD);
+    }
     return 1;
 }
 
