@@ -25,11 +25,12 @@ static uart_decoder_t     g_dbg_dec;
 static receiver_timeout_t g_dbg_rx;
 static uint8_t            g_dbg_rx_buf[128];
 
-static void on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
+static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
     (void)ctx;
     if (g_dbg_base.sender)
         sender_send(g_dbg_base.sender, data, len, SENDER_PRIO_CMD);
+    return 1;
 }
 
 static void on_periodic_send(void *ctx)
