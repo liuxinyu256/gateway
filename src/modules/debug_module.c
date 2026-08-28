@@ -6,6 +6,7 @@
  *   - 收到数据原样回显（测试接收+发送链路）
  */
 #include "debug_module.h"
+#include "debug.h"
 #include "module.h"
 #include "sender.h"
 #include "uart_encoder.h"
@@ -118,4 +119,5 @@ void debug_module_start(void)
     gateway_set_module(1, &g_dbg_base);
 
     module_start(&g_dbg_base);
+    debug_puts("[M]\r\n");
 }
