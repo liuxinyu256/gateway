@@ -16,6 +16,7 @@
 static module_t *g_modules[MODULE_MAX];
 
 
+
 static module_t *module_from_receiver(const receiver_t *receiver)
 {
     if (!receiver) return NULL;
