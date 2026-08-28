@@ -47,3 +47,12 @@ void ADC_IRQHandler(void)   { }
 void SPI1_IRQHandler(void)  { }
 void LED_IRQHandler(void)   { }
 void WDT_IRQHandler(void)   { }
+
+/* FreeRTOS 系统异常处理：显式提供强符号，避免走启动文件弱处理 */
+extern void vPortSVCHandler(void);
+extern void xPortPendSVHandler(void);
+extern void xPortSysTickHandler(void);
+
+void SVC_Handler(void)     { vPortSVCHandler(); }
+void PendSV_Handler(void)  { xPortPendSVHandler(); }
+void SysTick_Handler(void) { xPortSysTickHandler(); }

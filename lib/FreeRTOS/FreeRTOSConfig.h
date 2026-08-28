@@ -46,9 +46,9 @@
 #define configUSE_MALLOC_FAILED_HOOK            0
 
 /* 映射 FreeRTOS 函数名到 CMSIS 标准向量名 */
-#define vPortSVCHandler         SVC_Handler
-#define xPortPendSVHandler      PendSV_Handler
-#define xPortSysTickHandler     SysTick_Handler
+/* #define vPortSVCHandler         SVC_Handler */
+/* #define xPortPendSVHandler      PendSV_Handler */
+/* #define xPortSysTickHandler     SysTick_Handler */
 
 #define configASSERT( x )    if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
 
