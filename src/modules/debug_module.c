@@ -19,6 +19,14 @@
 #include "CH57x_common.h"
 #endif
 
+/* 空闲钩子：统计空闲 tick，用于计算 CPU 占用率 */
+static volatile uint32_t debug_idle_ticks;
+
+void vApplicationIdleHook(void)
+{
+    debug_idle_ticks++;
+}
+
 typedef struct {
     module_t base;
     uint8_t  rx_buf[128];   /* Debug 模块接收缓冲区 */
@@ -37,6 +45,39 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 
     if (!g_dbg.base.sender)
         return 1;
+
+    /* 命令：C = CPU 占用率 */
+    if (len == 1 && (data[0] == 'C' || data[0] == 'c')) {
+        uint32_t total = xTaskGetTickCount();
+        uint32_t idle = debug_idle_ticks;
+        uint32_t cpu = 0;
+        if (total > 0) {
+            uint32_t busy = total - (idle < total ? idle : total);
+            cpu = (busy * 100U) / total;
+        }
+        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                         "[cpu] %lu%%\r\n", (unsigned long)cpu);
+        if (n > 0)
+            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                        (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
+    }
+
+    /* 命令：R = RAM 占用率 */
+    if (len == 1 && (data[0] == 'R' || data[0] == 'r')) {
+        uint32_t total = (uint32_t)configTOTAL_HEAP_SIZE;
+        uint32_t free  = (uint32_t)xPortGetFreeHeapSize();
+        uint32_t used  = total - free;
+        uint32_t min_free = (uint32_t)xPortGetMinimumEverFreeHeapSize();
+        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                         "[ram] used=%lu free=%lu total=%lu min=%lu\r\n",
+                         (unsigned long)used, (unsigned long)free,
+                         (unsigned long)total, (unsigned long)min_free);
+        if (n > 0)
+            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                        (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
+    }
 
     /* 命令：S = 查询健康状态 */
     if (len == 1 && (data[0] == 'S' || data[0] == 's')) {
