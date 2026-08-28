@@ -49,8 +49,14 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         return 1;
     }
 
-    sender_send(g_dbg_base.sender, data, len, SENDER_PRIO_CMD);
-    sender_send(g_dbg_base.sender, (const uint8_t *)"\r\n", 2, SENDER_PRIO_CMD);
+    char buf[160];
+    int pos = snprintf(buf, sizeof(buf), "[rx]");
+    for (uint16_t i = 0; i < len && pos < (int)sizeof(buf) - 4; i++) {
+        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, " %02X", data[i]);
+    }
+    pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
+    sender_send(g_dbg_base.sender, (const uint8_t *)buf, (uint16_t)pos,
+                SENDER_PRIO_CMD);
     return 1;
 }
 
