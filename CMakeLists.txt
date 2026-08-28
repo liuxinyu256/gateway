@@ -72,7 +72,6 @@ add_library(gateway_core STATIC
     src/hal/bus/bus.c
     src/core/module.c
     src/core/gateway_device.c
-    src/core/static_alloc.c
     src/modules/ac_module.c
     src/modules/wireless_module.c
     src/modules/third_party_module.c
