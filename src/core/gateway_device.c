@@ -17,6 +17,11 @@
 
 static gateway_device_t g_gw;
 
+/* 网关状态任务静态资源 */
+static StackType_t  gw_state_stack[96];
+static StaticTask_t gw_state_tcb;
+
+
 static uint8_t gateway_state_enqueue(uint8_t module_id)
 {
 #ifdef FAKE_FREERTOS
@@ -83,8 +88,9 @@ void gateway_init(void) {
 #ifndef FAKE_FREERTOS
     g_gw.state_event_queue = xQueueCreate(GATEWAY_MODULE_MAX, sizeof(uint8_t));
     if (g_gw.state_event_queue)
-        xTaskCreate(gateway_state_task_fn, "gwstate", 96, NULL, 2,
-                    &g_gw.state_task);
+        g_gw.state_task = xTaskCreateStatic(gateway_state_task_fn, "gwstate", 96,
+                                           NULL, 2,
+                                           gw_state_stack, &gw_state_tcb);
 #endif
 }
 

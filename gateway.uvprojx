@@ -538,6 +538,11 @@
           <FileName>gateway_device.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\core\gateway_device.c</FilePath>
+            <File>
+              <FileName>static_alloc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\core\static_alloc.c</FilePath>
+            </File>
         </File>
           </Files>
         </Group>
