@@ -65,12 +65,13 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         uint32_t ram_free  = (uint32_t)xPortGetFreeHeapSize();
         uint32_t ram_used  = ram_total - ram_free;
         uint32_t ram_min   = (uint32_t)xPortGetMinimumEverFreeHeapSize();
+        uint32_t ram_percent = (ram_total > 0) ? (ram_used * 100U / ram_total) : 0;
 
         int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
-                         "[perf] cpu=%lu%% ram_used=%lu free=%lu total=%lu min=%lu\r\n",
-                         (unsigned long)cpu, (unsigned long)ram_used,
-                         (unsigned long)ram_free, (unsigned long)ram_total,
-                         (unsigned long)ram_min);
+                         "[perf] cpu=%lu%% ram=%lu%% used=%lu free=%lu total=%lu min=%lu\r\n",
+                         (unsigned long)cpu, (unsigned long)ram_percent,
+                         (unsigned long)ram_used, (unsigned long)ram_free,
+                         (unsigned long)ram_total, (unsigned long)ram_min);
         if (n > 0)
             sender_send(g_dbg.base.sender, g_dbg.tx_buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
