@@ -22,7 +22,7 @@
 typedef struct {
     module_t base;
     uint8_t  rx_buf[128];   /* Debug 模块接收缓冲区 */
-    uint8_t  tx_buf[160];   /* HEX 回显格式化缓冲区 */
+    uint8_t  tx_buf[128];   /* HEX 回显格式化缓冲区 */
 } debug_module_t;
 
 static debug_module_t     g_dbg;
