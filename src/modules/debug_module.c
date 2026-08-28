@@ -6,6 +6,7 @@
  *   - 收到数据原样回显（测试接收+发送链路）
  */
 #include "debug_module.h"
+#include <stdio.h>
 #include "module.h"
 #include "sender.h"
 #include "uart_encoder.h"
@@ -28,10 +29,28 @@ static uint8_t            g_dbg_rx_buf[128];
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
     (void)ctx;
-    if (g_dbg_base.sender) {
-        sender_send(g_dbg_base.sender, data, len, SENDER_PRIO_CMD);
-        sender_send(g_dbg_base.sender, (const uint8_t *)"\r\n", 2, SENDER_PRIO_CMD);
+
+    if (!g_dbg_base.sender)
+        return 1;
+
+    /* 命令：S = 查询健康状态 */
+    if (len >= 1 && (data[0] == 'S' || data[0] == 's')) {
+        char buf[128];
+        int n = snprintf(buf, sizeof(buf),
+                         "[st] s=%u r=%u st=%u cmd=%u norm=%u\r\n",
+                         g_dbg_base.send_queue_drop_cnt,
+                         g_dbg_base.receive_queue_drop_cnt,
+                         gateway_state_event_drop_count(),
+                         frame_queue_drop_count(&g_dbg_sender.cmd_q),
+                         frame_queue_drop_count(&g_dbg_sender.norm_q));
+        if (n > 0)
+            sender_send(g_dbg_base.sender, (const uint8_t *)buf,
+                        (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
     }
+
+    sender_send(g_dbg_base.sender, data, len, SENDER_PRIO_CMD);
+    sender_send(g_dbg_base.sender, (const uint8_t *)"\r\n", 2, SENDER_PRIO_CMD);
     return 1;
 }
 
