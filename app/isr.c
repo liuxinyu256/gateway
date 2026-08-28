@@ -24,7 +24,12 @@ void UART0_IRQHandler(void) {
         sender_isr(m->sender);
 }
 
-void UART1_IRQHandler(void) { ch579_uart_irq_handler(1); }
+void UART1_IRQHandler(void) {
+    ch579_uart_irq_handler(1);
+    module_t *m = gateway_module(1);
+    if (m && m->sender)
+        sender_isr(m->sender);
+}
 
 void UART2_IRQHandler(void) { ch579_uart_irq_handler(2); }
 void UART3_IRQHandler(void) { ch579_uart_irq_handler(3); }
