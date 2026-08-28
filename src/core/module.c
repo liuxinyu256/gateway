@@ -15,12 +15,6 @@
 
 static module_t *g_modules[MODULE_MAX];
 
-/* 模块任务静态资源：按 module_id 索引 */
-static StackType_t  module_rx_stacks[MODULE_MAX][96];
-static StaticTask_t module_rx_tcbs[MODULE_MAX];
-static StackType_t  module_tx_stacks[MODULE_MAX][96];
-static StaticTask_t module_tx_tcbs[MODULE_MAX];
-
 
 static module_t *module_from_receiver(const receiver_t *receiver)
 {
@@ -331,12 +325,8 @@ void module_start(module_t *m)
 {
     if (!m) return;
 
-    m->receive_task = xTaskCreateStatic(receive_task_fn, "rx", 96, m, 4,
-                                        module_rx_stacks[m->module_id],
-                                        &module_rx_tcbs[m->module_id]);
-    m->send_task = xTaskCreateStatic(send_task_fn, "tx", 96, m, 3,
-                                     module_tx_stacks[m->module_id],
-                                     &module_tx_tcbs[m->module_id]);
+    xTaskCreate(receive_task_fn, "rx", 96, m, 4, &m->receive_task);
+    xTaskCreate(send_task_fn, "tx", 96, m, 3, &m->send_task);
 
     if (m->receiver)
         receiver_set_callback(m->receiver, frame_done_cb);

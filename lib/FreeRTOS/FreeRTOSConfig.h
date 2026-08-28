@@ -24,9 +24,9 @@
 #define configTIMER_TASK_PRIORITY                1
 #define configTIMER_QUEUE_LENGTH                 8
 #define configTIMER_TASK_STACK_DEPTH             96
-#define configSUPPORT_STATIC_ALLOCATION         1
+#define configSUPPORT_STATIC_ALLOCATION         0
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
-#define configTOTAL_HEAP_SIZE                   ( ( size_t ) 4096 )
+#define configTOTAL_HEAP_SIZE                   ( ( size_t ) 7168 )
 
 /* 可选 API 函数 (默认0=不编译，需显式开1) */
 #define INCLUDE_vTaskDelay                      1
@@ -46,9 +46,9 @@
 #define configUSE_MALLOC_FAILED_HOOK            0
 
 /* 映射 FreeRTOS 函数名到 CMSIS 标准向量名 */
-/* #define vPortSVCHandler         SVC_Handler */
-/* #define xPortPendSVHandler      PendSV_Handler */
-/* #define xPortSysTickHandler     SysTick_Handler */
+#define vPortSVCHandler         SVC_Handler
+#define xPortPendSVHandler      PendSV_Handler
+#define xPortSysTickHandler     SysTick_Handler
 
 #define configASSERT( x )    if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
 
