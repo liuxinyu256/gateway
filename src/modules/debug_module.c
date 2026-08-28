@@ -51,15 +51,19 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     if (!g_dbg.base.sender)
         return 1;
 
-    /* 命令：P = CPU + RAM 占用率 */
+    /* 命令：P = CPU + RAM 占用率（CPU 用区间差值 + 一位小数） */
     if (len == 1 && (data[0] == 'P' || data[0] == 'p')) {
-        uint32_t total_tick = xTaskGetTickCount();
-        uint32_t idle = debug_idle_ticks;
-        uint32_t cpu = 0;
-        if (total_tick > 0) {
-            uint32_t busy = total_tick - (idle < total_tick ? idle : total_tick);
-            cpu = (busy * 100U) / total_tick;
-        }
+        static uint32_t last_total_tick;
+        static uint32_t last_idle_tick;
+
+        uint32_t total_now = xTaskGetTickCount();
+        uint32_t idle_now  = debug_idle_ticks;
+        uint32_t d_total = total_now - last_total_tick;
+        uint32_t d_idle  = idle_now - last_idle_tick;
+        uint32_t d_busy  = d_total - (d_idle < d_total ? d_idle : d_total);
+        uint32_t cpu_permille = (d_total > 0) ? (d_busy * 1000U / d_total) : 0;
+        last_total_tick = total_now;
+        last_idle_tick  = idle_now;
 
         uint32_t ram_total = (uint32_t)configTOTAL_HEAP_SIZE;
         uint32_t ram_free  = (uint32_t)xPortGetFreeHeapSize();
@@ -68,8 +72,10 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         uint32_t ram_percent = (ram_total > 0) ? (ram_used * 100U / ram_total) : 0;
 
         int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
-                         "[perf] cpu=%lu%% ram=%lu%% used=%lu free=%lu total=%lu min=%lu\r\n",
-                         (unsigned long)cpu, (unsigned long)ram_percent,
+                         "[perf] cpu=%lu.%lu%% ram=%lu%% used=%lu free=%lu total=%lu min=%lu\r\n",
+                         (unsigned long)(cpu_permille / 10),
+                         (unsigned long)(cpu_permille % 10),
+                         (unsigned long)ram_percent,
                          (unsigned long)ram_used, (unsigned long)ram_free,
                          (unsigned long)ram_total, (unsigned long)ram_min);
         if (n > 0)
