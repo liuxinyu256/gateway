@@ -17,7 +17,6 @@
 #include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
-#include "debug.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
@@ -41,48 +40,8 @@ static uart_decoder_t     g_hvac_dec;
 static receiver_timeout_t g_hvac_rx;
 static uint8_t            g_hvac_rx_buf[128];
 
-/* 状态观察者：状态变化时打印（验证状态事件队列） */
-static void on_gateway_state_change(uint8_t module_id,
-                                    const gateway_state_t *s,
-                                    void *ctx)
-{
-    (void)ctx;
-    debug_printf("[state] m=%u set=%u power=%u\r\n",
-                 module_id, s->set_temp, s->power);
-}
-
-/* 临时 bring-up 心跳：验证调度 + 定期健康快照 */
-static void debug_heartbeat_task(void *arg)
-{
-    (void)arg;
-    uint32_t beat = 0;
-
-    for (;;) {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        beat++;
-        debug_puts("alive\r\n");
-
-        if ((beat % 5) == 0) {
-            gateway_state_t st;
-            gateway_module_state_get(g_ac.base.module_id, &st);
-            st.set_temp = (uint8_t)(20 + (beat / 5) % 10);
-            module_update_state(&g_ac.base, &st);
-
-            debug_printf("[health] s=%u r=%u st=%u cmd=%u norm=%u\r\n",
-                         g_ac.base.send_queue_drop_cnt,
-                         g_ac.base.receive_queue_drop_cnt,
-                         gateway_state_event_drop_count(),
-                         frame_queue_drop_count(&g_hvac_sender.cmd_q),
-                         frame_queue_drop_count(&g_hvac_sender.norm_q));
-        }
-    }
-}
-
 void hvac_start(void) {
     gateway_init();
-    gateway_on_state_change(on_gateway_state_change, NULL);
-
-    xTaskCreate(debug_heartbeat_task, "dbg", 128, NULL, 1, NULL);
 
     /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA0 */
 #ifdef __CH579__

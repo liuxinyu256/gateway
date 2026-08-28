@@ -2,12 +2,11 @@
  * main.c —— 入口
  */
 #include "hvac_init.h"
-#include "debug.h"
+#include "debug_module.h"
 
 int main(void) {
-    debug_init();
-    debug_puts("OK\n");
     hvac_start();
+    debug_module_start();
     vTaskStartScheduler();
     for (;;);
 }
