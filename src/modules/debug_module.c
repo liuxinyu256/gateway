@@ -35,7 +35,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 
     /* 命令：S = 查询健康状态 */
     if (len >= 1 && (data[0] == 'S' || data[0] == 's')) {
-        char buf[128];
+        static char buf[128];
         int n = snprintf(buf, sizeof(buf),
                          "[st] s=%u r=%u st=%u cmd=%u norm=%u\r\n",
                          g_dbg_base.send_queue_drop_cnt,
@@ -49,7 +49,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         return 1;
     }
 
-    char buf[160];
+    static char buf[160];
     int pos = snprintf(buf, sizeof(buf), "[rx]");
     for (uint16_t i = 0; i < len && pos < (int)sizeof(buf) - 4; i++) {
         pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, " %02X", data[i]);
