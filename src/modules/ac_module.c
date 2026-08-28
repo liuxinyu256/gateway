@@ -40,9 +40,18 @@ static uint8_t ac_ops_init(module_t *m, void *cfg)
     return 0;
 }
 
+static uint8_t *ac_ops_get_rx_buf(module_t *m, uint16_t *size)
+{
+    ac_module_t *self = (ac_module_t *)m;
+    if (!self || !size) return NULL;
+    *size = sizeof(self->rx_buf);
+    return self->rx_buf;
+}
+
 const module_ops_t ac_module_ops = {
-    .init  = ac_ops_init,
-    .start = NULL,
+    .init       = ac_ops_init,
+    .start      = NULL,
+    .get_rx_buf = ac_ops_get_rx_buf,
 };
 
 /* 激活品牌: 验证已登记 → 绑定事件表 */

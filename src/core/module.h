@@ -25,6 +25,7 @@ typedef struct module_ops
 {
     uint8_t (*init)(module_t *m, void *cfg); /* 模块自己的初始化 */
     void    (*start)(module_t *m);           /* 模块自己的启动 (可空) */
+    uint8_t *(*get_rx_buf)(module_t *m, uint16_t *size); /* 返回模块自己的接收缓冲区 */
 } module_ops_t;
 
 typedef struct module

@@ -107,10 +107,16 @@ static void module_handle_event(module_t *m, const event_t *ev)
 /* ---- RX 处理 ---- */
 static void module_handle_rx(module_t *m)
 {
+    uint16_t size = 0;
+    uint8_t *buf = NULL;
+
     if (!m || !m->receiver) return;
 
-    uint8_t buf[128];
-    uint16_t n = receiver_read_frame(m->receiver, buf, sizeof(buf));
+    if (m->ops && m->ops->get_rx_buf)
+        buf = m->ops->get_rx_buf(m, &size);
+    if (!buf || !size) return;
+
+    uint16_t n = receiver_read_frame(m->receiver, buf, size);
     if (n && m->handler && m->handler->on_rx_frame)
         m->handler->on_rx_frame(m->handler_ctx, buf, n);
 }

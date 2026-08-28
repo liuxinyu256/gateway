@@ -110,6 +110,8 @@ typedef struct
     uint8_t brand_count;                         /* 注册表长度 */
     const ac_brand_config_t *current;            /* 当前激活品牌 */
     uint8_t locked;                              /* 品牌锁定标志: 0=扫描中, 1=已锁定 */
+
+    uint8_t rx_buf[128];                         /* AC 模块接收缓冲区 */
 } ac_module_t;
 
 /* AC 模块初始化参数 (通过 module_init 的 cfg 传入) */

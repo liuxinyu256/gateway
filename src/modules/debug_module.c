@@ -3,7 +3,7 @@
  *
  * 用 module_t 框架跑 UART1：
  *   - 周期发送 alive（测试发送链路）
- *   - 收到数据原样回显（测试接收+发送链路）
+ *   - 收到数据 HEX 回显（测试接收+发送链路）
  */
 #include "debug_module.h"
 #include <stdio.h>
@@ -19,44 +19,51 @@
 #include "CH57x_common.h"
 #endif
 
-static module_t           g_dbg_base;
+typedef struct {
+    module_t base;
+    uint8_t  rx_buf[128];   /* Debug 模块接收缓冲区 */
+    uint8_t  tx_buf[160];   /* HEX 回显格式化缓冲区 */
+} debug_module_t;
+
+static debug_module_t     g_dbg;
 static sender_t           g_dbg_sender;
 static uart_encoder_t     g_dbg_enc;
 static uart_decoder_t     g_dbg_dec;
 static receiver_timeout_t g_dbg_rx;
-static uint8_t            g_dbg_rx_buf[128];
 
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
     (void)ctx;
 
-    if (!g_dbg_base.sender)
+    if (!g_dbg.base.sender)
         return 1;
 
     /* 命令：S = 查询健康状态 */
-    if (len >= 1 && (data[0] == 'S' || data[0] == 's')) {
-        static uint8_t buf[128];
-        int n = snprintf((char *)buf, sizeof(buf),
+    if (len == 1 && (data[0] == 'S' || data[0] == 's')) {
+        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
                          "[st] s=%u r=%u st=%u cmd=%u norm=%u\r\n",
-                         g_dbg_base.send_queue_drop_cnt,
-                         g_dbg_base.receive_queue_drop_cnt,
+                         g_dbg.base.send_queue_drop_cnt,
+                         g_dbg.base.receive_queue_drop_cnt,
                          gateway_state_event_drop_count(),
                          frame_queue_drop_count(&g_dbg_sender.cmd_q),
                          frame_queue_drop_count(&g_dbg_sender.norm_q));
         if (n > 0)
-            sender_send(g_dbg_base.sender, (const uint8_t *)buf,
+            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
 
-    static uint8_t buf[160];
-    int pos = snprintf((char *)buf, sizeof(buf), "[rx]");
-    for (uint16_t i = 0; i < len && pos < (int)sizeof(buf) - 4; i++) {
-        pos += snprintf((char *)buf + pos, sizeof(buf) - (size_t)pos, " %02X", data[i]);
+    int pos = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf), "[rx]");
+    for (uint16_t i = 0; i < len &&
+                        pos < (int)sizeof(g_dbg.tx_buf) - 4; i++) {
+        pos += snprintf((char *)g_dbg.tx_buf + pos,
+                        sizeof(g_dbg.tx_buf) - (size_t)pos,
+                        " %02X", data[i]);
     }
-    pos += snprintf((char *)buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
-    sender_send(g_dbg_base.sender, buf, (uint16_t)pos,
-                SENDER_PRIO_CMD);
+    pos += snprintf((char *)g_dbg.tx_buf + pos,
+                    sizeof(g_dbg.tx_buf) - (size_t)pos, "\r\n");
+    sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                (uint16_t)pos, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -64,8 +71,8 @@ static void on_periodic_send(void *ctx)
 {
     (void)ctx;
     static const char alive[] = "alive\r\n";
-    if (g_dbg_base.sender)
-        sender_send(g_dbg_base.sender, (const uint8_t *)alive,
+    if (g_dbg.base.sender)
+        sender_send(g_dbg.base.sender, (const uint8_t *)alive,
                     sizeof(alive) - 1, SENDER_PRIO_NORM);
 }
 
@@ -88,9 +95,18 @@ static uint8_t debug_ops_init(module_t *m, void *cfg)
     return 0;
 }
 
+static uint8_t *debug_ops_get_rx_buf(module_t *m, uint16_t *size)
+{
+    debug_module_t *self = (debug_module_t *)m;
+    if (!self || !size) return NULL;
+    *size = sizeof(self->rx_buf);
+    return self->rx_buf;
+}
+
 static const module_ops_t debug_module_ops = {
-    .init  = debug_ops_init,
-    .start = NULL,
+    .init       = debug_ops_init,
+    .start      = NULL,
+    .get_rx_buf = debug_ops_get_rx_buf,
 };
 
 void debug_module_start(void)
@@ -102,8 +118,8 @@ void debug_module_start(void)
     DelayMs(1);
 #endif
 
-    g_dbg_base.ops = &debug_module_ops;
-    module_set_handler(&g_dbg_base, &debug_evt_table, NULL);
+    g_dbg.base.ops = &debug_module_ops;
+    module_set_handler(&g_dbg.base, &debug_evt_table, NULL);
 
     uart_encoder_cfg_t enc_cfg = {
         .port     = &uart1,
@@ -118,10 +134,10 @@ void debug_module_start(void)
 
     sender_cfg_t sender_cfg = {
         .encoder = &g_dbg_enc.base,
-        .bus     = &g_dbg_base.bus,
+        .bus     = &g_dbg.base.bus,
     };
     sender_init(&g_dbg_sender, &sender_cfg);
-    g_dbg_base.sender = &g_dbg_sender;
+    g_dbg.base.sender = &g_dbg_sender;
 
     uart_decoder_cfg_t dec_cfg = {
         .port     = &uart1,
@@ -136,13 +152,13 @@ void debug_module_start(void)
 
     timer_t *rx_timer = timer_hw_create(1);
     receiver_timeout_init(&g_dbg_rx, rx_timer, 5, NULL,
-                          g_dbg_rx_buf, sizeof(g_dbg_rx_buf));
-    receiver_set_bus(&g_dbg_rx.base, &g_dbg_base.bus);
+                          g_dbg.rx_buf, sizeof(g_dbg.rx_buf));
+    receiver_set_bus(&g_dbg_rx.base, &g_dbg.base.bus);
     uart_decoder_attach_receiver(&g_dbg_dec, &g_dbg_rx.base);
-    g_dbg_base.receiver = &g_dbg_rx.base;
+    g_dbg.base.receiver = &g_dbg_rx.base;
 
-    module_init(&g_dbg_base, &baudrate);
-    gateway_set_module(1, &g_dbg_base);
+    module_init(&g_dbg.base, &baudrate);
+    gateway_set_module(1, &g_dbg.base);
 
-    module_start(&g_dbg_base);
+    module_start(&g_dbg.base);
 }
