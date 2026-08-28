@@ -17,7 +17,7 @@
 #endif
 
 #define MODULE_MAX 5
-#define MODULE_EVENT_QUEUE_LEN 8
+#define MODULE_EVENT_QUEUE_LEN 4
 
 typedef struct module module_t;
 
