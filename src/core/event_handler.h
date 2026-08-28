@@ -14,7 +14,6 @@ typedef enum {
 
 typedef struct {
     event_type_t type;
-    uint8_t     *data;
     uint16_t     len;
     uint8_t      cmd_val;
     uint8_t      cmd_arg;
