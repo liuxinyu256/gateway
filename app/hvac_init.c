@@ -17,6 +17,7 @@
 #include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
+#include "debug_module.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
@@ -105,4 +106,6 @@ void hvac_start(void) {
 
     module_start(&g_ac.base);
     ac_module_start_scan(&g_ac);
+
+    debug_module_start();
 }
