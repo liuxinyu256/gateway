@@ -148,6 +148,10 @@ void gateway_on_state_change(state_change_cb cb, void *ctx) {
     g_gw.observer_count++;
 }
 
+uint16_t gateway_state_event_drop_count(void) {
+    return g_gw.state_event_drop_cnt;
+}
+
 uint8_t gateway_send_cmd(uint8_t module_id, uint8_t cmd, uint8_t val) {
     module_t *m = gateway_module(module_id);
     if (!m) return 1;

@@ -80,6 +80,7 @@ uint8_t gateway_module_state_get(uint8_t module_id,
                                  gateway_state_t *out);
 
 void     gateway_on_state_change(state_change_cb cb, void *ctx);
+uint16_t gateway_state_event_drop_count(void);
 module_t *gateway_module(uint8_t id);
 void      gateway_set_module(uint8_t id, module_t *m);
 
