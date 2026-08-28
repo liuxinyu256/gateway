@@ -21,10 +21,15 @@
 
 /* 空闲钩子：统计空闲 tick，用于计算 CPU 占用率 */
 static volatile uint32_t debug_idle_ticks;
+static TickType_t debug_last_idle_tick;
 
 void vApplicationIdleHook(void)
 {
-    debug_idle_ticks++;
+    TickType_t now = xTaskGetTickCount();
+    if (now != debug_last_idle_tick) {
+        debug_last_idle_tick = now;
+        debug_idle_ticks++;
+    }
 }
 
 typedef struct {
