@@ -46,33 +46,26 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     if (!g_dbg.base.sender)
         return 1;
 
-    /* 命令：C = CPU 占用率 */
-    if (len == 1 && (data[0] == 'C' || data[0] == 'c')) {
-        uint32_t total = xTaskGetTickCount();
+    /* 命令：P = CPU + RAM 占用率 */
+    if (len == 1 && (data[0] == 'P' || data[0] == 'p')) {
+        uint32_t total_tick = xTaskGetTickCount();
         uint32_t idle = debug_idle_ticks;
         uint32_t cpu = 0;
-        if (total > 0) {
-            uint32_t busy = total - (idle < total ? idle : total);
-            cpu = (busy * 100U) / total;
+        if (total_tick > 0) {
+            uint32_t busy = total_tick - (idle < total_tick ? idle : total_tick);
+            cpu = (busy * 100U) / total_tick;
         }
-        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
-                         "[cpu] %lu%%\r\n", (unsigned long)cpu);
-        if (n > 0)
-            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
-                        (uint16_t)n, SENDER_PRIO_CMD);
-        return 1;
-    }
 
-    /* 命令：R = RAM 占用率 */
-    if (len == 1 && (data[0] == 'R' || data[0] == 'r')) {
-        uint32_t total = (uint32_t)configTOTAL_HEAP_SIZE;
-        uint32_t free  = (uint32_t)xPortGetFreeHeapSize();
-        uint32_t used  = total - free;
-        uint32_t min_free = (uint32_t)xPortGetMinimumEverFreeHeapSize();
+        uint32_t ram_total = (uint32_t)configTOTAL_HEAP_SIZE;
+        uint32_t ram_free  = (uint32_t)xPortGetFreeHeapSize();
+        uint32_t ram_used  = ram_total - ram_free;
+        uint32_t ram_min   = (uint32_t)xPortGetMinimumEverFreeHeapSize();
+
         int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
-                         "[ram] used=%lu free=%lu total=%lu min=%lu\r\n",
-                         (unsigned long)used, (unsigned long)free,
-                         (unsigned long)total, (unsigned long)min_free);
+                         "[perf] cpu=%lu%% ram_used=%lu free=%lu total=%lu min=%lu\r\n",
+                         (unsigned long)cpu, (unsigned long)ram_used,
+                         (unsigned long)ram_free, (unsigned long)ram_total,
+                         (unsigned long)ram_min);
         if (n > 0)
             sender_send(g_dbg.base.sender, g_dbg.tx_buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
