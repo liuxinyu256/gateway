@@ -1,6 +1,8 @@
 #include "debug.h"
 #include "uart.h"
 #include "uart_instance.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
