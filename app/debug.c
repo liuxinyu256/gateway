@@ -8,8 +8,11 @@
 #include <stdio.h>
 #include <string.h>
 
+static SemaphoreHandle_t debug_mutex;
+
 void debug_init(void)
 {
+    debug_mutex = xSemaphoreCreateMutex();
     uart_cfg_t cfg = {
         .baudrate  = 115200,
         .data_bits = 8,
@@ -44,8 +47,15 @@ void debug_putc(char c)
 void debug_puts(const char *s)
 {
     if (!s) return;
+
+    if (debug_mutex)
+        xSemaphoreTake(debug_mutex, portMAX_DELAY);
+
     while (*s)
         debug_putc(*s++);
+
+    if (debug_mutex)
+        xSemaphoreGive(debug_mutex);
 }
 
 void debug_printf(const char *fmt, ...)
