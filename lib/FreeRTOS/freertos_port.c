@@ -6,7 +6,13 @@
  * 只需在 Keil 中添加这一个文件。
  *******************************************************************************/
 
+#ifdef __CC_ARM
+#pragma diag_suppress 940
+#endif
 #include "Source/tasks.c"
+#ifdef __CC_ARM
+#pragma diag_default 940
+#endif
 #include "Source/queue.c"
 #include "Source/list.c"
 #include "Source/timers.c"
