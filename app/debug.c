@@ -39,8 +39,10 @@ void debug_init(void)
 void debug_putc(char c)
 {
     if (c == '\n') {
+        while (!uart_irq_tx_ready(&uart1)) { }
         uart_write(&uart1, (uint8_t)'\r');
     }
+    while (!uart_irq_tx_ready(&uart1)) { }
     uart_write(&uart1, (uint8_t)c);
 }
 
