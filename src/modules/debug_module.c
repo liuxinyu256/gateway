@@ -73,10 +73,6 @@ void debug_module_start(void)
 #ifdef __CH579__
     SetSysClock(CLK_SOURCE_PLL_32MHz);
     DelayMs(1);
-    /* UART1 默认 PA8(RX)/PA9(TX) */
-    GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
-    GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
-    GPIOA_SetBits(GPIO_Pin_9);
 #endif
 
     g_dbg_base.ops = &debug_module_ops;

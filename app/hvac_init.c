@@ -46,9 +46,7 @@ void hvac_start(void) {
 
     /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA0 */
 #ifdef __CH579__
-    /* 绑定 CH579 GPIO：UART0 默认 PB4(RX)/PB7(TX)，PA0 作为 RS485 DE */
-    GPIOB_ModeCfg(GPIO_Pin_4, GPIO_ModeIN_PU);
-    GPIOB_ModeCfg(GPIO_Pin_7, GPIO_ModeOut_PP_5mA);
+    /* PA0 作为 RS485 DE，UART0 引脚由 uart_ch579.c 配置 */
     GPIOA_ModeCfg(GPIO_Pin_0, GPIO_ModeOut_PP_5mA);
     GPIOA_ResetBits(GPIO_Pin_0);
     bus_set_rs485_enable(&g_ac.base.bus, 1);

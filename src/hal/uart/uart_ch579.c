@@ -56,12 +56,42 @@ static void ch579_nvic_enable(uint8_t id)
 
 /* ---- 统一 ops 实现（通过 u->drv->id 区分 UART） ---- */
 
+/* 根据 UART 编号配置默认引脚 */
+static void ch579_gpio_init(uint8_t id)
+{
+    switch (id) {
+    case 0:
+        GPIOB_ModeCfg(GPIO_Pin_4, GPIO_ModeIN_PU);
+        GPIOB_ModeCfg(GPIO_Pin_7, GPIO_ModeOut_PP_5mA);
+        GPIOB_SetBits(GPIO_Pin_7);
+        break;
+    case 1:
+        GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
+        GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
+        GPIOA_SetBits(GPIO_Pin_9);
+        break;
+    case 2:
+        GPIOA_ModeCfg(GPIO_Pin_6, GPIO_ModeIN_PU);
+        GPIOA_ModeCfg(GPIO_Pin_7, GPIO_ModeOut_PP_5mA);
+        GPIOA_SetBits(GPIO_Pin_7);
+        break;
+    case 3:
+        GPIOA_ModeCfg(GPIO_Pin_4, GPIO_ModeIN_PU);
+        GPIOA_ModeCfg(GPIO_Pin_5, GPIO_ModeOut_PP_5mA);
+        GPIOA_SetBits(GPIO_Pin_5);
+        break;
+    default:
+        break;
+    }
+}
+
 static int ch579_configure(uart_t *u, const uart_cfg_t *cfg)
 {
     uint8_t id;
     if (!u || !cfg) return -1;
 
     id = ch579_id(u);
+    ch579_gpio_init(id);
     switch (id) {
     case 0:
         UART0_Reset(); UART0_DefInit(); UART0_BaudRateCfg(cfg->baudrate);
