@@ -6,7 +6,6 @@
  *   - 收到数据原样回显（测试接收+发送链路）
  */
 #include "debug_module.h"
-#include "debug.h"
 #include "module.h"
 #include "sender.h"
 #include "uart_encoder.h"
@@ -38,7 +37,6 @@ static void on_periodic_send(void *ctx)
 {
     (void)ctx;
     static const char alive[] = "alive\r\n";
-    debug_puts("[P]\r\n");
     if (g_dbg_base.sender)
         sender_send(g_dbg_base.sender, (const uint8_t *)alive,
                     sizeof(alive) - 1, SENDER_PRIO_NORM);
@@ -120,5 +118,4 @@ void debug_module_start(void)
     gateway_set_module(1, &g_dbg_base);
 
     module_start(&g_dbg_base);
-    debug_puts("[M]\r\n");
 }
