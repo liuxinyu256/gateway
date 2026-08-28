@@ -38,6 +38,7 @@ static void on_periodic_send(void *ctx)
 {
     (void)ctx;
     static const char alive[] = "alive\r\n";
+    debug_puts("[P]\r\n");
     if (g_dbg_base.sender)
         sender_send(g_dbg_base.sender, (const uint8_t *)alive,
                     sizeof(alive) - 1, SENDER_PRIO_NORM);
