@@ -16,13 +16,13 @@
 /* ============================================================
  * 板级选择：同一芯片、不同产品板子之间一键切换
  * ============================================================ */
-#define BSP_BOARD_CH579     0   /* 当前 CH579 通用板 */
+#define BSP_BOARD_A07S     0   /* A07S 产品板（CH579） */
 #define BSP_BOARD_MEIDI     1   /* 美的空调板 */
 #define BSP_BOARD_TOSHIBA   2   /* 东芝空调板 */
 #define BSP_BOARD_HAIER     3   /* 海尔多联机板 */
 
 #ifndef BSP_BOARD_SELECT
-#define BSP_BOARD_SELECT    BSP_BOARD_CH579
+#define BSP_BOARD_SELECT    BSP_BOARD_A07S
 #endif
 
 typedef struct bsp bsp_t;

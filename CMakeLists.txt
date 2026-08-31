@@ -132,7 +132,7 @@ if(CH579)
         app/isr.c
         src/bsp/bsp.c
         src/bsp/bsp_board.c
-        src/bsp/bsp_ch579.c
+        src/bsp/bsp_a07s.c
         src/modules/debug_module.c
         csp/CH579/startup_ARMCM0.s
         csp/CH579/StdPeriphDriver/CH57x_clk.c

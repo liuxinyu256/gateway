@@ -585,9 +585,9 @@
               <FilePath>.\src\bsp\bsp_board.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_ch579.c</FileName>
+              <FileName>bsp_a07s.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\bsp\bsp_ch579.c</FilePath>
+              <FilePath>.\src\bsp\bsp_a07s.c</FilePath>
             </File>
           </Files>
         </Group>

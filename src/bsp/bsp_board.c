@@ -10,10 +10,10 @@
  */
 #include "bsp.h"
 
-#if BSP_BOARD_SELECT == BSP_BOARD_CH579
-#include "bsp_ch579.h"
-static uint8_t board_init(void) { return bsp_ch579_board_init(); }
-static bsp_t *board_get(void)   { return bsp_ch579_board_get(); }
+#if BSP_BOARD_SELECT == BSP_BOARD_A07S
+#include "bsp_a07s.h"
+static uint8_t board_init(void) { return bsp_a07s_board_init(); }
+static bsp_t *board_get(void)   { return bsp_a07s_board_get(); }
 
 #elif BSP_BOARD_SELECT == BSP_BOARD_MEIDI
 /* TODO: bsp_meidi.c 实现后打开 */
