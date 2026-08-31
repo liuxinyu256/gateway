@@ -12,13 +12,13 @@
 
 typedef struct gpio gpio_t;
 
-/* 与 CH57x 库模式对应，保持平台无关 */
+/* 统一的 GPIO 模式；具体平台驱动负责映射到自己的寄存器/库 */
 typedef enum {
-    GPIO_MODE_IN_FLOATING = 0,
-    GPIO_MODE_IN_PU,
-    GPIO_MODE_IN_PD,
-    GPIO_MODE_OUT_PP_5MA,
-    GPIO_MODE_OUT_PP_20MA,
+    GPIO_MODE_INPUT = 0,        /* 高阻输入 */
+    GPIO_MODE_INPUT_PULLUP,     /* 上拉输入 */
+    GPIO_MODE_INPUT_PULLDOWN,   /* 下拉输入 */
+    GPIO_MODE_OUTPUT_PP,        /* 推挽输出 */
+    GPIO_MODE_OUTPUT_OD,        /* 开漏输出（平台不支持时 init 返回失败） */
 } gpio_mode_t;
 
 typedef struct gpio_ops {
@@ -34,9 +34,9 @@ struct gpio {
 
 /* 平台无关的 GPIO 配置 */
 typedef struct {
-    uint8_t  port;      /* 0=GPIOA, 1=GPIOB */
-    uint32_t pin;       /* GPIO_Pin_x */
-    uint8_t  mode;      /* gpio_mode_t */
+    uint8_t  port;       /* 端口号：平台相关（CH579: 0=GPIOA, 1=GPIOB） */
+    uint32_t pin;        /* 引脚号：平台相关（CH579: GPIO_Pin_x） */
+    uint8_t  mode;       /* gpio_mode_t */
     uint8_t  init_level; /* 0=低, 1=高 */
 } gpio_cfg_t;
 

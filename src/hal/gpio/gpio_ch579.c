@@ -51,16 +51,17 @@ static uint8_t ch579_init(gpio_t *g, const void *cfg)
     self->port = c->port;
     self->pin  = c->pin;
 
-    /* 按平台无关模式映射到 CH57x GPIOModeTypeDef */
+    /* 平台无关模式 -> CH57x 库模式 */
     {
         GPIOModeTypeDef m;
         switch (c->mode) {
-        case GPIO_MODE_IN_FLOATING: m = GPIO_ModeIN_Floating; break;
-        case GPIO_MODE_IN_PU:       m = GPIO_ModeIN_PU;       break;
-        case GPIO_MODE_IN_PD:       m = GPIO_ModeIN_PD;       break;
-        case GPIO_MODE_OUT_PP_20MA: m = GPIO_ModeOut_PP_20mA; break;
-        case GPIO_MODE_OUT_PP_5MA:
-        default:                    m = GPIO_ModeOut_PP_5mA;  break;
+        case GPIO_MODE_INPUT:         m = GPIO_ModeIN_Floating; break;
+        case GPIO_MODE_INPUT_PULLUP:  m = GPIO_ModeIN_PU;       break;
+        case GPIO_MODE_INPUT_PULLDOWN: m = GPIO_ModeIN_PD;      break;
+        case GPIO_MODE_OUTPUT_PP:     m = GPIO_ModeOut_PP_5mA;  break;
+        case GPIO_MODE_OUTPUT_OD:
+        default:
+            return 1;   /* CH579 无开漏模式/未知模式 */
         }
 
         if (self->port == 1)

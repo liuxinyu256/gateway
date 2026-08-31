@@ -20,7 +20,7 @@ static uint8_t ch579_init(rs485_t *rs, const void *cfg)
     gpio_cfg_t de_cfg = {
         .port       = c->port,
         .pin        = c->de_pin,
-        .mode       = GPIO_MODE_OUT_PP_5MA,
+        .mode       = GPIO_MODE_OUTPUT_PP,
         .init_level = 0,
     };
     return gpio_ch579_init(&self->de, &de_cfg);
