@@ -16,6 +16,8 @@
 #include "timer.h"
 #include "timer_instance.h"
 #include "led.h"
+#include "bsp.h"
+#include "gateway.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
@@ -97,6 +99,44 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         if (n > 0)
             sender_send(g_dbg.base.sender, g_dbg.tx_buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
+    }
+
+    /* 命令：T[0|1|2] = 485 测试，切换品牌并发一帧测试数据
+     *   T0/美的  T1/东芝  T2/海尔
+     */
+    if ((data[0] == 'T' || data[0] == 't') && (len == 1 || len == 2)) {
+        bsp_ac_brand_t brand = BSP_AC_MEIDI;
+        const char *brand_name = "meidi";
+
+        if (len == 2) {
+            if (data[1] == '1') { brand = BSP_AC_TOSHIBA; brand_name = "toshiba"; }
+            else if (data[1] == '2') { brand = BSP_AC_HAIER; brand_name = "haier"; }
+        }
+
+        bsp_ac_select(bsp_board_get(), brand);
+
+        static const uint8_t test_frame[] = {
+            0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x0A, 0x0B
+        };
+
+        module_t *ac = gateway_module(0);
+        if (ac && ac->sender) {
+            sender_send(ac->sender, test_frame, sizeof(test_frame),
+                        SENDER_PRIO_CMD);
+            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                             "[test] brand=%s send %uB\r\n",
+                             brand_name, (unsigned)sizeof(test_frame));
+            if (n > 0)
+                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                            (uint16_t)n, SENDER_PRIO_CMD);
+        } else {
+            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                             "[test] ac not ready\r\n");
+            if (n > 0)
+                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                            (uint16_t)n, SENDER_PRIO_CMD);
+        }
         return 1;
     }
 
