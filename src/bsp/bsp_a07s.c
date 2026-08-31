@@ -1,7 +1,8 @@
 /**
- * bsp_a07s.c —— CH579 板级硬件实现
+ * bsp_a07s.c —— A07S 板级硬件实现
  *
- * 所有 GPIO 操作统一走 GPIO HAL，隔离具体引脚/电路差异。
+ * A07S 不涉及美的/东芝/海尔品牌选择电路，只配置 485 电路。
+ * 所有 GPIO 操作统一走 GPIO HAL。
  */
 #include "bsp_a07s.h"
 #include "gpio_instance.h"
@@ -34,27 +35,8 @@ static uint8_t ch579_init(bsp_t *hw, const void *cfg)
     if (!self)
         return 1;
 
-    /* 声明本板能力：支持 485，不支持品牌电路切换 */
+    /* 声明本板能力：只支持 485，无品牌电路切换 */
     hw->caps = BSP_CAP_RS485;
-
-    /* 关闭海尔多联机通讯电路 */
-    cfg_pin(&self->pb8, GPIO_PORT_B, 8,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);
-
-    /* PB11/PB21 浮空输入 */
-    cfg_pin(&self->pb11, GPIO_PORT_B, 11, GPIO_MODE_INPUT, GPIO_LEVEL_LOW);
-    cfg_pin(&self->pb21, GPIO_PORT_B, 21, GPIO_MODE_INPUT, GPIO_LEVEL_LOW);
-
-    /* 关闭 120 电阻 */
-    cfg_pin(&self->pb1, GPIO_PORT_B, 1,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);
-
-    /* PA14 浮空输入 */
-    cfg_pin(&self->pa14, GPIO_PORT_A, 14, GPIO_MODE_INPUT, GPIO_LEVEL_LOW);
-
-    /* 关掉东芝电路，电源先选择美的 */
-    cfg_pin(&self->pb9, GPIO_PORT_B, 9,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_HIGH);
-
-    /* PA15 浮空输入，接收口选择美的 */
-    cfg_pin(&self->pa15, GPIO_PORT_A, 15, GPIO_MODE_INPUT, GPIO_LEVEL_LOW);
 
     /* 打开 485 电路 */
     cfg_pin(&self->pb6, GPIO_PORT_B, 6,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);
