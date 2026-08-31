@@ -3,6 +3,8 @@
 
 #ifdef __CH579__
 #include "CH57x_common.h"
+#include "gpio.h"
+#include "gpio_instance.h"
 
 /* ---- 公共工具 ---- */
 
@@ -56,29 +58,42 @@ static void ch579_nvic_enable(uint8_t id)
 
 /* ---- 统一 ops 实现（通过 u->drv->id 区分 UART） ---- */
 
+/* 通过 GPIO HAL 配置一个引脚 */
+static void ch579_gpio_cfg(uint8_t port, uint8_t pin_idx,
+                           uint8_t mode, gpio_level_t init_level)
+{
+    gpio_t *g = gpio_get(port, pin_idx);
+    gpio_cfg_t cfg;
+
+    if (!g)
+        return;
+
+    cfg.port       = port;
+    cfg.pin        = (uint32_t)(1u << pin_idx);
+    cfg.mode       = mode;
+    cfg.init_level = init_level;
+    gpio_init(g, &cfg);
+}
+
 /* 根据 UART 编号配置默认引脚 */
 static void ch579_gpio_init(uint8_t id)
 {
     switch (id) {
-    case 0:
-        GPIOB_ModeCfg(GPIO_Pin_4, GPIO_ModeIN_PU);
-        GPIOB_ModeCfg(GPIO_Pin_7, GPIO_ModeOut_PP_5mA);
-        GPIOB_SetBits(GPIO_Pin_7);
+    case 0: /* UART0: RX=PB4, TX=PB7 */
+        ch579_gpio_cfg(GPIO_PORT_B, 4, GPIO_MODE_INPUT_PULLUP, GPIO_LEVEL_LOW);
+        ch579_gpio_cfg(GPIO_PORT_B, 7, GPIO_MODE_OUTPUT_PP,    GPIO_LEVEL_HIGH);
         break;
-    case 1:
-        GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
-        GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
-        GPIOA_SetBits(GPIO_Pin_9);
+    case 1: /* UART1: RX=PA8, TX=PA9 */
+        ch579_gpio_cfg(GPIO_PORT_A, 8, GPIO_MODE_INPUT_PULLUP, GPIO_LEVEL_LOW);
+        ch579_gpio_cfg(GPIO_PORT_A, 9, GPIO_MODE_OUTPUT_PP,    GPIO_LEVEL_HIGH);
         break;
-    case 2:
-        GPIOA_ModeCfg(GPIO_Pin_6, GPIO_ModeIN_PU);
-        GPIOA_ModeCfg(GPIO_Pin_7, GPIO_ModeOut_PP_5mA);
-        GPIOA_SetBits(GPIO_Pin_7);
+    case 2: /* UART2: RX=PA6, TX=PA7 */
+        ch579_gpio_cfg(GPIO_PORT_A, 6, GPIO_MODE_INPUT_PULLUP, GPIO_LEVEL_LOW);
+        ch579_gpio_cfg(GPIO_PORT_A, 7, GPIO_MODE_OUTPUT_PP,    GPIO_LEVEL_HIGH);
         break;
-    case 3:
-        GPIOA_ModeCfg(GPIO_Pin_4, GPIO_ModeIN_PU);
-        GPIOA_ModeCfg(GPIO_Pin_5, GPIO_ModeOut_PP_5mA);
-        GPIOA_SetBits(GPIO_Pin_5);
+    case 3: /* UART3: RX=PA4, TX=PA5 */
+        ch579_gpio_cfg(GPIO_PORT_A, 4, GPIO_MODE_INPUT_PULLUP, GPIO_LEVEL_LOW);
+        ch579_gpio_cfg(GPIO_PORT_A, 5, GPIO_MODE_OUTPUT_PP,    GPIO_LEVEL_HIGH);
         break;
     default:
         break;
