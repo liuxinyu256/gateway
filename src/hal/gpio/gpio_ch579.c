@@ -9,19 +9,19 @@
 #ifdef __CH579__
 #include "CH57x_common.h"
 
-static void ch579_set(gpio_t *g, uint8_t level)
+static void ch579_set(gpio_t *g, gpio_level_t level)
 {
     gpio_ch579_t *self = (gpio_ch579_t *)g;
     if (!self)
         return;
 
     if (self->port == 1) {
-        if (level)
+        if (level == GPIO_LEVEL_HIGH)
             GPIOB_SetBits(self->pin);
         else
             GPIOB_ResetBits(self->pin);
     } else {
-        if (level)
+        if (level == GPIO_LEVEL_HIGH)
             GPIOA_SetBits(self->pin);
         else
             GPIOA_ResetBits(self->pin);
@@ -70,7 +70,7 @@ static uint8_t ch579_init(gpio_t *g, const void *cfg)
             GPIOA_ModeCfg(self->pin, m);
     }
 
-    ch579_set(g, c->init_level ? 1 : 0);
+    ch579_set(g, c->init_level);
     return 0;
 }
 

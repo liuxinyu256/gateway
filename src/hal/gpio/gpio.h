@@ -21,9 +21,15 @@ typedef enum {
     GPIO_MODE_OUTPUT_OD,        /* 开漏输出（平台不支持时 init 返回失败） */
 } gpio_mode_t;
 
+/* 统一的 GPIO 电平 */
+typedef enum {
+    GPIO_LEVEL_LOW = 0,
+    GPIO_LEVEL_HIGH,
+} gpio_level_t;
+
 typedef struct gpio_ops {
     uint8_t (*init)(gpio_t *g, const void *cfg);
-    void    (*set)(gpio_t *g, uint8_t level);     /* 0=低, 非0=高 */
+    void    (*set)(gpio_t *g, gpio_level_t level);
     void    (*toggle)(gpio_t *g);
 } gpio_ops_t;
 
@@ -34,14 +40,14 @@ struct gpio {
 
 /* 平台无关的 GPIO 配置 */
 typedef struct {
-    uint8_t  port;       /* 端口号：平台相关（CH579: 0=GPIOA, 1=GPIOB） */
-    uint32_t pin;        /* 引脚号：平台相关（CH579: GPIO_Pin_x） */
-    uint8_t  mode;       /* gpio_mode_t */
-    uint8_t  init_level; /* 0=低, 1=高 */
+    uint8_t      port;       /* 端口号：平台相关（CH579: 0=GPIOA, 1=GPIOB） */
+    uint32_t     pin;        /* 引脚号：平台相关（CH579: GPIO_Pin_x） */
+    uint8_t      mode;       /* gpio_mode_t */
+    gpio_level_t init_level; /* 初始电平 */
 } gpio_cfg_t;
 
 uint8_t gpio_init(gpio_t *g, const gpio_cfg_t *cfg);
-void    gpio_set(gpio_t *g, uint8_t level);
+void    gpio_set(gpio_t *g, gpio_level_t level);
 void    gpio_toggle(gpio_t *g);
 
 #endif /* GPIO_H */

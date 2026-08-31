@@ -10,7 +10,7 @@ uint8_t gpio_init(gpio_t *g, const gpio_cfg_t *cfg)
     return g->ops->init(g, cfg);
 }
 
-void gpio_set(gpio_t *g, uint8_t level)
+void gpio_set(gpio_t *g, gpio_level_t level)
 {
     if (!g || !g->ops || !g->ops->set)
         return;

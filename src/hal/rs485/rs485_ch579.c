@@ -21,7 +21,7 @@ static uint8_t ch579_init(rs485_t *rs, const void *cfg)
         .port       = c->port,
         .pin        = c->de_pin,
         .mode       = GPIO_MODE_OUTPUT_PP,
-        .init_level = 0,
+        .init_level = GPIO_LEVEL_LOW,
     };
     return gpio_ch579_init(&self->de, &de_cfg);
 }
@@ -32,7 +32,8 @@ static void ch579_set_dir(rs485_t *rs, uint8_t tx)
     if (!self)
         return;
 
-    gpio_set(&self->de.base, tx ? 1 : 0);
+    gpio_set(&self->de.base,
+             tx ? GPIO_LEVEL_HIGH : GPIO_LEVEL_LOW);
 }
 
 const rs485_ops_t rs485_ch579_ops = {
