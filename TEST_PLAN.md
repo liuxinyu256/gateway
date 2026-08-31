@@ -12,7 +12,7 @@
 |---|------|------|----------|
 | 0.1 | [P0] Keil 全量编译 | Rebuild gateway.uvprojx | 0 Error; warning 逐条过目, 与 git 记录一致 |
 | 0.2 | [P0] **定时器中断优先级补丁** | 见附A-R1。`timer_ch579.c` 只 Enable 没 SetPriority, 复位默认级 0 违反 `configMAX_SYSCALL`(=1)。先改码再上板 | TMR0-3 均 `NVIC_SetPriority(x, 1)` 后再 Enable |
-| 0.3 | [P0] 引脚核对 | 对照原理图: UART0 RX=PB4(TTL上拉入), TX=PB7, DE=PA0; UART1 debug PA8(RX)/PA9(TX); 485 收发器 A/B、偏置电阻 | 实物接线 = hvac_init.c/debug.c 配置 |
+| 0.3 | [P0] 引脚核对 | 对照原理图: UART0 RX=PB4(TTL上拉入), TX=PB7, DE=PA1; UART1 debug PA8(RX)/PA9(TX); 485 收发器 A/B、偏置电阻 | 实物接线 = hvac_init.c/debug.c 配置 |
 | 0.4 | [P1] 485 收发器 /RE 接法 | 查图纸: /RE 若恒接地(接收常开)则自发自收, 见附A-R2 | DE 与 /RE 同源控制; 否则记录为已知问题 |
 
 ## T1 上电 Bring-up
@@ -22,7 +22,7 @@
 | 1.1 | [P0] 系统启动 | 烧录, UART1@115200 接终端 | 看到 `[GW] boot`, 调度器起后不再回车刷屏(不死循环/不 hardfault) |
 | 1.2 | [P0] 调度存活 | 静置 1min, 观察任务运行 | rx/tx/gwstate/idle/tmrsvc 均被调度, 无任务饿死表现 |
 | 1.3 | [P0] 单字节收 | USB-485 工具发 1 字节, UART1 加临时日志或示波器看 PB4 | 字节进入 ring, `bus_mark_rx_busy` 生效(bus.busy=1), 日志计数 +1 |
-| 1.4 | [P0] 单帧发 | 临时注入一帧测试查询(6B), 示波器抓 TX+PA0 | 帧完整发出; DE 发送前拉高、`STA_TXALL_EMP` 后拉低 |
+| 1.4 | [P0] 单帧发 | 临时注入一帧测试查询(6B), 示波器抓 TX+PA1 | 帧完整发出; DE 发送前拉高、`STA_TXALL_EMP` 后拉低 |
 
 ## T2 FreeRTOS ISR 路径 (模拟器未覆盖分支)
 
@@ -34,7 +34,7 @@
 | 2.4 | [P1] 任务栈高水位 | `uxTaskGetStackHighWaterMark` 定期经 UART1 打印(rx/tx/gwstate 各 256 words) | 余量 > 20%; 注意 `module_handle_rx` 还有 128B 局部 buf |
 | 2.5 | [P2] 中断负载 | 逻辑分析仪测 UART0/TMR0 ISR 单次时长 | 单次 < 100us 量级; 高流量下 SysTick 无明显抖动 |
 
-## T3 RS485 半双工时序 (示波器双通道: TX 数据线 + PA0)
+## T3 RS485 半双工时序 (示波器双通道: TX 数据线 + PA1)
 
 | # | 项目 | 步骤 | 通过标准 |
 |---|------|------|----------|

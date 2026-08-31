@@ -21,6 +21,7 @@ set(HAL_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/src/hal/frame
     ${CMAKE_SOURCE_DIR}/src/hal/uart
     ${CMAKE_SOURCE_DIR}/src/hal/timer
+    ${CMAKE_SOURCE_DIR}/src/hal/led
 )
 
 # ============================================================
@@ -49,6 +50,7 @@ endif()
 if(CH579)
     target_compile_definitions(hal_core PUBLIC __CH579__)
     target_sources(hal_core PRIVATE
+        src/hal/led/led_ch579.c
         src/hal/uart/uart_ch579.c
         src/hal/timer/timer_ch579.c
         src/hal/timer/timer_hw.c

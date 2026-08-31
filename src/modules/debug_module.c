@@ -15,6 +15,7 @@
 #include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
+#include "led.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
@@ -121,6 +122,7 @@ static void on_periodic_send(void *ctx)
 {
     (void)ctx;
     static const char alive[] = "alive\r\n";
+    halLedRunBlink();   /* 每次 alive 翻转一次运行 LED */
     if (g_dbg.base.sender)
         sender_send(g_dbg.base.sender, (const uint8_t *)alive,
                     sizeof(alive) - 1, SENDER_PRIO_NORM);
@@ -167,6 +169,8 @@ void debug_module_start(void)
     SetSysClock(CLK_SOURCE_PLL_32MHz);
     DelayMs(1);
 #endif
+
+    halLedInit();   /* 运行 LED 初始化 */
 
     g_dbg.base.ops = &debug_module_ops;
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);

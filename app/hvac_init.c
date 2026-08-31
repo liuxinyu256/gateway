@@ -23,14 +23,15 @@
 #endif
 
 #ifdef __CH579__
-/* RS485 DE 方向控制：PA0 高电平=发送，低电平=接收 */
+/* RS485 DE 方向控制：PA1 高电平=发送，低电平=接收
+ * (PA0 已改为运行 LED，不能再做 DE) */
 static void hvac_rs485_dir(uint8_t tx, void *ctx)
 {
     (void)ctx;
     if (tx)
-        GPIOA_SetBits(GPIO_Pin_0);
+        GPIOA_SetBits(GPIO_Pin_1);
     else
-        GPIOA_ResetBits(GPIO_Pin_0);
+        GPIOA_ResetBits(GPIO_Pin_1);
 }
 #endif
 
@@ -44,11 +45,11 @@ static uint8_t            g_hvac_rx_buf[128];
 void hvac_start(void) {
     gateway_init();
 
-    /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA0 */
+    /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA1 */
 #ifdef __CH579__
-    /* PA0 作为 RS485 DE，UART0 引脚由 uart_ch579.c 配置 */
-    GPIOA_ModeCfg(GPIO_Pin_0, GPIO_ModeOut_PP_5mA);
-    GPIOA_ResetBits(GPIO_Pin_0);
+    /* PA1 作为 RS485 DE，UART0 引脚由 uart_ch579.c 配置 */
+    GPIOA_ModeCfg(GPIO_Pin_1, GPIO_ModeOut_PP_5mA);
+    GPIOA_ResetBits(GPIO_Pin_1);
     bus_set_rs485_enable(&g_ac.base.bus, 1);
     bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, NULL);
 #endif
