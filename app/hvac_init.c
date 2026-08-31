@@ -56,8 +56,6 @@ void hvac_start(void) {
         };
         rs485_ch579_init(&g_hvac_rs485, &rs_cfg);
     }
-    bus_set_rs485_enable(&g_ac.base.bus, 1);
-    bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, &g_hvac_rs485.base);
 #endif
 
     /* TX：上层创建 UART 编码器和 sender 并注入 */
@@ -107,6 +105,13 @@ void hvac_start(void) {
     };
 
     module_init(&g_ac.base, &cfg);
+
+#ifdef __CH579__
+    /* 必须在 module_init 之后设置：module_base_init 会 bus_init 清零 */
+    bus_set_rs485_enable(&g_ac.base.bus, 1);
+    bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, &g_hvac_rs485.base);
+#endif
+
     gateway_set_module(0, &g_ac.base);
 
     module_start(&g_ac.base);

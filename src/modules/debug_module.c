@@ -110,6 +110,16 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 
         module_t *ac = gateway_module(0);
         if (ac && ac->sender) {
+            int dn = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                              "[dbg] ac bus rs485=%u busy=%u dir=%p gap=%u\r\n",
+                              (unsigned)ac->bus.rs485_enable,
+                              (unsigned)ac->bus.busy,
+                              (void *)ac->bus.set_dir,
+                              (unsigned)ac->bus.gap_ms);
+            if (dn > 0)
+                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                            (uint16_t)dn, SENDER_PRIO_CMD);
+
             uint8_t ret = sender_send(ac->sender, test_frame,
                                       sizeof(test_frame), SENDER_PRIO_CMD);
             int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
