@@ -130,6 +130,7 @@ if(CH579)
         app/main.c
         app/hvac_init.c
         app/isr.c
+        app/board_hw.c
         src/modules/debug_module.c
         bsp/CH579/startup_ARMCM0.s
         bsp/CH579/StdPeriphDriver/CH57x_clk.c

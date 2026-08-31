@@ -338,7 +338,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>__CH579__;DEBUG</Define>
+              <Define>__CH579__,DEBUG</Define>
               <Undefine></Undefine>
               <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\core;.\src\modules;.\src\brands;.\app;.\bsp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0</IncludePath>
             </VariousControls>
@@ -384,231 +384,236 @@
         <Group>
           <GroupName>app</GroupName>
           <Files>
-        <File>
-          <FileName>main.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\app\main.c</FilePath>
-        </File>
-        <File>
-          <FileName>hvac_init.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\app\hvac_init.c</FilePath>
-        </File>
-        <File>
-          <FileName>debug.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\app\debug.c</FilePath>
-        </File>
-        <File>
-          <FileName>isr.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\app\isr.c</FilePath>
-        </File>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\app\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>hvac_init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\app\hvac_init.c</FilePath>
+            </File>
+            <File>
+              <FileName>debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\app\debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\app\isr.c</FilePath>
+            </File>
+            <File>
+              <FileName>board_hw.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\app\board_hw.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/queue</GroupName>
           <Files>
-        <File>
-          <FileName>ring.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\queue\ring.c</FilePath>
-        </File>
-        <File>
-          <FileName>frame_queue.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\queue\frame_queue.c</FilePath>
-        </File>
+            <File>
+              <FileName>ring.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\queue\ring.c</FilePath>
+            </File>
+            <File>
+              <FileName>frame_queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\queue\frame_queue.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/bus</GroupName>
           <Files>
-        <File>
-          <FileName>bus.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\bus\bus.c</FilePath>
-        </File>
+            <File>
+              <FileName>bus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\bus\bus.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/comm</GroupName>
           <Files>
-        <File>
-          <FileName>decoder.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\comm\decoder.c</FilePath>
-        </File>
-        <File>
-          <FileName>encoder.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\comm\encoder.c</FilePath>
-        </File>
-        <File>
-          <FileName>uart_decoder.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\comm\uart_decoder.c</FilePath>
-        </File>
-        <File>
-          <FileName>uart_encoder.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\comm\uart_encoder.c</FilePath>
-        </File>
+            <File>
+              <FileName>decoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\comm\decoder.c</FilePath>
+            </File>
+            <File>
+              <FileName>encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\comm\encoder.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_decoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\comm\uart_decoder.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\comm\uart_encoder.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/frame</GroupName>
           <Files>
-        <File>
-          <FileName>receiver.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\frame\receiver.c</FilePath>
-        </File>
-        <File>
-          <FileName>receiver_timeout.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\frame\receiver_timeout.c</FilePath>
-        </File>
-        <File>
-          <FileName>sender.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\frame\sender.c</FilePath>
-        </File>
+            <File>
+              <FileName>receiver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\frame\receiver.c</FilePath>
+            </File>
+            <File>
+              <FileName>receiver_timeout.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\frame\receiver_timeout.c</FilePath>
+            </File>
+            <File>
+              <FileName>sender.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\frame\sender.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/uart</GroupName>
           <Files>
-        <File>
-          <FileName>uart.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\uart\uart.c</FilePath>
-        </File>
-        <File>
-          <FileName>uart_instance.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\uart\uart_instance.c</FilePath>
-        </File>
-        <File>
-          <FileName>uart_ch579.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\uart\uart_ch579.c</FilePath>
-        </File>
+            <File>
+              <FileName>uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\uart\uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_instance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\uart\uart_instance.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_ch579.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\uart\uart_ch579.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/timer</GroupName>
           <Files>
-        <File>
-          <FileName>timer.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\timer\timer.c</FilePath>
-        </File>
-        <File>
-          <FileName>timer_instance.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\timer\timer_instance.c</FilePath>
-        </File>
-        <File>
-          <FileName>timer_ch579.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\timer\timer_ch579.c</FilePath>
-        </File>
-        <File>
-          <FileName>timer_hw.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\timer\timer_hw.c</FilePath>
-        </File>
-        <File>
-          <FileName>timer_soft.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\timer\timer_soft.c</FilePath>
-        </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\timer\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer_instance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\timer\timer_instance.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer_ch579.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\timer\timer_ch579.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer_hw.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\timer\timer_hw.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer_soft.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\timer\timer_soft.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/led</GroupName>
           <Files>
-        <File>
-          <FileName>led_ch579.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\led\led_ch579.c</FilePath>
-        </File>
+            <File>
+              <FileName>led_ch579.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\led\led_ch579.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/rs485</GroupName>
           <Files>
-        <File>
-          <FileName>rs485.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\rs485\rs485.c</FilePath>
-        </File>
-        <File>
-          <FileName>rs485_ch579.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\rs485\rs485_ch579.c</FilePath>
-        </File>
+            <File>
+              <FileName>rs485.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\rs485\rs485.c</FilePath>
+            </File>
+            <File>
+              <FileName>rs485_ch579.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\rs485\rs485_ch579.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>HAL/gpio</GroupName>
           <Files>
-        <File>
-          <FileName>gpio.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\gpio\gpio.c</FilePath>
-        </File>
-        <File>
-          <FileName>gpio_instance.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\gpio\gpio_instance.c</FilePath>
-        </File>
-        <File>
-          <FileName>gpio_ch579.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\hal\gpio\gpio_ch579.c</FilePath>
-        </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\gpio\gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_instance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\gpio\gpio_instance.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_ch579.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\gpio\gpio_ch579.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>core</GroupName>
           <Files>
-        <File>
-          <FileName>module.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\core\module.c</FilePath>
-        </File>
-        <File>
-          <FileName>gateway_device.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\core\gateway_device.c</FilePath>
-        </File>
+            <File>
+              <FileName>module.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\core\module.c</FilePath>
+            </File>
+            <File>
+              <FileName>gateway_device.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\core\gateway_device.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>modules</GroupName>
           <Files>
-        <File>
-          <FileName>ac_module.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\modules\ac_module.c</FilePath>
-        </File>
-        <File>
-          <FileName>wireless_module.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\modules\wireless_module.c</FilePath>
-        </File>
-        <File>
-          <FileName>third_party_module.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\modules\third_party_module.c</FilePath>
-        </File>
-        <File>
-          <FileName>wifi_module.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\modules\wifi_module.c</FilePath>
-        </File>
+            <File>
+              <FileName>ac_module.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\modules\ac_module.c</FilePath>
+            </File>
+            <File>
+              <FileName>wireless_module.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\modules\wireless_module.c</FilePath>
+            </File>
+            <File>
+              <FileName>third_party_module.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\modules\third_party_module.c</FilePath>
+            </File>
+            <File>
+              <FileName>wifi_module.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\modules\wifi_module.c</FilePath>
+            </File>
             <File>
               <FileName>debug_module.c</FileName>
               <FileType>1</FileType>
@@ -619,121 +624,119 @@
         <Group>
           <GroupName>brands</GroupName>
           <Files>
-        <File>
-          <FileName>ac_gree.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\src\brands\ac_gree.c</FilePath>
-        </File>
+            <File>
+              <FileName>ac_gree.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\brands\ac_gree.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>FreeRTOS</GroupName>
           <Files>
-        <File>
-          <FileName>freertos_port.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\lib\FreeRTOS\freertos_port.c</FilePath>
-        </File>
+            <File>
+              <FileName>freertos_port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lib\FreeRTOS\freertos_port.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>SRC/Startup</GroupName>
           <Files>
-        <File>
-          <FileName>startup_ARMCM0.s</FileName>
-          <FileType>2</FileType>
-          <FilePath>.\bsp\CH579\startup_ARMCM0.s</FilePath>
-        </File>
+            <File>
+              <FileName>startup_ARMCM0.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\bsp\CH579\startup_ARMCM0.s</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>SRC/StdPeriphDriver</GroupName>
           <Files>
-        <File>
-          <FileName>CH57x_clk.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_clk.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_gpio.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_gpio.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_pwr.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwr.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_sys.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_sys.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_uart0.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart0.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_uart1.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart1.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_uart2.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart2.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_uart3.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart3.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_int.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_int.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_flash.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_flash.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_adc.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_adc.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_timer0.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer0.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_timer1.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer1.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_timer2.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer2.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_timer3.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer3.c</FilePath>
-        </File>
-        <File>
-          <FileName>CH57x_pwm.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwm.c</FilePath>
-        </File>
+            <File>
+              <FileName>CH57x_clk.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_clk.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_pwr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwr.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_sys.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_sys.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_uart0.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart0.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_uart1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart1.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_uart2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart2.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_uart3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart3.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_int.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_int.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_timer0.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer0.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_timer1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer1.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_timer2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer2.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_timer3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer3.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57x_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwm.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
-
-
     </Target>
   </Targets>
 

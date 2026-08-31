@@ -20,6 +20,7 @@
 #include "debug_module.h"
 #include "rs485.h"
 #include "rs485_ch579.h"
+#include "board_hw.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
@@ -42,6 +43,8 @@ static uint8_t            g_hvac_rx_buf[128];
 
 void hvac_start(void) {
     gateway_init();
+
+    board_hw_init();   /* AC 模块外围电路选择：先打开 485 电路等 */
 
     /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA1 */
 #ifdef __CH579__
