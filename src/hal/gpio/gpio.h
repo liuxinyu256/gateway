@@ -30,7 +30,9 @@ typedef enum {
 typedef struct gpio_ops {
     uint8_t (*init)(gpio_t *g, const void *cfg);
     void    (*deinit)(gpio_t *g);
+    void    (*reset)(gpio_t *g);                 /* 恢复 init 时的模式/初始电平，不释放 */
     void    (*set)(gpio_t *g, gpio_level_t level);
+    gpio_level_t (*get)(gpio_t *g);
     void    (*toggle)(gpio_t *g);
 } gpio_ops_t;
 
@@ -49,7 +51,9 @@ typedef struct {
 
 uint8_t gpio_init(gpio_t *g, const gpio_cfg_t *cfg);
 void    gpio_deinit(gpio_t *g);
+void    gpio_reset(gpio_t *g);
 void    gpio_set(gpio_t *g, gpio_level_t level);
+gpio_level_t gpio_get(gpio_t *g);
 void    gpio_toggle(gpio_t *g);
 
 #endif /* GPIO_H */
