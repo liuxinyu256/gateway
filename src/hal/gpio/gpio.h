@@ -29,6 +29,7 @@ typedef enum {
 
 typedef struct gpio_ops {
     uint8_t (*init)(gpio_t *g, const void *cfg);
+    void    (*deinit)(gpio_t *g);
     void    (*set)(gpio_t *g, gpio_level_t level);
     void    (*toggle)(gpio_t *g);
 } gpio_ops_t;
@@ -47,6 +48,7 @@ typedef struct {
 } gpio_cfg_t;
 
 uint8_t gpio_init(gpio_t *g, const gpio_cfg_t *cfg);
+void    gpio_deinit(gpio_t *g);
 void    gpio_set(gpio_t *g, gpio_level_t level);
 void    gpio_toggle(gpio_t *g);
 

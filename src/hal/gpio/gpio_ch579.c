@@ -40,6 +40,19 @@ static void ch579_toggle(gpio_t *g)
         GPIOA_InverseBits(self->pin);
 }
 
+static void ch579_deinit(gpio_t *g)
+{
+    gpio_ch579_t *self = (gpio_ch579_t *)g;
+    if (!self || !self->pin)
+        return;
+
+    /* 释放引脚：恢复高阻输入，避免影响外部电路 */
+    if (self->port == 1)
+        GPIOB_ModeCfg(self->pin, GPIO_ModeIN_Floating);
+    else
+        GPIOA_ModeCfg(self->pin, GPIO_ModeIN_Floating);
+}
+
 static uint8_t ch579_init(gpio_t *g, const void *cfg)
 {
     gpio_ch579_t      *self = (gpio_ch579_t *)g;
@@ -76,6 +89,7 @@ static uint8_t ch579_init(gpio_t *g, const void *cfg)
 
 const gpio_ops_t gpio_ch579_ops = {
     .init   = ch579_init,
+    .deinit = ch579_deinit,
     .set    = ch579_set,
     .toggle = ch579_toggle,
 };
