@@ -130,7 +130,8 @@ if(CH579)
         app/main.c
         app/hvac_init.c
         app/isr.c
-        app/board_hw.c
+        src/board/board_hw.c
+        src/board/board_hw_ch579.c
         src/modules/debug_module.c
         bsp/CH579/startup_ARMCM0.s
         bsp/CH579/StdPeriphDriver/CH57x_clk.c
@@ -154,6 +155,7 @@ if(CH579)
         ${CMAKE_SOURCE_DIR}/src/core
         ${CMAKE_SOURCE_DIR}/src/modules
         ${CMAKE_SOURCE_DIR}/src/brands
+        ${CMAKE_SOURCE_DIR}/src/board
         ${CMAKE_SOURCE_DIR}/app
         ${CMAKE_SOURCE_DIR}/bsp/CH579/StdPeriphDriver/inc
         ${CMAKE_SOURCE_DIR}/lib/CMSIS/Include

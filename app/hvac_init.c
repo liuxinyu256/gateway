@@ -21,6 +21,7 @@
 #include "rs485.h"
 #include "rs485_ch579.h"
 #include "board_hw.h"
+#include "board_hw_ch579.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
@@ -34,6 +35,7 @@ static void hvac_rs485_dir(uint8_t tx, void *ctx)
 #endif
 
 static ac_module_t        g_ac = { .base.ops = &ac_module_ops };
+static board_hw_ch579_t   g_board_hw;
 static rs485_ch579_t      g_hvac_rs485;
 static sender_t           g_hvac_sender;
 static uart_encoder_t     g_hvac_enc;
@@ -44,7 +46,7 @@ static uint8_t            g_hvac_rx_buf[128];
 void hvac_start(void) {
     gateway_init();
 
-    board_hw_init();   /* AC 模块外围电路选择：先打开 485 电路等 */
+    board_hw_ch579_init(&g_board_hw, NULL);   /* AC 模块外围电路选择 */
 
     /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA1 */
 #ifdef __CH579__

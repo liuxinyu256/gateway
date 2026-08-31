@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>__CH579__,DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\core;.\src\modules;.\src\brands;.\app;.\bsp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0</IncludePath>
+              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\board;.\src\core;.\src\modules;.\src\brands;.\app;.\bsp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -403,11 +403,6 @@
               <FileName>isr.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\app\isr.c</FilePath>
-            </File>
-            <File>
-              <FileName>board_hw.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\app\board_hw.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -573,6 +568,21 @@
               <FileName>gpio_ch579.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\hal\gpio\gpio_ch579.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>board</GroupName>
+          <Files>
+            <File>
+              <FileName>board_hw.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\board\board_hw.c</FilePath>
+            </File>
+            <File>
+              <FileName>board_hw_ch579.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\board\board_hw_ch579.c</FilePath>
             </File>
           </Files>
         </Group>
