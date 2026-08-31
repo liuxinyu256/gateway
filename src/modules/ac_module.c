@@ -4,6 +4,9 @@
  * sender / receiver 都由上层指针注入，本模块只管理品牌状态机。
  */
 #include "ac_module.h"
+#include "gateway.h"
+#include "sender.h"
+#include <stdio.h>
 #include <string.h>
 
 /* 品牌注册表: 由清单生成 (单一数据源, 见 ac_module.h)
@@ -115,4 +118,36 @@ void ac_module_update_state(ac_module_t *self, const gateway_state_t *new_state)
     if (!self || !new_state) return;
 
     module_update_state(&self->base, new_state);
+}
+
+/* ---- 临时调试：把 AC 模块收到的帧打印到 UART1 ---- */
+static int ac_dbg_rx_frame(void *ctx, uint8_t *data, uint16_t len)
+{
+    (void)ctx;
+    module_t *dbg = gateway_module(1);
+    char buf[160];
+    int pos;
+
+    if (!dbg || !dbg->sender || !data || !len)
+        return 1;
+
+    pos = snprintf(buf, sizeof(buf), "[ac rx]");
+    for (uint16_t i = 0; i < len && pos < (int)sizeof(buf) - 6; i++)
+        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, " %02X", data[i]);
+    if (pos < (int)sizeof(buf) - 3)
+        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
+
+    sender_send(dbg->sender, (const uint8_t *)buf, (uint16_t)pos,
+                SENDER_PRIO_CMD);
+    return 1;
+}
+
+static const event_handler_t ac_dbg_evt = {
+    .on_rx_frame = ac_dbg_rx_frame,
+};
+
+void ac_module_enable_debug_echo(ac_module_t *self)
+{
+    if (self)
+        module_set_handler(&self->base, &ac_dbg_evt, self);
 }
