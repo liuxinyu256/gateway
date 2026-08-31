@@ -6,11 +6,7 @@
 #include "gpio.h"
 
 typedef struct {
-    gpio_t       base;
-    uint8_t      port;       /* 0=GPIOA, 1=GPIOB */
-    uint32_t     pin;        /* GPIO_Pin_x */
-    uint8_t      mode;       /* 保存 init 时的 gpio_mode_t，供 reset 使用 */
-    gpio_level_t init_level; /* 保存 init 时的初始电平，供 reset 使用 */
+    gpio_t base;   /* CH579 暂无额外平台私有数据 */
 } gpio_ch579_t;
 
 extern const gpio_ops_t gpio_ch579_ops;

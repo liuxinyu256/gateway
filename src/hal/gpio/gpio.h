@@ -2,9 +2,9 @@
  * gpio.h —— GPIO HAL 接口
  *
  * 与 uart/timer/encoder 同风格：
- *   - gpio_t 只保存 ops + drv
+ *   - gpio_t 保存 ops + drv + 通用引脚信息（port/pin/mode/init_level）
  *   - 具体平台实现继承 gpio_t，例如 gpio_ch579_t
- *   - 上层通过 gpio_init / gpio_set / gpio_toggle 操作引脚
+ *   - 上层通过 gpio_init / gpio_set / gpio_get / gpio_toggle / gpio_reset / gpio_deinit 操作引脚
  */
 #ifndef GPIO_H
 #define GPIO_H
@@ -39,6 +39,12 @@ typedef struct gpio_ops {
 struct gpio {
     const gpio_ops_t *ops;
     void             *drv;
+
+    /* 通用引脚信息：init 时写入，reset 时使用 */
+    uint8_t      port;       /* 端口号：平台相关（CH579: 0=GPIOA, 1=GPIOB） */
+    uint32_t     pin;        /* 引脚号：平台相关（CH579: GPIO_Pin_x） */
+    uint8_t      mode;       /* gpio_mode_t */
+    gpio_level_t init_level; /* 初始电平 */
 };
 
 /* 平台无关的 GPIO 配置 */
