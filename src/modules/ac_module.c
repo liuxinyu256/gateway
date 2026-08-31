@@ -4,9 +4,6 @@
  * sender / receiver 都由上层指针注入，本模块只管理品牌状态机。
  */
 #include "ac_module.h"
-#include "gateway.h"
-#include "sender.h"
-#include <stdio.h>
 #include <string.h>
 
 /* 品牌注册表: 由清单生成 (单一数据源, 见 ac_module.h)
@@ -97,8 +94,8 @@ const ac_brand_config_t *ac_module_current(ac_module_t *self)
 
 void ac_module_set_poll_period(ac_module_t *self, uint16_t period_ms)
 {
-    if (self)
-        module_set_poll_period(&self->base, period_ms);
+    (void)self;
+    (void)period_ms;
 }
 
 /* 把 AC 模块当前完整状态发布到网关 */
@@ -118,50 +115,4 @@ void ac_module_update_state(ac_module_t *self, const gateway_state_t *new_state)
     if (!self || !new_state) return;
 
     module_update_state(&self->base, new_state);
-}
-
-/* ---- 临时调试：把 AC 模块收到的帧打印到 UART1 ---- */
-static int ac_dbg_rx_frame(void *ctx, uint8_t *data, uint16_t len)
-{
-    (void)ctx;
-    module_t *dbg = gateway_module(1);
-    char buf[160];
-    int pos;
-
-    if (!dbg || !dbg->sender || !data || !len)
-        return 1;
-
-    pos = snprintf(buf, sizeof(buf), "[ac rx]");
-    for (uint16_t i = 0; i < len && pos < (int)sizeof(buf) - 6; i++)
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, " %02X", data[i]);
-    if (pos < (int)sizeof(buf) - 3)
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
-
-    sender_send(dbg->sender, (const uint8_t *)buf, (uint16_t)pos,
-                SENDER_PRIO_CMD);
-    return 1;
-}
-
-/* 临时调试：网关作为 Modbus 主机，周期发送读请求 */
-static void ac_dbg_periodic_send(void *ctx)
-{
-    ac_module_t *self = (ac_module_t *)ctx;
-    static const uint8_t test_frame[] = {
-        0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
-    };
-
-    if (self && self->base.sender)
-        sender_send(self->base.sender, test_frame,
-                    sizeof(test_frame), SENDER_PRIO_CMD);
-}
-
-static const event_handler_t ac_dbg_evt = {
-    .on_rx_frame       = ac_dbg_rx_frame,
-    .on_periodic_send  = ac_dbg_periodic_send,
-};
-
-void ac_module_enable_debug_echo(ac_module_t *self)
-{
-    if (self)
-        module_set_handler(&self->base, &ac_dbg_evt, self);
 }

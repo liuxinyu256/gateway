@@ -139,7 +139,4 @@ void ac_module_set_poll_period(ac_module_t *self, uint16_t period_ms);
 void ac_module_publish_state(ac_module_t *self);
 /* 更新 AC 模块状态：new_state 必须是“读当前完整状态 → 改支持字段”后的完整状态 */
 void ac_module_update_state(ac_module_t *self, const gateway_state_t *new_state);
-
-/* 临时调试：AC 模块收到的帧通过 UART1 打印（正式品牌协议接入后移除） */
-void ac_module_enable_debug_echo(ac_module_t *self);
 #endif

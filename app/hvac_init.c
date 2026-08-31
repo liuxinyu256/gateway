@@ -112,13 +112,9 @@ void hvac_start(void) {
     bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, &g_hvac_rs485.base);
 #endif
 
-    /* 临时调试：AC 模块收到的帧通过 UART1 打印 */
-    ac_module_enable_debug_echo(&g_ac);
-
     gateway_set_module(0, &g_ac.base);
 
     module_start(&g_ac.base);
-    ac_module_set_poll_period(&g_ac, 1000);   /* 临时：1s 周期发读请求 */
     ac_module_start_scan(&g_ac);
 
     debug_module_start();
