@@ -98,7 +98,7 @@ target_link_libraries(gateway_core PUBLIC hal_core)
 # ============================================================
 # 品牌库
 # ============================================================
-add_library(gateway_brands STATIC src/brands/ac_gree.c)
+add_library(gateway_brands STATIC src/brands/ac_gree.c src/brands/ac_test.c)
 target_include_directories(gateway_brands PUBLIC
     ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/src/modules ${CMAKE_SOURCE_DIR}/src/brands
     ${HAL_INCLUDE_DIRS}

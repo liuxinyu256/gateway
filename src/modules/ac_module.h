@@ -26,7 +26,8 @@ typedef enum
  * 枚举与注册表都由它生成; id 由清单顺序编码, 禁止重排;
  * 0 位是契约占位, 不进清单 */
 // clang-format off
-#define AC_BRAND_LIST(BRAND)
+#define AC_BRAND_LIST(BRAND) \
+    BRAND(ac_test, &ac_test_cfg)
 // clang-format on
 
 #define AC_BRAND_ENUM(name, cfg) name,

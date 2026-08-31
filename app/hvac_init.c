@@ -10,7 +10,7 @@
 #include "hvac_init.h"
 #include "gateway.h"
 #include "ac_module.h"
-#include <stdio.h>
+#include "ac_test.h"
 #include "uart_encoder.h"
 #include "uart_decoder.h"
 #include "uart_instance.h"
@@ -41,44 +41,6 @@ static uart_encoder_t     g_hvac_enc;
 static uart_decoder_t     g_hvac_dec;
 static receiver_timeout_t g_hvac_rx;
 static uint8_t            g_hvac_rx_buf[128];
-
-/* ---- 临时测试：利用 AC 模块已有 EVENT_PERIODIC_SEND 事件 ---- */
-static int test_ac_rx(void *ctx, uint8_t *data, uint16_t len)
-{
-    (void)ctx;
-    module_t *dbg = gateway_module(1);
-    char buf[160];
-    int pos;
-
-    if (!dbg || !dbg->sender || !data || !len)
-        return 1;
-
-    pos = snprintf(buf, sizeof(buf), "[ac rx]");
-    for (uint16_t i = 0; i < len && pos < (int)sizeof(buf) - 6; i++)
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, " %02X", data[i]);
-    if (pos < (int)sizeof(buf) - 3)
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
-
-    sender_send(dbg->sender, (const uint8_t *)buf, (uint16_t)pos,
-                SENDER_PRIO_CMD);
-    return 1;
-}
-
-static void test_ac_periodic(void *ctx)
-{
-    (void)ctx;
-    static const uint8_t frame[] = {
-        0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
-    };
-
-    if (g_ac.base.sender)
-        sender_send(g_ac.base.sender, frame, sizeof(frame), SENDER_PRIO_CMD);
-}
-
-static const event_handler_t test_ac_evt = {
-    .on_rx_frame      = test_ac_rx,
-    .on_periodic_send = test_ac_periodic,
-};
 
 void hvac_start(void) {
     gateway_init();
@@ -151,13 +113,13 @@ void hvac_start(void) {
     bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, &g_hvac_rs485.base);
 #endif
 
-    /* 临时测试：利用 AC 模块定时发送事件，1s 周期发 Modbus 读请求 */
-    module_set_handler(&g_ac.base, &test_ac_evt, &g_ac);
+    /* 注册测试品牌（实现 AC 模块全部事件） */
+    ac_module_register(&g_ac, &ac_test_cfg);
 
     gateway_set_module(0, &g_ac.base);
 
     module_start(&g_ac.base);
-    module_set_poll_period(&g_ac.base, 1000);
+    module_set_poll_period(&g_ac.base, 1000);   /* 测试：1s 周期发读请求 */
     ac_module_start_scan(&g_ac);
 
     debug_module_start();

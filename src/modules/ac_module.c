@@ -4,6 +4,7 @@
  * sender / receiver 都由上层指针注入，本模块只管理品牌状态机。
  */
 #include "ac_module.h"
+#include "ac_test.h"
 #include <string.h>
 
 /* 品牌注册表: 由清单生成 (单一数据源, 见 ac_module.h)

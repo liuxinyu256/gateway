@@ -644,6 +644,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\brands\ac_gree.c</FilePath>
             </File>
+            <File>
+              <FileName>ac_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\brands\ac_test.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
