@@ -48,6 +48,7 @@ void hvac_start(void) {
     /* PA1 作为 RS485 DE，由 rs485 HAL 驱动配置 */
     {
         rs485_ch579_cfg_t rs_cfg = {
+            .port   = 0,          /* GPIOA */
             .de_pin = GPIO_Pin_1,
         };
         rs485_ch579_init(&g_hvac_rs485, &rs_cfg);

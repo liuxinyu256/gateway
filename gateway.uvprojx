@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>__CH579__;DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\core;.\src\modules;.\src\brands;.\app;.\bsp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0</IncludePath>
+              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\core;.\src\modules;.\src\brands;.\app;.\bsp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -548,6 +548,21 @@
           <FileName>rs485_ch579.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\hal\rs485\rs485_ch579.c</FilePath>
+        </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>HAL/gpio</GroupName>
+          <Files>
+        <File>
+          <FileName>gpio.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\src\hal\gpio\gpio.c</FilePath>
+        </File>
+        <File>
+          <FileName>gpio_ch579.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\src\hal\gpio\gpio_ch579.c</FilePath>
         </File>
           </Files>
         </Group>

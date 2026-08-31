@@ -4,14 +4,16 @@
 #ifndef RS485_CH579_H
 #define RS485_CH579_H
 #include "rs485.h"
+#include "gpio_ch579.h"
 
 typedef struct {
-    rs485_t  base;
-    uint32_t de_pin; /* GPIO_Pin_x，仅支持 GPIOA */
+    rs485_t      base;
+    gpio_ch579_t de;   /* DE 引脚由 GPIO HAL 驱动 */
 } rs485_ch579_t;
 
 typedef struct {
-    uint32_t de_pin; /* GPIO_Pin_x，仅支持 GPIOA */
+    uint8_t  port;   /* 0=GPIOA, 1=GPIOB */
+    uint32_t de_pin; /* GPIO_Pin_x */
 } rs485_ch579_cfg_t;
 
 extern const rs485_ops_t rs485_ch579_ops;
