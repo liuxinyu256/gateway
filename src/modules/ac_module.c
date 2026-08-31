@@ -97,8 +97,8 @@ const ac_brand_config_t *ac_module_current(ac_module_t *self)
 
 void ac_module_set_poll_period(ac_module_t *self, uint16_t period_ms)
 {
-    (void)self;
-    (void)period_ms;
+    if (self)
+        module_set_poll_period(&self->base, period_ms);
 }
 
 /* 把 AC 模块当前完整状态发布到网关 */
@@ -142,8 +142,22 @@ static int ac_dbg_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     return 1;
 }
 
+/* 临时调试：网关作为 Modbus 主机，周期发送读请求 */
+static void ac_dbg_periodic_send(void *ctx)
+{
+    ac_module_t *self = (ac_module_t *)ctx;
+    static const uint8_t test_frame[] = {
+        0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
+    };
+
+    if (self && self->base.sender)
+        sender_send(self->base.sender, test_frame,
+                    sizeof(test_frame), SENDER_PRIO_CMD);
+}
+
 static const event_handler_t ac_dbg_evt = {
-    .on_rx_frame = ac_dbg_rx_frame,
+    .on_rx_frame       = ac_dbg_rx_frame,
+    .on_periodic_send  = ac_dbg_periodic_send,
 };
 
 void ac_module_enable_debug_echo(ac_module_t *self)

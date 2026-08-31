@@ -118,6 +118,7 @@ void hvac_start(void) {
     gateway_set_module(0, &g_ac.base);
 
     module_start(&g_ac.base);
+    ac_module_set_poll_period(&g_ac, 1000);   /* 临时：1s 周期发读请求 */
     ac_module_start_scan(&g_ac);
 
     debug_module_start();
