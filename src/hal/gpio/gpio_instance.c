@@ -10,7 +10,7 @@
 static gpio_ch579_t gpio_pa[GPIO_PIN_COUNT_A];
 static gpio_ch579_t gpio_pb[GPIO_PIN_COUNT_B];
 
-gpio_t *gpio_get_instance(uint8_t port, uint8_t pin)
+gpio_t *gpio_get(uint8_t port, uint8_t pin)
 {
     gpio_ch579_t *g;
 
@@ -32,7 +32,7 @@ gpio_t *gpio_get_instance(uint8_t port, uint8_t pin)
 
 #else
 
-gpio_t *gpio_get_instance(uint8_t port, uint8_t pin)
+gpio_t *gpio_get(uint8_t port, uint8_t pin)
 {
     (void)port;
     (void)pin;

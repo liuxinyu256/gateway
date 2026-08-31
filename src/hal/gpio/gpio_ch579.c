@@ -34,7 +34,7 @@ static void ch579_set(gpio_t *g, gpio_level_t level)
     }
 }
 
-static gpio_level_t ch579_get(gpio_t *g)
+static gpio_level_t ch579_read(gpio_t *g)
 {
     uint8_t reg;
 
@@ -137,7 +137,7 @@ const gpio_ops_t gpio_ch579_ops = {
     .deinit = ch579_deinit,
     .reset  = ch579_reset,
     .set    = ch579_set,
-    .get    = ch579_get,
+    .read = ch579_read,
     .toggle = ch579_toggle,
 };
 

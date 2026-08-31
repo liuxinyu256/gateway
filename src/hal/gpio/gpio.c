@@ -31,11 +31,11 @@ void gpio_set(gpio_t *g, gpio_level_t level)
     g->ops->set(g, level);
 }
 
-gpio_level_t gpio_get(gpio_t *g)
+gpio_level_t gpio_read(gpio_t *g)
 {
-    if (!g || !g->ops || !g->ops->get)
+    if (!g || !g->ops || !g->ops->read)
         return GPIO_LEVEL_LOW;
-    return g->ops->get(g);
+    return g->ops->read(g);
 }
 
 void gpio_toggle(gpio_t *g)
