@@ -78,15 +78,15 @@ static void ch579_ac_select(bsp_t *hw, bsp_ac_brand_t brand)
         break;
 
     case BSP_AC_TOSHIBA:
-        /* TODO: 东芝具体电平以原理图为准 */
+        /* 东芝：PB9 拉低打开东芝电路 */
         if (self->pb9)
-            gpio_set(self->pb9, GPIO_LEVEL_LOW);   /* 打开东芝 */
+            gpio_set(self->pb9, GPIO_LEVEL_LOW);
         break;
 
     case BSP_AC_HAIER:
-        /* TODO: 海尔具体电平以原理图为准 */
+        /* 海尔：PB8 拉高打开海尔多联机电路 */
         if (self->pb8)
-            gpio_set(self->pb8, GPIO_LEVEL_HIGH);  /* 打开海尔 */
+            gpio_set(self->pb8, GPIO_LEVEL_HIGH);
         break;
 
     default:
