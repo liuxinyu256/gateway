@@ -4,9 +4,8 @@
 #include "uart.h"
 
 typedef struct {
-    encoder_t   base;
-    uart_t     *port;
-    uart_cfg_t  uart_cfg;
+    encoder_t base;
+    uart_t   *port;
 } uart_encoder_t;
 
 typedef struct {

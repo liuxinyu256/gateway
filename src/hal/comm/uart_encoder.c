@@ -3,9 +3,14 @@
 
 static uint8_t uart_encoder_configure(encoder_t *e, const void *cfg)
 {
-    (void)cfg;
-    uart_encoder_t *u = (uart_encoder_t *)e;
-    return (uart_configure(u->port, &u->uart_cfg) == 0) ? 0 : 1;
+    const uart_encoder_cfg_t *c = (const uart_encoder_cfg_t *)cfg;
+    uart_encoder_t           *u = (uart_encoder_t *)e;
+
+    if (!u || !c || !c->port)
+        return 1;
+
+    u->port = c->port;
+    return (uart_configure(c->port, &c->uart_cfg) == 0) ? 0 : 1;
 }
 
 static uint8_t uart_encoder_encode_byte(encoder_t *e, uint8_t byte)
@@ -56,8 +61,6 @@ uint8_t uart_encoder_init(uart_encoder_t *e,
     memset(e, 0, sizeof(*e));
 
     e->base.ops = &uart_encoder_ops;
-    e->port     = cfg->port;
-    e->uart_cfg = cfg->uart_cfg;
 
-    return encoder_configure(&e->base, NULL);
+    return encoder_configure(&e->base, cfg);
 }

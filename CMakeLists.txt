@@ -22,6 +22,7 @@ set(HAL_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/src/hal/uart
     ${CMAKE_SOURCE_DIR}/src/hal/timer
     ${CMAKE_SOURCE_DIR}/src/hal/led
+    ${CMAKE_SOURCE_DIR}/src/hal/rs485
 )
 
 # ============================================================
@@ -41,6 +42,7 @@ add_library(hal_core STATIC
     src/hal/frame/sender.c
     src/hal/timer/timer.c
     src/hal/timer/timer_instance.c
+    src/hal/rs485/rs485.c
 )
 target_include_directories(hal_core PUBLIC ${HAL_INCLUDE_DIRS})
 if(PC_SIM)
@@ -51,6 +53,7 @@ if(CH579)
     target_compile_definitions(hal_core PUBLIC __CH579__)
     target_sources(hal_core PRIVATE
         src/hal/led/led_ch579.c
+        src/hal/rs485/rs485_ch579.c
         src/hal/uart/uart_ch579.c
         src/hal/timer/timer_ch579.c
         src/hal/timer/timer_hw.c

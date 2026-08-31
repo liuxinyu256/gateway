@@ -18,24 +18,22 @@
 #include "timer.h"
 #include "timer_instance.h"
 #include "debug_module.h"
+#include "rs485.h"
+#include "rs485_ch579.h"
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
 
 #ifdef __CH579__
-/* RS485 DE 方向控制：PA1 高电平=发送，低电平=接收
- * (PA0 已改为运行 LED，不能再做 DE) */
+/* RS485 方向回调适配：bus 层调用 (tx, ctx)，转给 rs485 HAL */
 static void hvac_rs485_dir(uint8_t tx, void *ctx)
 {
-    (void)ctx;
-    if (tx)
-        GPIOA_SetBits(GPIO_Pin_1);
-    else
-        GPIOA_ResetBits(GPIO_Pin_1);
+    rs485_set_dir((rs485_t *)ctx, tx);
 }
 #endif
 
 static ac_module_t        g_ac = { .base.ops = &ac_module_ops };
+static rs485_ch579_t      g_hvac_rs485;
 static sender_t           g_hvac_sender;
 static uart_encoder_t     g_hvac_enc;
 static uart_decoder_t     g_hvac_dec;
@@ -47,11 +45,15 @@ void hvac_start(void) {
 
     /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA1 */
 #ifdef __CH579__
-    /* PA1 作为 RS485 DE，UART0 引脚由 uart_ch579.c 配置 */
-    GPIOA_ModeCfg(GPIO_Pin_1, GPIO_ModeOut_PP_5mA);
-    GPIOA_ResetBits(GPIO_Pin_1);
+    /* PA1 作为 RS485 DE，由 rs485 HAL 驱动配置 */
+    {
+        rs485_ch579_cfg_t rs_cfg = {
+            .de_pin = GPIO_Pin_1,
+        };
+        rs485_ch579_init(&g_hvac_rs485, &rs_cfg);
+    }
     bus_set_rs485_enable(&g_ac.base.bus, 1);
-    bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, NULL);
+    bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, &g_hvac_rs485.base);
 #endif
 
     /* TX：上层创建 UART 编码器和 sender 并注入 */
