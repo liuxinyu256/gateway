@@ -1,18 +1,18 @@
 /**
- * board_hw_ch579.h —— CH579 板级硬件具体实现
+ * bsp_ch579.h —— CH579 板级硬件具体实现
  *
  * 当前硬件：
  *   - 默认选择美的电路
  *   - 打开 485 电路
  *   - 关闭海尔多联机/东芝/120 电阻等
  */
-#ifndef BOARD_HW_CH579_H
-#define BOARD_HW_CH579_H
-#include "board_hw.h"
+#ifndef BSP_CH579_H
+#define BSP_CH579_H
+#include "bsp.h"
 #include "gpio.h"
 
 typedef struct {
-    board_hw_t base;
+    bsp_t base;
 
     /* 外围电路控制引脚（init 时获取） */
     gpio_t *pb5;   /* 485 电路 */
@@ -24,15 +24,15 @@ typedef struct {
     gpio_t *pa15;  /* 接收口选择 */
     gpio_t *pb11;  /* 浮空输入 */
     gpio_t *pb21;  /* 浮空输入 */
-} board_hw_ch579_t;
+} bsp_ch579_t;
 
 typedef struct {
     uint8_t reserved; /* 预留，后续可放默认品牌等 */
-} board_hw_ch579_cfg_t;
+} bsp_ch579_cfg_t;
 
-extern const board_hw_ops_t board_hw_ch579_ops;
+extern const bsp_ops_t bsp_ch579_ops;
 
-uint8_t board_hw_ch579_init(board_hw_ch579_t *self,
-                            const board_hw_ch579_cfg_t *cfg);
+uint8_t bsp_ch579_init(bsp_ch579_t *self,
+                            const bsp_ch579_cfg_t *cfg);
 
-#endif /* BOARD_HW_CH579_H */
+#endif /* BSP_CH579_H */

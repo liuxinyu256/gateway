@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>__CH579__,DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\board;.\src\core;.\src\modules;.\src\brands;.\app;.\bsp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0</IncludePath>
+              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\bsp;.\src\core;.\src\modules;.\src\brands;.\app;.\csp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -572,17 +572,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>board</GroupName>
+          <GroupName>bsp</GroupName>
           <Files>
             <File>
-              <FileName>board_hw.c</FileName>
+              <FileName>bsp.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\board\board_hw.c</FilePath>
+              <FilePath>.\src\bsp\bsp.c</FilePath>
             </File>
             <File>
-              <FileName>board_hw_ch579.c</FileName>
+              <FileName>bsp_ch579.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\board\board_hw_ch579.c</FilePath>
+              <FilePath>.\src\bsp\bsp_ch579.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -657,7 +657,7 @@
             <File>
               <FileName>startup_ARMCM0.s</FileName>
               <FileType>2</FileType>
-              <FilePath>.\bsp\CH579\startup_ARMCM0.s</FilePath>
+              <FilePath>.\csp\CH579\startup_ARMCM0.s</FilePath>
             </File>
           </Files>
         </Group>
@@ -667,82 +667,82 @@
             <File>
               <FileName>CH57x_clk.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_clk.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_clk.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_gpio.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_gpio.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_gpio.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_pwr.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwr.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_pwr.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_sys.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_sys.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_sys.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_uart0.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart0.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_uart0.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_uart1.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart1.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_uart1.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_uart2.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart2.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_uart2.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_uart3.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_uart3.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_uart3.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_int.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_int.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_int.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_flash.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_flash.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_flash.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_adc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_adc.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_adc.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_timer0.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer0.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_timer0.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_timer1.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer1.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_timer1.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_timer2.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer2.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_timer2.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_timer3.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_timer3.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_timer3.c</FilePath>
             </File>
             <File>
               <FileName>CH57x_pwm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\bsp\CH579\StdPeriphDriver\CH57x_pwm.c</FilePath>
+              <FilePath>.\csp\CH579\StdPeriphDriver\CH57x_pwm.c</FilePath>
             </File>
           </Files>
         </Group>

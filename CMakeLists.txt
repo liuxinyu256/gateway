@@ -63,7 +63,7 @@ if(CH579)
         src/hal/timer/timer_hw.c
     )
     target_include_directories(hal_core PUBLIC
-        ${CMAKE_SOURCE_DIR}/bsp/CH579/StdPeriphDriver/inc
+        ${CMAKE_SOURCE_DIR}/csp/CH579/StdPeriphDriver/inc
     )
 endif()
 
@@ -130,24 +130,24 @@ if(CH579)
         app/main.c
         app/hvac_init.c
         app/isr.c
-        src/board/board_hw.c
-        src/board/board_hw_ch579.c
+        src/bsp/bsp.c
+        src/bsp/bsp_ch579.c
         src/modules/debug_module.c
-        bsp/CH579/startup_ARMCM0.s
-        bsp/CH579/StdPeriphDriver/CH57x_clk.c
-        bsp/CH579/StdPeriphDriver/CH57x_flash.c
-        bsp/CH579/StdPeriphDriver/CH57x_gpio.c
-        bsp/CH579/StdPeriphDriver/CH57x_int.c
-        bsp/CH579/StdPeriphDriver/CH57x_pwr.c
-        bsp/CH579/StdPeriphDriver/CH57x_sys.c
-        bsp/CH579/StdPeriphDriver/CH57x_timer0.c
-        bsp/CH579/StdPeriphDriver/CH57x_timer1.c
-        bsp/CH579/StdPeriphDriver/CH57x_timer2.c
-        bsp/CH579/StdPeriphDriver/CH57x_timer3.c
-        bsp/CH579/StdPeriphDriver/CH57x_uart0.c
-        bsp/CH579/StdPeriphDriver/CH57x_uart1.c
-        bsp/CH579/StdPeriphDriver/CH57x_uart2.c
-        bsp/CH579/StdPeriphDriver/CH57x_uart3.c
+        csp/CH579/startup_ARMCM0.s
+        csp/CH579/StdPeriphDriver/CH57x_clk.c
+        csp/CH579/StdPeriphDriver/CH57x_flash.c
+        csp/CH579/StdPeriphDriver/CH57x_gpio.c
+        csp/CH579/StdPeriphDriver/CH57x_int.c
+        csp/CH579/StdPeriphDriver/CH57x_pwr.c
+        csp/CH579/StdPeriphDriver/CH57x_sys.c
+        csp/CH579/StdPeriphDriver/CH57x_timer0.c
+        csp/CH579/StdPeriphDriver/CH57x_timer1.c
+        csp/CH579/StdPeriphDriver/CH57x_timer2.c
+        csp/CH579/StdPeriphDriver/CH57x_timer3.c
+        csp/CH579/StdPeriphDriver/CH57x_uart0.c
+        csp/CH579/StdPeriphDriver/CH57x_uart1.c
+        csp/CH579/StdPeriphDriver/CH57x_uart2.c
+        csp/CH579/StdPeriphDriver/CH57x_uart3.c
         lib/FreeRTOS/freertos_port.c
     )
     target_include_directories(gateway_ch579 PRIVATE
@@ -155,9 +155,9 @@ if(CH579)
         ${CMAKE_SOURCE_DIR}/src/core
         ${CMAKE_SOURCE_DIR}/src/modules
         ${CMAKE_SOURCE_DIR}/src/brands
-        ${CMAKE_SOURCE_DIR}/src/board
+        ${CMAKE_SOURCE_DIR}/src/bsp
         ${CMAKE_SOURCE_DIR}/app
-        ${CMAKE_SOURCE_DIR}/bsp/CH579/StdPeriphDriver/inc
+        ${CMAKE_SOURCE_DIR}/csp/CH579/StdPeriphDriver/inc
         ${CMAKE_SOURCE_DIR}/lib/CMSIS/Include
         ${CMAKE_SOURCE_DIR}/lib/FreeRTOS/include
         ${CMAKE_SOURCE_DIR}/lib/FreeRTOS

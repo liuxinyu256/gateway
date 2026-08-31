@@ -1,9 +1,9 @@
 /**
- * board_hw_ch579.c —— CH579 板级硬件实现
+ * bsp_ch579.c —— CH579 板级硬件实现
  *
  * 所有 GPIO 操作统一走 GPIO HAL，隔离具体引脚/电路差异。
  */
-#include "board_hw_ch579.h"
+#include "bsp_ch579.h"
 #include "gpio_instance.h"
 
 static void cfg_pin(gpio_t **slot, uint8_t port, uint8_t pin,
@@ -25,9 +25,9 @@ static void cfg_pin(gpio_t **slot, uint8_t port, uint8_t pin,
         *slot = g;
 }
 
-static uint8_t ch579_init(board_hw_t *hw, const void *cfg)
+static uint8_t ch579_init(bsp_t *hw, const void *cfg)
 {
-    board_hw_ch579_t *self = (board_hw_ch579_t *)hw;
+    bsp_ch579_t *self = (bsp_ch579_t *)hw;
     (void)cfg;
 
     if (!self)
@@ -59,9 +59,9 @@ static uint8_t ch579_init(board_hw_t *hw, const void *cfg)
     return 0;
 }
 
-static void ch579_rs485_enable(board_hw_t *hw, uint8_t enable)
+static void ch579_rs485_enable(bsp_t *hw, uint8_t enable)
 {
-    board_hw_ch579_t *self = (board_hw_ch579_t *)hw;
+    bsp_ch579_t *self = (bsp_ch579_t *)hw;
     if (!self)
         return;
 
@@ -71,17 +71,17 @@ static void ch579_rs485_enable(board_hw_t *hw, uint8_t enable)
         gpio_set(self->pb6, enable ? GPIO_LEVEL_LOW : GPIO_LEVEL_HIGH);
 }
 
-const board_hw_ops_t board_hw_ch579_ops = {
+const bsp_ops_t bsp_ch579_ops = {
     .init          = ch579_init,
     .rs485_enable  = ch579_rs485_enable,
 };
 
-uint8_t board_hw_ch579_init(board_hw_ch579_t *self,
-                            const board_hw_ch579_cfg_t *cfg)
+uint8_t bsp_ch579_init(bsp_ch579_t *self,
+                            const bsp_ch579_cfg_t *cfg)
 {
     if (!self)
         return 1;
 
-    self->base.ops = &board_hw_ch579_ops;
-    return board_hw_init(&self->base, cfg);
+    self->base.ops = &bsp_ch579_ops;
+    return bsp_init(&self->base, cfg);
 }
