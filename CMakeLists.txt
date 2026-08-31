@@ -45,6 +45,7 @@ add_library(hal_core STATIC
     src/hal/timer/timer_instance.c
     src/hal/rs485/rs485.c
     src/hal/gpio/gpio.c
+    src/hal/gpio/gpio_instance.c
 )
 target_include_directories(hal_core PUBLIC ${HAL_INCLUDE_DIRS})
 if(PC_SIM)

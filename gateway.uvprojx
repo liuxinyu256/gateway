@@ -560,6 +560,11 @@
           <FilePath>.\src\hal\gpio\gpio.c</FilePath>
         </File>
         <File>
+          <FileName>gpio_instance.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>.\src\hal\gpio\gpio_instance.c</FilePath>
+        </File>
+        <File>
           <FileName>gpio_ch579.c</FileName>
           <FileType>1</FileType>
           <FilePath>.\src\hal\gpio\gpio_ch579.c</FilePath>
