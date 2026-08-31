@@ -102,6 +102,40 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         return 1;
     }
 
+    /* 命令：F = 485 物理层测试，直接发送一帧带正确 CRC 的 Modbus 帧 */
+    if (len == 1 && (data[0] == 'F' || data[0] == 'f')) {
+        static const uint8_t test_frame[] = {
+            0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
+        };
+
+        module_t *ac = gateway_module(0);
+        if (ac && ac->sender) {
+            uint8_t ret = sender_send(ac->sender, test_frame,
+                                      sizeof(test_frame), SENDER_PRIO_CMD);
+            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                             "[test] tx:");
+            for (uint16_t i = 0; i < sizeof(test_frame) &&
+                                n < (int)sizeof(g_dbg.tx_buf) - 8; i++) {
+                n += snprintf((char *)g_dbg.tx_buf + n,
+                              sizeof(g_dbg.tx_buf) - (size_t)n,
+                              " %02X", test_frame[i]);
+            }
+            n += snprintf((char *)g_dbg.tx_buf + n,
+                          sizeof(g_dbg.tx_buf) - (size_t)n,
+                          " ret=%u\r\n", (unsigned)ret);
+            if (n > 0)
+                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                            (uint16_t)n, SENDER_PRIO_CMD);
+        } else {
+            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                             "[test] ac not ready\r\n");
+            if (n > 0)
+                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                            (uint16_t)n, SENDER_PRIO_CMD);
+        }
+        return 1;
+    }
+
     /* 命令：T[0|1|2] = 485 测试，切换品牌并发一帧测试数据
      *   T0/美的  T1/东芝  T2/海尔
      */
@@ -117,7 +151,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         bsp_ac_select(bsp_board_get(), brand);
 
         static const uint8_t test_frame[] = {
-            0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x0A, 0x0B
+            0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
         };
 
         module_t *ac = gateway_module(0);
