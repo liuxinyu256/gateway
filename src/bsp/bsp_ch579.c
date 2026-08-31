@@ -5,6 +5,7 @@
  */
 #include "bsp_ch579.h"
 #include "gpio_instance.h"
+#include <stddef.h>
 
 static void cfg_pin(gpio_t **slot, uint8_t port, uint8_t pin,
                     uint8_t mode, gpio_level_t level)
@@ -77,11 +78,24 @@ const bsp_ops_t bsp_ch579_ops = {
 };
 
 uint8_t bsp_ch579_init(bsp_ch579_t *self,
-                            const bsp_ch579_cfg_t *cfg)
+                       const bsp_ch579_cfg_t *cfg)
 {
     if (!self)
         return 1;
 
     self->base.ops = &bsp_ch579_ops;
     return bsp_init(&self->base, cfg);
+}
+
+/* ---- 板级选择接口 ---- */
+static bsp_ch579_t g_bsp;
+
+uint8_t bsp_ch579_board_init(void)
+{
+    return bsp_ch579_init(&g_bsp, NULL);
+}
+
+bsp_t *bsp_ch579_board_get(void)
+{
+    return &g_bsp.base;
 }

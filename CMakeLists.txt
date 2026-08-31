@@ -131,6 +131,7 @@ if(CH579)
         app/hvac_init.c
         app/isr.c
         src/bsp/bsp.c
+        src/bsp/bsp_board.c
         src/bsp/bsp_ch579.c
         src/modules/debug_module.c
         csp/CH579/startup_ARMCM0.s

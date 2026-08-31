@@ -13,6 +13,18 @@
 #define BSP_H
 #include <stdint.h>
 
+/* ============================================================
+ * 板级选择：同一芯片、不同产品板子之间一键切换
+ * ============================================================ */
+#define BSP_BOARD_CH579     0   /* 当前 CH579 通用板 */
+#define BSP_BOARD_MEIDI     1   /* 美的空调板 */
+#define BSP_BOARD_TOSHIBA   2   /* 东芝空调板 */
+#define BSP_BOARD_HAIER     3   /* 海尔多联机板 */
+
+#ifndef BSP_BOARD_SELECT
+#define BSP_BOARD_SELECT    BSP_BOARD_CH579
+#endif
+
 typedef struct bsp bsp_t;
 
 typedef struct bsp_ops {
@@ -22,10 +34,14 @@ typedef struct bsp_ops {
 
 struct bsp {
     const bsp_ops_t *ops;
-    void                 *drv;
+    void            *drv;
 };
 
 uint8_t bsp_init(bsp_t *hw, const void *cfg);
 void    bsp_rs485_enable(bsp_t *hw, uint8_t enable);
+
+/* 根据 BSP_BOARD_SELECT 初始化和获取当前板子实例 */
+uint8_t bsp_board_init(void);
+bsp_t  *bsp_board_get(void);
 
 #endif /* BSP_H */

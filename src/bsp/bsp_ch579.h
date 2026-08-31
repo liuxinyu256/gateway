@@ -33,6 +33,10 @@ typedef struct {
 extern const bsp_ops_t bsp_ch579_ops;
 
 uint8_t bsp_ch579_init(bsp_ch579_t *self,
-                            const bsp_ch579_cfg_t *cfg);
+                       const bsp_ch579_cfg_t *cfg);
+
+/* 板级选择接口：初始化/获取本板实例 */
+uint8_t bsp_ch579_board_init(void);
+bsp_t  *bsp_ch579_board_get(void);
 
 #endif /* BSP_CH579_H */
