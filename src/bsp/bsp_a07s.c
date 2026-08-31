@@ -34,6 +34,9 @@ static uint8_t ch579_init(bsp_t *hw, const void *cfg)
     if (!self)
         return 1;
 
+    /* 声明本板能力：支持 485，不支持品牌电路切换 */
+    hw->caps = BSP_CAP_RS485;
+
     /* 关闭海尔多联机通讯电路 */
     cfg_pin(&self->pb8, GPIO_PORT_B, 8,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);
 
@@ -75,6 +78,7 @@ static void ch579_rs485_enable(bsp_t *hw, uint8_t enable)
 const bsp_ops_t bsp_a07s_ops = {
     .init          = ch579_init,
     .rs485_enable  = ch579_rs485_enable,
+    .ac_select     = NULL,   /* A07S 无品牌电路切换 */
 };
 
 uint8_t bsp_a07s_init(bsp_a07s_t *self,
