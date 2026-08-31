@@ -122,11 +122,19 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 
         module_t *ac = gateway_module(0);
         if (ac && ac->sender) {
-            sender_send(ac->sender, test_frame, sizeof(test_frame),
-                        SENDER_PRIO_CMD);
+            uint8_t ret = sender_send(ac->sender, test_frame,
+                                      sizeof(test_frame), SENDER_PRIO_CMD);
             int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
-                             "[test] brand=%s send %uB\r\n",
-                             brand_name, (unsigned)sizeof(test_frame));
+                             "[test] brand=%s tx:", brand_name);
+            for (uint16_t i = 0; i < sizeof(test_frame) &&
+                                n < (int)sizeof(g_dbg.tx_buf) - 8; i++) {
+                n += snprintf((char *)g_dbg.tx_buf + n,
+                              sizeof(g_dbg.tx_buf) - (size_t)n,
+                              " %02X", test_frame[i]);
+            }
+            n += snprintf((char *)g_dbg.tx_buf + n,
+                          sizeof(g_dbg.tx_buf) - (size_t)n,
+                          " ret=%u\r\n", (unsigned)ret);
             if (n > 0)
                 sender_send(g_dbg.base.sender, g_dbg.tx_buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
