@@ -79,12 +79,6 @@ static void ac_ops_on_event(module_t *m, const event_t *ev)
     }
 }
 
-static void ac_ops_on_rx_log(module_t *m, const uint8_t *data, uint16_t len)
-{
-    (void)m;
-    debug_hex_dump("ac evt", data, len);
-}
-
 /* ---- AC 模块自己注册 IO 回调 ---- */
 static ac_module_t *s_ac_self;
 
@@ -122,7 +116,6 @@ const module_ops_t ac_module_ops = {
     .get_rx_buf            = ac_ops_get_rx_buf,
     .register_io_callbacks = ac_ops_register_io_callbacks,
     .on_event              = ac_ops_on_event,
-    .on_rx_log             = ac_ops_on_rx_log,
 };
 
 /* 激活品牌: 验证已登记 → 绑定事件表 */

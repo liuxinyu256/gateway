@@ -431,6 +431,13 @@ void debug_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
                     (uint16_t)pos, SENDER_PRIO_CMD);
 }
 
+/* 调试模块挂接 AC 模块的 RX 日志：AC 模块自身不感知日志 */
+static void dbg_module_rx_log(module_t *m, const uint8_t *data, uint16_t len)
+{
+    (void)m;
+    debug_hex_dump("ac evt", data, len);
+}
+
 void debug_module_start(void)
 {
     uint32_t baudrate = 115200;
@@ -454,6 +461,13 @@ void debug_module_start(void)
 
     module_init(&g_dbg.base, &baudrate);
     gateway_set_module(1, &g_dbg.base);
+
+    /* RX 日志由 debug 模块统一管理：挂到 AC 模块的运行时日志钩子 */
+    {
+        module_t *ac = gateway_module(0);
+        if (ac)
+            ac->rx_log = dbg_module_rx_log;
+    }
 
     module_start(&g_dbg.base);
 

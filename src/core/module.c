@@ -112,8 +112,8 @@ static void module_handle_rx(module_t *m)
     if (!buf || !size) return;
 
     uint16_t n = receiver_read_frame(m->receiver, buf, size);
-    if (n && m->ops && m->ops->on_rx_log)
-        m->ops->on_rx_log(m, buf, n);
+    if (n && m->rx_log)
+        m->rx_log(m, buf, n);
     if (n && m->handler && m->handler->on_rx_frame)
         m->handler->on_rx_frame(m->handler_ctx, buf, n);
 }

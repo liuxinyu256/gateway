@@ -28,7 +28,6 @@ typedef struct module_ops
     uint8_t *(*get_rx_buf)(module_t *m, uint16_t *size); /* 返回模块自己的接收缓冲区 */
     void    (*register_io_callbacks)(module_t *m); /* 模块自己注册接收/发送完成回调 */
     void    (*on_event)(module_t *m, const event_t *ev); /* 可选: 模块统一事件日志 */
-    void    (*on_rx_log)(module_t *m, const uint8_t *data, uint16_t len); /* 可选: 模块统一接收日志 */
 } module_ops_t;
 
 typedef struct module
@@ -41,6 +40,8 @@ typedef struct module
     bus_t      bus;            /* 总线状态 */
     sender_t   *sender;        /* 发送抽象：指针注入 */
     receiver_t *receiver;      /* 接收抽象：指针注入 */
+
+    void (*rx_log)(module_t *m, const uint8_t *data, uint16_t len); /* 可选: 运行时由调试模块挂接 */
 
     TaskHandle_t send_task;    /* 发送任务 */
     TaskHandle_t receive_task; /* 接收任务 */
