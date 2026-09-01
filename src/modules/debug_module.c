@@ -8,7 +8,6 @@
 #include "debug_module.h"   /* 含 module.h / stdarg.h */
 #include <stdio.h>
 #include "FreeRTOS.h"
-#include "semphr.h"
 #include "debug_phy.h"
 #include "led.h"
 #include "bsp.h"
@@ -62,15 +61,14 @@ void vApplicationIdleHook(void)
 typedef struct {
     module_t base;
     uint8_t  rx_buf[128];   /* Debug 模块接收缓冲区 */
-    uint8_t  tx_buf[128];   /* HEX 回显格式化缓冲区 */
 } debug_module_t;
 
 static debug_module_t     g_dbg;
-static SemaphoreHandle_t debug_print_mutex;
 static debug_io_t        g_dbg_io;
 
-static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
+static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
+    char buf[128];   /* 本任务独立发送缓冲区，避免与其他任务共用 */
     (void)ctx;
 
     if (!g_dbg.base.sender)
@@ -98,7 +96,7 @@ static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
         uint32_t heap_free = (uint32_t)xPortGetFreeHeapSize();
         uint32_t heap_min  = (uint32_t)xPortGetMinimumEverFreeHeapSize();
 
-        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+        int n = snprintf((char *)buf, sizeof(buf),
                          "[perf] cpu=%lu.%lu%% ram=%lu%% used=%lu free=%lu total=%lu heap_free=%lu min=%lu\r\n",
                          (unsigned long)(cpu_permille / 10),
                          (unsigned long)(cpu_permille % 10),
@@ -108,14 +106,14 @@ static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
                          (unsigned long)heap_free,
                          (unsigned long)heap_min);
         if (n > 0)
-            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+            sender_send(g_dbg.base.sender, buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
 
     /* 命令：S = 查询健康状态 */
     if (len == 1 && (data[0] == 'S' || data[0] == 's')) {
-        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+        int n = snprintf((char *)buf, sizeof(buf),
                          "[st] s=%u r=%u st=%u cmd=%u norm=%u\r\n",
                          g_dbg.base.send_queue_drop_cnt,
                          g_dbg.base.receive_queue_drop_cnt,
@@ -123,7 +121,7 @@ static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
                          frame_queue_drop_count(&g_dbg.base.sender->cmd_q),
                          frame_queue_drop_count(&g_dbg.base.sender->norm_q));
         if (n > 0)
-            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+            sender_send(g_dbg.base.sender, buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -131,28 +129,28 @@ static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
     /* 命令：A/O/B = 触发 AC 模块事件 */
     if (len == 1 && (data[0] == 'A' || data[0] == 'a')) {
         uint8_t ret = module_send_event(gateway_module(0), EVENT_NEED_ACK);
-        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+        int n = snprintf((char *)buf, sizeof(buf),
                          "[evt] need_ack ret=%u\r\n", (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+            sender_send(g_dbg.base.sender, buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
     if (len == 1 && (data[0] == 'O' || data[0] == 'o')) {
         uint8_t ret = module_send_event(gateway_module(0), EVENT_TIMEOUT);
-        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+        int n = snprintf((char *)buf, sizeof(buf),
                          "[evt] timeout ret=%u\r\n", (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+            sender_send(g_dbg.base.sender, buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
     if (len == 1 && (data[0] == 'B' || data[0] == 'b')) {
         uint8_t ret = module_send_event(gateway_module(0), EVENT_BUS_IDLE);
-        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+        int n = snprintf((char *)buf, sizeof(buf),
                          "[evt] bus_idle ret=%u\r\n", (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+            sender_send(g_dbg.base.sender, buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -162,11 +160,11 @@ static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
         uint8_t cmd = (uint8_t)(data[1] - '0');
         uint8_t val = (uint8_t)((data[3] - '0') * 10 + (data[4] - '0'));
         uint8_t ret = module_send_cmd(gateway_module(0), cmd, val);
-        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+        int n = snprintf((char *)buf, sizeof(buf),
                          "[evt] cmd=%u val=%u ret=%u\r\n",
                          (unsigned)cmd, (unsigned)val, (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+            sender_send(g_dbg.base.sender, buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -175,20 +173,20 @@ static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
     if (len == 1 && (data[0] == 'G' || data[0] == 'g')) {
         gateway_state_t s;
         if (gateway_module_state_get(0, &s) == 0) {
-            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+            int n = snprintf((char *)buf, sizeof(buf),
                              "[ac st] power=%u mode=%u set=%u room=%u fan=%u swing=%u err=%u\r\n",
                              (unsigned)s.power, (unsigned)s.mode,
                              (unsigned)s.set_temp, (unsigned)s.room_temp,
                              (unsigned)s.fan, (unsigned)s.swing,
                              (unsigned)s.error_code);
             if (n > 0)
-                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                sender_send(g_dbg.base.sender, buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         } else {
-            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+            int n = snprintf((char *)buf, sizeof(buf),
                              "[ac st] unavailable\r\n");
             if (n > 0)
-                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                sender_send(g_dbg.base.sender, buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         }
         return 1;
@@ -202,37 +200,37 @@ static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
 
         module_t *ac = gateway_module(0);
         if (ac && ac->sender) {
-            int dn = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+            int dn = snprintf((char *)buf, sizeof(buf),
                               "[dbg] ac bus busy=%u gap=%u dir=%p need_txc=%u\r\n",
                               (unsigned)ac->bus.busy,
                               (unsigned)ac->bus.gap_ms,
                               (void *)ac->bus.set_dir,
                               (unsigned)ac->bus.need_tx_complete);
             if (dn > 0)
-                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                sender_send(g_dbg.base.sender, buf,
                             (uint16_t)dn, SENDER_PRIO_CMD);
 
             uint8_t ret = sender_send(ac->sender, test_frame,
                                       sizeof(test_frame), SENDER_PRIO_CMD);
-            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+            int n = snprintf((char *)buf, sizeof(buf),
                              "[test] tx:");
             for (uint16_t i = 0; i < sizeof(test_frame) &&
-                                n < (int)sizeof(g_dbg.tx_buf) - 8; i++) {
-                n += snprintf((char *)g_dbg.tx_buf + n,
-                              sizeof(g_dbg.tx_buf) - (size_t)n,
+                                n < (int)sizeof(buf) - 8; i++) {
+                n += snprintf((char *)buf + n,
+                              sizeof(buf) - (size_t)n,
                               " %02X", test_frame[i]);
             }
-            n += snprintf((char *)g_dbg.tx_buf + n,
-                          sizeof(g_dbg.tx_buf) - (size_t)n,
+            n += snprintf((char *)buf + n,
+                          sizeof(buf) - (size_t)n,
                           " ret=%u\r\n", (unsigned)ret);
             if (n > 0)
-                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                sender_send(g_dbg.base.sender, buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         } else {
-            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+            int n = snprintf((char *)buf, sizeof(buf),
                              "[test] ac not ready\r\n");
             if (n > 0)
-                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                sender_send(g_dbg.base.sender, buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         }
         return 1;
@@ -260,65 +258,46 @@ static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
         if (ac && ac->sender) {
             uint8_t ret = sender_send(ac->sender, test_frame,
                                       sizeof(test_frame), SENDER_PRIO_CMD);
-            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+            int n = snprintf((char *)buf, sizeof(buf),
                              "[test] brand=%s tx:", brand_name);
             for (uint16_t i = 0; i < sizeof(test_frame) &&
-                                n < (int)sizeof(g_dbg.tx_buf) - 8; i++) {
-                n += snprintf((char *)g_dbg.tx_buf + n,
-                              sizeof(g_dbg.tx_buf) - (size_t)n,
+                                n < (int)sizeof(buf) - 8; i++) {
+                n += snprintf((char *)buf + n,
+                              sizeof(buf) - (size_t)n,
                               " %02X", test_frame[i]);
             }
-            n += snprintf((char *)g_dbg.tx_buf + n,
-                          sizeof(g_dbg.tx_buf) - (size_t)n,
+            n += snprintf((char *)buf + n,
+                          sizeof(buf) - (size_t)n,
                           " ret=%u\r\n", (unsigned)ret);
             if (n > 0)
-                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                sender_send(g_dbg.base.sender, buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         } else {
-            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+            int n = snprintf((char *)buf, sizeof(buf),
                              "[test] ac not ready\r\n");
             if (n > 0)
-                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                sender_send(g_dbg.base.sender, buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         }
         return 1;
     }
 
-    int pos = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf), "[rx]");
+    int pos = snprintf((char *)buf, sizeof(buf), "[rx]");
     for (uint16_t i = 0; i < len &&
-                        pos < (int)sizeof(g_dbg.tx_buf) - 5; i++) {
-        pos += snprintf((char *)g_dbg.tx_buf + pos,
-                        sizeof(g_dbg.tx_buf) - (size_t)pos,
+                        pos < (int)sizeof(buf) - 5; i++) {
+        pos += snprintf((char *)buf + pos,
+                        sizeof(buf) - (size_t)pos,
                         " %02X", data[i]);
     }
-    if (pos < (int)sizeof(g_dbg.tx_buf) - 3) {
-        pos += snprintf((char *)g_dbg.tx_buf + pos,
-                        sizeof(g_dbg.tx_buf) - (size_t)pos, "\r\n");
+    if (pos < (int)sizeof(buf) - 3) {
+        pos += snprintf((char *)buf + pos,
+                        sizeof(buf) - (size_t)pos, "\r\n");
     } else {
-        g_dbg.tx_buf[sizeof(g_dbg.tx_buf) - 1] = 0;
+        buf[sizeof(buf) - 1] = 0;
     }
-    sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+    sender_send(g_dbg.base.sender, buf,
                 (uint16_t)pos, SENDER_PRIO_CMD);
     return 1;
-}
-
-/* 所有 debug 回复都经过同一把锁，避免和 debug_vprintf() 共用 tx_buf 时互相覆盖 */
-static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
-{
-    int r;
-
-    if (!g_dbg.base.sender)
-        return 1;
-
-    if (debug_print_mutex)
-        xSemaphoreTake(debug_print_mutex, portMAX_DELAY);
-
-    r = on_rx_frame_locked(ctx, data, len);
-
-    if (debug_print_mutex)
-        xSemaphoreGive(debug_print_mutex);
-
-    return r;
 }
 
 static void on_periodic_send(void *ctx)
@@ -393,24 +372,19 @@ static void dbg_tx_done(sender_t *tx)
     module_tx_done(&g_dbg.base);
 }
 
-/* 公共发送：复用调试模块 tx_buf，发到 UART1 */
+/* 公共发送：每个调用使用独立栈上缓冲区，避免多任务共用同一块内存 */
 void debug_vprintf(const char *fmt, va_list ap)
 {
+    char buf[128];
     int n;
 
     if (!g_dbg.base.sender)
         return;
 
-    if (debug_print_mutex)
-        xSemaphoreTake(debug_print_mutex, portMAX_DELAY);
-
-    n = vsnprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf), fmt, ap);
+    n = vsnprintf(buf, sizeof(buf), fmt, ap);
     if (n > 0)
-        sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                     (uint16_t)n, SENDER_PRIO_CMD);
-
-    if (debug_print_mutex)
-        xSemaphoreGive(debug_print_mutex);
 }
 
 void debug_printf(const char *fmt, ...)
@@ -432,8 +406,6 @@ void debug_module_start(void)
 #endif
 
     halLedInit();   /* 运行 LED 初始化 */
-
-    debug_print_mutex = xSemaphoreCreateMutex();
 
     g_dbg.base.ops = &debug_module_ops;
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);
