@@ -12,12 +12,14 @@
 #include "sender.h"
 #include "receiver.h"
 #include "bus.h"
+#include "rs485.h"
 
 typedef struct {
     encoder_t  *encoder;
     decoder_t  *decoder;
     sender_t   *sender;
     receiver_t *receiver;
+    rs485_t    *rs485;   /* RS485 方向控制（若该物理层是 485） */
 } ac_io_t;
 
 /* 物理层类接口：每个物理层实现 create_io */

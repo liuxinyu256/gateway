@@ -15,11 +15,7 @@
 #include "ac_phy.h"
 #include "debug_module.h"
 #include "rs485.h"
-#include "rs485_ch579.h"
 #include "bsp.h"
-#ifdef __CH579__
-#include "CH57x_common.h"
-#endif
 
 #ifdef __CH579__
 /* RS485 方向回调适配：bus 层调用 (tx, ctx)，转给 rs485 HAL */
@@ -30,22 +26,9 @@ static void hvac_rs485_dir(uint8_t tx, void *ctx)
 #endif
 
 static ac_module_t   g_ac = { .base.ops = &ac_module_ops };
-static rs485_ch579_t g_hvac_rs485;
 static ac_io_t       g_ac_io;
 
-/* 1. RS485 DE 方向初始化 */
-static void init_rs485(void)
-{
-#ifdef __CH579__
-    rs485_ch579_cfg_t rs_cfg = {
-        .port   = 0,          /* GPIOA */
-        .de_pin = GPIO_Pin_1,
-    };
-    rs485_ch579_init(&g_hvac_rs485, &rs_cfg);
-#endif
-}
-
-/* 2. AC 物理层装配：由品牌 phy_cfg 决定 */
+/* 1. AC 物理层装配：由品牌 phy_cfg 决定（内部包含 RS485 方向控制） */
 static uint8_t init_ac_phy(void)
 {
     if (ac_phy_init(ac_test_cfg.phy_cfg, &g_ac.base.bus, &g_ac_io) != 0)
@@ -70,7 +53,7 @@ static void init_ac_module(void)
 #ifdef __CH579__
     /* 必须在 module_init 之后设置：module_base_init 会 bus_init 清零 */
     bus_set_rs485_enable(&g_ac.base.bus, 1);
-    bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, &g_hvac_rs485.base);
+    bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, g_ac_io.rs485);
 #endif
 
     ac_module_register(&g_ac, &ac_test_cfg);
@@ -86,8 +69,7 @@ void hvac_start(void)
     gateway_init();
 
     bsp_board_init();       /* 板级外围电路选择 */
-    init_rs485();           /* RS485 DE 方向 */
-    if (init_ac_phy() != 0) /* 物理层装配 */
+    if (init_ac_phy() != 0) /* 物理层装配（含 RS485） */
         return;
 
     init_ac_module();       /* AC 模块初始化/注册/启动 */

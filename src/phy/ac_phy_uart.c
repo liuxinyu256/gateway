@@ -9,12 +9,17 @@
 #include "sender_complete_poll.h"
 #include "timer.h"
 #include "timer_instance.h"
+#include "rs485_ch579.h"
+#ifdef __CH579__
+#include "CH57x_common.h"
+#endif
 
 /* 具体对象由本类静态持有（当前单实例） */
 static uart_encoder_t     s_enc;
 static uart_decoder_t     s_dec;
 static sender_poll_t      s_sender;
 static receiver_timeout_t s_rx;
+static rs485_ch579_t      s_rs485;
 static uint8_t            s_rx_buf[128];
 
 /* create_io：UART 物理层的“创建对象”方法 */
@@ -62,10 +67,23 @@ static uint8_t uart_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
     receiver_set_bus(&s_rx.base, bus);
     uart_decoder_attach_receiver(&s_dec, &s_rx.base);
 
+#ifdef __CH579__
+    /* RS485 方向控制：DE=PA1（A07S 板） */
+    {
+        rs485_ch579_cfg_t rs_cfg = {
+            .port   = 0,
+            .de_pin = GPIO_Pin_1,
+        };
+        if (rs485_ch579_init(&s_rs485, &rs_cfg) != 0)
+            return 1;
+    }
+#endif
+
     io->encoder  = &s_enc.base;
     io->decoder  = &s_dec.base;
     io->sender   = &s_sender.base;
     io->receiver = &s_rx.base;
+    io->rs485    = &s_rs485.base;
     return 0;
 }
 
