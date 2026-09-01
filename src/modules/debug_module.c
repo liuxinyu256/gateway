@@ -486,8 +486,8 @@ static void on_periodic_send(void *ctx)
 
     halLedRunBlink();   /* 运行指示灯保持原节奏闪烁 */
 
-    /* 心跳 1s 一跳（默认 poll 200ms，1s/200ms = 5 次），可用 hb 命令开关 */
-    if (++alive_div >= 5) {
+    /* 心跳 5s 一跳（默认 poll 200ms，5s/200ms = 25 次），可用 hb 命令开关 */
+    if (++alive_div >= 25) {
         alive_div = 0;
         if (s_log_heartbeat_enabled && g_dbg.base.sender)
             sender_send(g_dbg.base.sender, (const uint8_t *)alive,
