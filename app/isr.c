@@ -39,10 +39,8 @@ void GPIO_IRQHandler(void)  { }
 void SLAVE_IRQHandler(void) { }
 void SPI0_IRQHandler(void)  { }
 void BB_IRQHandler(void)    { }
-void LLE_IRQHandler(void)   { }
 void USB_IRQHandler(void)   { }
 void ETH_IRQHandler(void)   { }
-void RTC_IRQHandler(void)   { }
 void ADC_IRQHandler(void)   { }
 void SPI1_IRQHandler(void)  { }
 void LED_IRQHandler(void)   { }

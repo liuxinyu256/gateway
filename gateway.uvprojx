@@ -338,9 +338,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>__CH579__,DEBUG</Define>
+              <Define>__CH579__,DEBUG,BLE_ENABLE</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\bsp;.\src\phy;.\src\core;.\src\modules;.\src\brands;.\app;.\csp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0</IncludePath>
+              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\bsp;.\src\phy;.\src\core;.\src\modules;.\src\brands;.\app;.\csp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0;.\src\ble\lib;.\src\ble\hal;.\src\ble\app;.\src\ble\profile</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -678,6 +678,56 @@
               <FileName>ble_module.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\modules\ble_module.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ble</GroupName>
+          <Files>
+            <File>
+              <FileName>MCU.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\hal\MCU.c</FilePath>
+            </File>
+            <File>
+              <FileName>RTC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\hal\RTC.c</FilePath>
+            </File>
+            <File>
+              <FileName>LED.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\hal\LED.c</FilePath>
+            </File>
+            <File>
+              <FileName>KEY.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\hal\KEY.c</FilePath>
+            </File>
+            <File>
+              <FileName>SLEEP.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\hal\SLEEP.c</FilePath>
+            </File>
+            <File>
+              <FileName>peripheral.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\app\peripheral.c</FilePath>
+            </File>
+            <File>
+              <FileName>gattprofile.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\profile\gattprofile.c</FilePath>
+            </File>
+            <File>
+              <FileName>devinfoservice.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\profile\devinfoservice.c</FilePath>
+            </File>
+            <File>
+              <FileName>CH57xBLE.lib</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble\lib\CH57xBLE.lib</FilePath>
             </File>
           </Files>
         </Group>
