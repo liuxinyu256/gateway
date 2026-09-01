@@ -75,10 +75,11 @@ typedef struct module
 
 /* 通用模块接口
  * module_init 只做分发: 调用 m->ops->init(m, cfg)
- * module_base_init 是公共初始化 (bus/队列/模块注册), 由各模块 init 内部调用
+ * module_base_init 是公共初始化 (队列/模块注册), 由各模块 init 内部调用。
+ * 总线/帧间隙由物理层装配时负责初始化，不在这里传波特率。
  */
 uint8_t module_init(module_t *m, void *cfg);
-uint8_t module_base_init(module_t *m, uint32_t baudrate);
+uint8_t module_base_init(module_t *m);
 void    module_set_handler(module_t *m, const event_handler_t *handler, void *ctx);
 void    module_start(module_t *m);
 

@@ -9,7 +9,7 @@ static uint8_t third_party_ops_init(module_t *m, void *cfg)
     const third_party_init_cfg_t *c = (const third_party_init_cfg_t *)cfg;
     if (!m || !c) return 1;
 
-    if (module_base_init(m, c->baudrate) != 0)
+    if (module_base_init(m) != 0)
         return 1;
 
     third_party_module_init(m, c->gw);

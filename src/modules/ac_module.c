@@ -35,7 +35,7 @@ static uint8_t ac_ops_init(module_t *m, void *cfg)
 
     if (!self || !c) return 1;
 
-    if (module_base_init(m, c->baudrate) != 0)
+    if (module_base_init(m) != 0)
         return 1;
 
     ac_module_init(self, c->brand_table, c->brand_count);

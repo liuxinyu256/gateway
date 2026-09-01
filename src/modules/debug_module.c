@@ -508,8 +508,8 @@ static const event_handler_t debug_evt_table = {
 
 static uint8_t debug_ops_init(module_t *m, void *cfg)
 {
-    uint32_t baudrate = cfg ? *(uint32_t *)cfg : 115200;
-    if (module_base_init(m, baudrate) != 0)
+    (void)cfg;
+    if (module_base_init(m) != 0)
         return 1;
     return 0;
 }

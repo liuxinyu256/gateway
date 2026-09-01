@@ -23,6 +23,8 @@ static uint8_t uart_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
     if (!u || !bus || !io)
         return 1;
 
+    bus_init(bus, u->baudrate);   /* 帧间隙由物理层根据波特率初始化 */
+
     uart_encoder_cfg_t enc_cfg = {
         .port = &uart0,
         .uart_cfg = {
