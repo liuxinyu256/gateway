@@ -5,6 +5,9 @@
  */
 #include "ac_module.h"
 #include "ac_test.h"
+#include "debug_module.h"
+#include "gateway.h"
+#include <stdio.h>
 #include <string.h>
 
 /* 品牌注册表: 由清单生成 (单一数据源, 见 ac_module.h)
@@ -49,6 +52,62 @@ static uint8_t *ac_ops_get_rx_buf(module_t *m, uint16_t *size)
     return self->rx_buf;
 }
 
+/* ---- AC 模块统一事件日志（品牌里不再打印） ---- */
+static const char *ac_event_name(event_type_t type)
+{
+    switch (type) {
+    case EVENT_PERIODIC_SEND: return "periodic";
+    case EVENT_RX_FRAME:      return "rx";
+    case EVENT_CONTROL_CMD:   return "cmd";
+    case EVENT_NEED_ACK:      return "need_ack";
+    case EVENT_SCAN_AC:       return "scan";
+    case EVENT_TIMEOUT:       return "timeout";
+    case EVENT_BUS_IDLE:      return "bus_idle";
+    default:                  return "?";
+    }
+}
+
+static void ac_ops_on_event(module_t *m, const event_t *ev)
+{
+    (void)m;
+    if (!ev) return;
+
+    if (ev->type == EVENT_CONTROL_CMD) {
+        debug_printf("[ac evt] %s cmd=%u val=%u\r\n",
+                     ac_event_name(ev->type),
+                     (unsigned)ev->cmd_val, (unsigned)ev->cmd_arg);
+    } else {
+        debug_printf("[ac evt] %s\r\n", ac_event_name(ev->type));
+    }
+}
+
+static void ac_ops_on_rx_log(module_t *m, const uint8_t *data, uint16_t len)
+{
+    module_t *dbg = gateway_module(1);
+    char buf[64];
+    int pos;
+    (void)m;
+
+    if (!dbg || !dbg->sender || !data || !len)
+        return;
+
+    pos = snprintf(buf, sizeof(buf), "[ac evt] rx:");
+    for (uint16_t i = 0; i < len; i++) {
+        if (pos + 4 >= (int)sizeof(buf)) {
+            sender_send(dbg->sender, (const uint8_t *)buf,
+                        (uint16_t)pos, SENDER_PRIO_CMD);
+            pos = 0;
+        }
+        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos,
+                        " %02X", data[i]);
+    }
+    if (pos + 2 < (int)sizeof(buf))
+        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
+    if (pos > 0)
+        sender_send(dbg->sender, (const uint8_t *)buf,
+                    (uint16_t)pos, SENDER_PRIO_CMD);
+}
+
 /* ---- AC 模块自己注册 IO 回调 ---- */
 static ac_module_t *s_ac_self;
 
@@ -85,6 +144,8 @@ const module_ops_t ac_module_ops = {
     .start                 = NULL,
     .get_rx_buf            = ac_ops_get_rx_buf,
     .register_io_callbacks = ac_ops_register_io_callbacks,
+    .on_event              = ac_ops_on_event,
+    .on_rx_log             = ac_ops_on_rx_log,
 };
 
 /* 激活品牌: 验证已登记 → 绑定事件表 */

@@ -63,6 +63,9 @@ static void module_handle_event(module_t *m, const event_t *ev)
 {
     if (!m || !ev) return;
 
+    if (m->ops && m->ops->on_event)
+        m->ops->on_event(m, ev);
+
     switch (ev->type) {
     case EVENT_PERIODIC_SEND:
         if (m->handler && m->handler->on_periodic_send)
@@ -109,6 +112,8 @@ static void module_handle_rx(module_t *m)
     if (!buf || !size) return;
 
     uint16_t n = receiver_read_frame(m->receiver, buf, size);
+    if (n && m->ops && m->ops->on_rx_log)
+        m->ops->on_rx_log(m, buf, n);
     if (n && m->handler && m->handler->on_rx_frame)
         m->handler->on_rx_frame(m->handler_ctx, buf, n);
 }

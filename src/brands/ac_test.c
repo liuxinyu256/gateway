@@ -1,27 +1,14 @@
 /**
  * ac_test.c —— 测试品牌实现
  *
- * 实现 AC 模块全部事件，每个事件都在 UART1 打印标记，
- * cmd 事件会更新 AC 模块状态并上报网关，便于验证事件响应。
- * 正式品牌协议开发后可移除。
+ * 实现 AC 模块全部事件（只做协议行为，不负责日志打印），
+ * cmd 事件会更新 AC 模块状态并上报网关。
+ * 事件日志由 ac_module 统一打印。
  */
 #include "ac_test.h"
 #include "gateway.h"
 #include "sender.h"
-#include "debug_module.h"
-#include <stdio.h>
-#include <stdarg.h>
 #include <string.h>
-
-/* 打印事件标记到 UART1：复用 Debug 模块公共发送缓冲区 */
-static void test_evt_printf(const char *fmt, ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    debug_vprintf(fmt, ap);
-    va_end(ap);
-}
 
 static void test_send_query(ac_module_t *self)
 {
@@ -36,41 +23,19 @@ static void test_send_query(ac_module_t *self)
 static void test_on_activate(void *ctx)
 {
     (void)ctx;
-    test_evt_printf("[ac evt] activate\r\n");
 }
 
 static void test_on_periodic_send(void *ctx)
 {
     ac_module_t *self = (ac_module_t *)ctx;
-    test_evt_printf("[ac evt] periodic\r\n");
     test_send_query(self);
 }
 
 static int test_on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
     (void)ctx;
-    module_t *dbg = gateway_module(1);
-    char buf[64];   /* 小缓冲，分段发送，避免大局部数组 */
-    int pos;
-
-    if (!dbg || !dbg->sender || !data || !len)
-        return 1;
-
-    pos = snprintf(buf, sizeof(buf), "[ac evt] rx:");
-    for (uint16_t i = 0; i < len; i++) {
-        if (pos + 4 >= (int)sizeof(buf)) {
-            sender_send(dbg->sender, (const uint8_t *)buf,
-                        (uint16_t)pos, SENDER_PRIO_CMD);
-            pos = 0;
-        }
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos,
-                        " %02X", data[i]);
-    }
-    if (pos + 2 < (int)sizeof(buf))
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
-    if (pos > 0)
-        sender_send(dbg->sender, (const uint8_t *)buf,
-                    (uint16_t)pos, SENDER_PRIO_CMD);
+    (void)data;
+    (void)len;
     return 1;
 }
 
@@ -78,8 +43,6 @@ static void test_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val)
 {
     ac_module_t   *self = (ac_module_t *)ctx;
     gateway_state_t s;
-
-    test_evt_printf("[ac evt] cmd=%u val=%u\r\n", (unsigned)cmd, (unsigned)val);
 
     if (!self)
         return;
@@ -104,20 +67,17 @@ static void test_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val)
 static void test_on_need_ack(void *ctx)
 {
     (void)ctx;
-    test_evt_printf("[ac evt] need_ack\r\n");
 }
 
 static void test_on_scan(void *ctx)
 {
     ac_module_t *self = (ac_module_t *)ctx;
-    test_evt_printf("[ac evt] scan\r\n");
     test_send_query(self);
 }
 
 static void test_on_timeout(void *ctx)
 {
     (void)ctx;
-    test_evt_printf("[ac evt] timeout\r\n");
 }
 
 static const event_handler_t ac_test_evt = {
