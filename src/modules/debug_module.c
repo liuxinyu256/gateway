@@ -26,6 +26,32 @@
 static volatile uint32_t debug_idle_ticks;
 static TickType_t debug_last_idle_tick;
 
+/* 整个用户 RAM 统计（通过链接器 scatter 符号） */
+#ifdef __CC_ARM
+extern int Image$$RW_IRAM1$$Base;
+extern int Image$$RW_IRAM1$$ZI$$Limit;
+extern int Image$$RW_IRAM2$$Base;
+extern int Image$$RW_IRAM2$$ZI$$Limit;
+#endif
+
+static uint32_t debug_app_ram_total(void)
+{
+    return 0x3000u + 0x2000u;   /* RAM1 12KB + RAM2 8KB */
+}
+
+static uint32_t debug_app_ram_used(void)
+{
+#ifdef __CC_ARM
+    uint32_t r1 = (uint32_t)&Image$$RW_IRAM1$$ZI$$Limit -
+                  (uint32_t)&Image$$RW_IRAM1$$Base;
+    uint32_t r2 = (uint32_t)&Image$$RW_IRAM2$$ZI$$Limit -
+                  (uint32_t)&Image$$RW_IRAM2$$Base;
+    return r1 + r2;
+#else
+    return 0;
+#endif
+}
+
 void vApplicationIdleHook(void)
 {
     TickType_t now = xTaskGetTickCount();
@@ -68,19 +94,23 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         last_total_tick = total_now;
         last_idle_tick  = idle_now;
 
-        uint32_t ram_total = (uint32_t)configTOTAL_HEAP_SIZE;
-        uint32_t ram_free  = (uint32_t)xPortGetFreeHeapSize();
-        uint32_t ram_used  = ram_total - ram_free;
-        uint32_t ram_min   = (uint32_t)xPortGetMinimumEverFreeHeapSize();
-        uint32_t ram_percent = (ram_total > 0) ? (ram_used * 100U / ram_total) : 0;
+        uint32_t app_total   = debug_app_ram_total();
+        uint32_t app_used    = debug_app_ram_used();
+        uint32_t app_free    = app_total - app_used;
+        uint32_t app_percent = (app_total > 0) ? (app_used * 100U / app_total) : 0;
+
+        uint32_t heap_free = (uint32_t)xPortGetFreeHeapSize();
+        uint32_t heap_min  = (uint32_t)xPortGetMinimumEverFreeHeapSize();
 
         int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
-                         "[perf] cpu=%lu.%lu%% ram=%lu%% used=%lu free=%lu total=%lu min=%lu\r\n",
+                         "[perf] cpu=%lu.%lu%% ram=%lu%% used=%lu free=%lu total=%lu heap_free=%lu min=%lu\r\n",
                          (unsigned long)(cpu_permille / 10),
                          (unsigned long)(cpu_permille % 10),
-                         (unsigned long)ram_percent,
-                         (unsigned long)ram_used, (unsigned long)ram_free,
-                         (unsigned long)ram_total, (unsigned long)ram_min);
+                         (unsigned long)app_percent,
+                         (unsigned long)app_used, (unsigned long)app_free,
+                         (unsigned long)app_total,
+                         (unsigned long)heap_free,
+                         (unsigned long)heap_min);
         if (n > 0)
             sender_send(g_dbg.base.sender, g_dbg.tx_buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
