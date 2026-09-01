@@ -6,11 +6,13 @@
 #include "bus.h"
 #include "sender_complete.h"
 
+/* 发送完成回调类型（与接收 frame_finish_callback 对称） */
+typedef void (*sender_done_callback)(sender_t *tx);
+
 /* 发送回调 */
 typedef struct
 {
-    void (*done)(void *ctx); /* 一帧真正发完 (含 RS485 TX_COMPLETE) */
-    void *done_ctx;
+    sender_done_callback done; /* 一帧真正发完 (含 RS485 TX_COMPLETE) */
 } sender_callbacks_t;
 
 #define SENDER_PRIO_NORM 0
@@ -42,14 +44,15 @@ typedef struct sender
     volatile uint8_t sending;          /* 1 = 当前有帧在发 */
     volatile uint8_t wait_tx_complete; /* RS485: 等最后一位上总线 */
 
-    void (*on_done)(void *ctx);
-    void *done_ctx;
+    sender_done_callback on_done;
+    void *owner;   /* 上层实例（如 module_t*），由 cfg 注入 */
 } sender_t;
 
 typedef struct
 {
     encoder_t *encoder; /* 物理层编码器 */
     bus_t *bus;         /* 要绑定的发送总线 (通常是 module->bus) */
+    void *owner;        /* 上层实例（可空） */
 } sender_cfg_t;
 
 uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg);
