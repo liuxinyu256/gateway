@@ -71,11 +71,11 @@ static void ac_ops_on_event(module_t *m, const event_t *ev)
     if (!ev) return;
 
     if (ev->type == EVENT_CONTROL_CMD) {
-        debug_printf("[ac evt] %s cmd=%u val=%u\r\n",
+        log_printf("[ac evt] %s cmd=%u val=%u\r\n",
                      ac_event_name(ev->type),
                      (unsigned)ev->cmd_val, (unsigned)ev->cmd_arg);
     } else {
-        debug_printf("[ac evt] %s\r\n", ac_event_name(ev->type));
+        log_printf("[ac evt] %s\r\n", ac_event_name(ev->type));
     }
 }
 

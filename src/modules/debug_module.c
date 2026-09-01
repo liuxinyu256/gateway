@@ -378,7 +378,7 @@ static void dbg_tx_done(sender_t *tx)
 }
 
 /* 公共发送：每个调用使用独立栈上缓冲区，避免多任务共用同一块内存 */
-void debug_vprintf(const char *fmt, va_list ap)
+void log_vprintf(const char *fmt, va_list ap)
 {
     char *buf = s_ac_evt_buf;   /* AC 事件打印专用静态发送缓冲区 */
     int n;
@@ -392,17 +392,17 @@ void debug_vprintf(const char *fmt, va_list ap)
                     (uint16_t)n, SENDER_PRIO_CMD);
 }
 
-void debug_printf(const char *fmt, ...)
+void log_printf(const char *fmt, ...)
 {
     va_list ap;
 
     va_start(ap, fmt);
-    debug_vprintf(fmt, ap);
+    log_vprintf(fmt, ap);
     va_end(ap);
 }
 
 /* HEX 打印统一由 debug 模块管理，外部模块只传 tag + 数据 */
-void debug_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
+void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
 {
     int pos;
 
@@ -435,7 +435,7 @@ void debug_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
 static void dbg_module_rx_log(module_t *m, const uint8_t *data, uint16_t len)
 {
     (void)m;
-    debug_hex_dump("ac evt", data, len);
+    log_hex_dump("ac evt", data, len);
 }
 
 void debug_module_start(void)
