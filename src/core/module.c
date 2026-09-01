@@ -124,11 +124,18 @@ void module_rx_frame_done(module_t *m, uint16_t len)
     };
 #ifdef FAKE_FREERTOS
     module_enqueue_receive_event(m, &ev);
+    if (m->gap_timer)
+        xTimerStart(m->gap_timer, 0);
 #else
     if (!m->receive_queue) return;
     BaseType_t woken = pdFALSE;
     xQueueSendFromISR(m->receive_queue, &ev, &woken);
-    portYIELD_FROM_ISR(woken);
+    if (m->gap_timer) {
+        xTimerStartFromISR(m->gap_timer, &woken);
+        portYIELD_FROM_ISR(woken);
+    } else {
+        portYIELD_FROM_ISR(woken);
+    }
 #endif
 }
 

@@ -58,10 +58,10 @@ static void on_timeout(void *ctx)
         return;
     timer_stop(s->timer); /* 一帧完成, 等下一帧首字节 */
     s->base.frame_len = ring_count(&s->base.ring);
+    if (s->base.bus)
+        bus_on_rx_complete(s->base.bus); /* 接收完成: 总线先进入空闲/gap */
     if (s->base.on_frame_finish)
         s->base.on_frame_finish(&s->base, s->base.frame_len);
-    if (s->base.bus)
-        bus_on_rx_complete(s->base.bus); /* 接收完成: 总线进入空闲/gap */
     s->base.receiving = 0;
 }
 
