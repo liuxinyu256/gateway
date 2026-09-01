@@ -79,13 +79,17 @@ static void gateway_state_task_fn(void *pv)
 
 void gateway_init(void) {
     memset(&g_gw, 0, sizeof(g_gw));
-    g_gw.state_mutex = xSemaphoreCreateMutex();
+    g_gw.state_mutex = xSemaphoreCreateMutexStatic(&g_gw.state_mutex_buf);
 
 #ifndef FAKE_FREERTOS
-    g_gw.state_event_queue = xQueueCreate(GATEWAY_MODULE_MAX, sizeof(uint8_t));
+    g_gw.state_event_queue =
+        xQueueCreateStatic(GATEWAY_MODULE_MAX, sizeof(uint8_t),
+                           g_gw.state_event_queue_storage,
+                           &g_gw.state_event_queue_buf);
     if (g_gw.state_event_queue)
-        xTaskCreate(gateway_state_task_fn, "gwstate", 128, NULL, 2,
-                    &g_gw.state_task);
+        g_gw.state_task =
+            xTaskCreateStatic(gateway_state_task_fn, "gwstate", 128, NULL, 2,
+                              g_gw.state_task_stack, &g_gw.state_task_buf);
 #endif
 }
 

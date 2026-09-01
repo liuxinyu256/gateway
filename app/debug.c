@@ -10,11 +10,12 @@
 #include <stdio.h>
 #include <string.h>
 
+static StaticSemaphore_t debug_mutex_buf;
 static SemaphoreHandle_t debug_mutex;
 
 void debug_init(void)
 {
-    debug_mutex = xSemaphoreCreateMutex();
+    debug_mutex = xSemaphoreCreateMutexStatic(&debug_mutex_buf);
     uart_cfg_t cfg = {
         .baudrate  = 115200,
         .data_bits = 8,
