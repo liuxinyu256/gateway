@@ -55,13 +55,6 @@ typedef struct gateway_device {
     uint8_t            state_pending[GATEWAY_MODULE_MAX];
     volatile uint16_t  state_event_drop_cnt;
 
-    /* 静态分配内存（configSUPPORT_STATIC_ALLOCATION=1） */
-    StaticSemaphore_t  state_mutex_buf;
-    StaticQueue_t      state_event_queue_buf;
-    uint8_t            state_event_queue_storage[GATEWAY_MODULE_MAX];
-    StaticTask_t       state_task_buf;
-    StackType_t        state_task_stack[96];
-
 #ifdef FAKE_FREERTOS
     uint8_t            state_q_data[GATEWAY_MODULE_MAX];
     uint8_t            state_q_head;

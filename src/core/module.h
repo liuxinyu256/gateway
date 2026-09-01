@@ -53,22 +53,6 @@ typedef struct module
     TimerHandle_t gap_timer;     /* 帧间 gap 软件定时器 */
     TimerHandle_t tx_poll_timer; /* RS485: 轮询 TX_COMPLETE 的一次性定时器 */
 
-    /* 静态分配内存（configSUPPORT_STATIC_ALLOCATION=1） */
-    StaticQueue_t send_queue_buf;
-    uint8_t       send_queue_storage[MODULE_EVENT_QUEUE_LEN * sizeof(event_t)];
-    StaticQueue_t receive_queue_buf;
-    uint8_t       receive_queue_storage[MODULE_EVENT_QUEUE_LEN * sizeof(event_t)];
-
-    StaticTask_t  receive_task_buf;
-    StackType_t   receive_task_stack[96];
-    StaticTask_t  send_task_buf;
-    StackType_t   send_task_stack[96];
-
-    StaticTimer_t poll_timer_buf;
-    StaticTimer_t timeout_timer_buf;
-    StaticTimer_t gap_timer_buf;
-    StaticTimer_t tx_poll_timer_buf;
-
     const event_handler_t *handler; /* 事件表 (由子类/品牌注册) */
     void                  *handler_ctx;
 

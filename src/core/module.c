@@ -269,13 +269,10 @@ uint8_t module_base_init(module_t *m, uint32_t baudrate)
     bus_init(&m->bus, baudrate);
 
 #ifndef FAKE_FREERTOS
-    m->send_queue = xQueueCreateStatic(MODULE_EVENT_QUEUE_LEN, sizeof(event_t),
-                                       m->send_queue_storage, &m->send_queue_buf);
+    m->send_queue = xQueueCreate(MODULE_EVENT_QUEUE_LEN, sizeof(event_t));
     if (!m->send_queue) return 1;
 
-    m->receive_queue = xQueueCreateStatic(MODULE_EVENT_QUEUE_LEN, sizeof(event_t),
-                                          m->receive_queue_storage,
-                                          &m->receive_queue_buf);
+    m->receive_queue = xQueueCreate(MODULE_EVENT_QUEUE_LEN, sizeof(event_t));
     if (!m->receive_queue) return 1;
 #endif
 
@@ -329,11 +326,8 @@ void module_start(module_t *m)
 {
     if (!m) return;
 
-    m->receive_task = xTaskCreateStatic(receive_task_fn, "rx", 96, m, 4,
-                                        m->receive_task_stack,
-                                        &m->receive_task_buf);
-    m->send_task = xTaskCreateStatic(send_task_fn, "tx", 96, m, 3,
-                                     m->send_task_stack, &m->send_task_buf);
+    xTaskCreate(receive_task_fn, "rx", 128, m, 4, &m->receive_task);
+    xTaskCreate(send_task_fn, "tx", 128, m, 3, &m->send_task);
 
     if (m->receiver)
         receiver_set_callback(m->receiver, frame_done_cb);
@@ -348,25 +342,21 @@ void module_start(module_t *m)
         sender_set_callbacks(m->sender, &cbs);
     }
 
-    m->poll_timer = xTimerCreateStatic("poll", pdMS_TO_TICKS(200), pdTRUE,
-                                       (void *)m, poll_timer_cb,
-                                       &m->poll_timer_buf);
+    m->poll_timer = xTimerCreate("poll", pdMS_TO_TICKS(200), pdTRUE,
+                                 (void *)m, poll_timer_cb);
     if (m->poll_timer)
         xTimerStart(m->poll_timer, 0);
 
-    m->timeout_timer = xTimerCreateStatic("tmo", pdMS_TO_TICKS(50), pdTRUE,
-                                          (void *)m, timeout_timer_cb,
-                                          &m->timeout_timer_buf);
+    m->timeout_timer = xTimerCreate("tmo", pdMS_TO_TICKS(50), pdTRUE,
+                                    (void *)m, timeout_timer_cb);
     if (m->timeout_timer)
         xTimerStart(m->timeout_timer, 0);
 
-    m->gap_timer = xTimerCreateStatic("gap", pdMS_TO_TICKS(m->bus.gap_ms),
-                                      pdFALSE, (void *)m, gap_timer_cb,
-                                      &m->gap_timer_buf);
+    m->gap_timer = xTimerCreate("gap", pdMS_TO_TICKS(m->bus.gap_ms),
+                                pdFALSE, (void *)m, gap_timer_cb);
 
-    m->tx_poll_timer = xTimerCreateStatic("txpoll", pdMS_TO_TICKS(1),
-                                          pdFALSE, (void *)m, tx_poll_timer_cb,
-                                          &m->tx_poll_timer_buf);
+    m->tx_poll_timer = xTimerCreate("txpoll", pdMS_TO_TICKS(1),
+                                    pdFALSE, (void *)m, tx_poll_timer_cb);
 
     if (m->ops && m->ops->start)
         m->ops->start(m);
