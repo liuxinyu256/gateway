@@ -7,6 +7,7 @@
  */
 #include "debug_module.h"   /* 含 module.h / stdarg.h */
 #include <stdio.h>
+#include <string.h>
 #include "FreeRTOS.h"
 #include "debug_phy.h"
 #include "led.h"
@@ -72,6 +73,12 @@ static char s_log_rx_buf[128];    /* AC receive_task 文本/HEX 日志 */
 static char s_log_other_buf[64];  /* 其他任务文本日志（当前未用） */
 static char s_dbg_rx_buf[128];    /* 调试命令回复使用（Debug receive_task） */
 
+static int cmd_is(const uint8_t *d, uint16_t len, const char *s)
+{
+    size_t n = strlen(s);
+    return len == n && memcmp(d, s, n) == 0;
+}
+
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
     char *buf = s_dbg_rx_buf;   /* 本任务专用静态发送缓冲区 */
@@ -80,8 +87,17 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     if (!g_dbg.base.sender)
         return 1;
 
+    /* 命令：help = 显示命令列表 */
+    if (cmd_is(data, len, "help") || (len == 1 && (data[0] == '?' || data[0] == 'h'))) {
+        static const char help[] =
+            "[cmd] help perf stat tx brand0/1/2 ack timeout idle cmd state\r\n";
+        sender_send(g_dbg.base.sender, (const uint8_t *)help,
+                    sizeof(help) - 1, SENDER_PRIO_CMD);
+        return 1;
+    }
+
     /* 命令：P = CPU + RAM 占用率（CPU 用区间差值 + 一位小数） */
-    if (len == 1 && (data[0] == 'P' || data[0] == 'p')) {
+    if (cmd_is(data, len, "perf") || (len == 1 && (data[0] == 'P' || data[0] == 'p'))) {
         static uint32_t last_total_tick;
         static uint32_t last_idle_tick;
 
@@ -118,7 +134,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     }
 
     /* 命令：S = 查询健康状态 */
-    if (len == 1 && (data[0] == 'S' || data[0] == 's')) {
+    if (cmd_is(data, len, "stat") || (len == 1 && (data[0] == 'S' || data[0] == 's'))) {
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                          "[st] s=%u r=%u st=%u cmd=%u norm=%u\r\n",
                          g_dbg.base.send_queue_drop_cnt,
@@ -133,7 +149,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     }
 
     /* 命令：A/O/B = 触发 AC 模块事件 */
-    if (len == 1 && (data[0] == 'A' || data[0] == 'a')) {
+    if (cmd_is(data, len, "ack") || (len == 1 && (data[0] == 'A' || data[0] == 'a'))) {
         uint8_t ret = module_send_event(gateway_module(0), EVENT_NEED_ACK);
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                          "[evt] need_ack ret=%u\r\n", (unsigned)ret);
@@ -142,7 +158,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
-    if (len == 1 && (data[0] == 'O' || data[0] == 'o')) {
+    if (cmd_is(data, len, "timeout") || (len == 1 && (data[0] == 'O' || data[0] == 'o'))) {
         uint8_t ret = module_send_event(gateway_module(0), EVENT_TIMEOUT);
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                          "[evt] timeout ret=%u\r\n", (unsigned)ret);
@@ -151,7 +167,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
-    if (len == 1 && (data[0] == 'B' || data[0] == 'b')) {
+    if (cmd_is(data, len, "idle") || (len == 1 && (data[0] == 'B' || data[0] == 'b'))) {
         uint8_t ret = module_send_event(gateway_module(0), EVENT_BUS_IDLE);
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                          "[evt] bus_idle ret=%u\r\n", (unsigned)ret);
@@ -161,11 +177,24 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         return 1;
     }
 
-    /* 命令：C<cmd>,<val> = 发送控制命令给 AC 模块 */
-    if ((data[0] == 'C' || data[0] == 'c') && len >= 5) {
-        uint8_t cmd = (uint8_t)(data[1] - '0');
-        uint8_t val = (uint8_t)((data[3] - '0') * 10 + (data[4] - '0'));
-        uint8_t ret = module_send_cmd(gateway_module(0), cmd, val);
+    /* 命令：C<cmd>,<val> 或 cmd<cmd>,<val> = 发送控制命令给 AC 模块 */
+    if (((data[0] == 'C' || data[0] == 'c') && len >= 5) ||
+        (len >= 7 && memcmp(data, "cmd", 3) == 0)) {
+        uint8_t cmd;
+        uint8_t val;
+        uint8_t ret;
+
+        if (len >= 7 && memcmp(data, "cmd", 3) == 0) {
+            /* cmd1,25 */
+            cmd = (uint8_t)(data[3] - '0');
+            val = (uint8_t)((data[5] - '0') * 10 + (data[6] - '0'));
+        } else {
+            /* C1,25 */
+            cmd = (uint8_t)(data[1] - '0');
+            val = (uint8_t)((data[3] - '0') * 10 + (data[4] - '0'));
+        }
+
+        ret = module_send_cmd(gateway_module(0), cmd, val);
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                          "[evt] cmd=%u val=%u ret=%u\r\n",
                          (unsigned)cmd, (unsigned)val, (unsigned)ret);
@@ -176,7 +205,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     }
 
     /* 命令：G = 查询 AC 模块当前状态 */
-    if (len == 1 && (data[0] == 'G' || data[0] == 'g')) {
+    if (cmd_is(data, len, "state") || (len == 1 && (data[0] == 'G' || data[0] == 'g'))) {
         gateway_state_t s;
         if (gateway_module_state_get(0, &s) == 0) {
             int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
@@ -199,7 +228,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     }
 
     /* 命令：F = 485 物理层测试，直接发送一帧带正确 CRC 的 Modbus 帧 */
-    if (len == 1 && (data[0] == 'F' || data[0] == 'f')) {
+    if (cmd_is(data, len, "tx") || (len == 1 && (data[0] == 'F' || data[0] == 'f'))) {
         static const uint8_t test_frame[] = {
             0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
         };
@@ -242,50 +271,66 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         return 1;
     }
 
-    /* 命令：T[0|1|2] = 485 测试，切换品牌并发一帧测试数据
-     *   T0/美的  T1/东芝  T2/海尔
-     */
-    if ((data[0] == 'T' || data[0] == 't') && (len == 1 || len == 2)) {
-        bsp_ac_brand_t brand = BSP_AC_MEIDI;
-        const char *brand_name = "meidi";
+    /* 命令：T0/T1/T2、b0/b1/b2、brand0/brand1/brand2 = 切换品牌并发测试帧 */
+    {
+        int brand_idx = -1;
 
-        if (len == 2) {
-            if (data[1] == '1') { brand = BSP_AC_TOSHIBA; brand_name = "toshiba"; }
-            else if (data[1] == '2') { brand = BSP_AC_HAIER; brand_name = "haier"; }
+        if (len == 1 && (data[0] == 'T' || data[0] == 't')) {
+            brand_idx = 0;
+        } else if (len == 2 && (data[0] == 'T' || data[0] == 't') &&
+                   data[1] >= '0' && data[1] <= '2') {
+            brand_idx = data[1] - '0';
+        } else if (len == 2 && data[0] == 'b' &&
+                   data[1] >= '0' && data[1] <= '2') {
+            brand_idx = data[1] - '0';
+        } else if (cmd_is(data, len, "brand0")) {
+            brand_idx = 0;
+        } else if (cmd_is(data, len, "brand1")) {
+            brand_idx = 1;
+        } else if (cmd_is(data, len, "brand2")) {
+            brand_idx = 2;
         }
 
-        bsp_ac_select(bsp_board_get(), brand);
+        if (brand_idx >= 0) {
+            bsp_ac_brand_t brand = BSP_AC_MEIDI;
+            const char *brand_name = "meidi";
 
-        static const uint8_t test_frame[] = {
-            0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
-        };
+            if (brand_idx == 1) { brand = BSP_AC_TOSHIBA; brand_name = "toshiba"; }
+            else if (brand_idx == 2) { brand = BSP_AC_HAIER; brand_name = "haier"; }
 
-        module_t *ac = gateway_module(0);
-        if (ac && ac->sender) {
-            uint8_t ret = sender_send(ac->sender, test_frame,
-                                      sizeof(test_frame), SENDER_PRIO_CMD);
-            int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
-                             "[test] brand=%s tx:", brand_name);
-            for (uint16_t i = 0; i < sizeof(test_frame) &&
-                                n < (int)sizeof(s_dbg_rx_buf) - 8; i++) {
+            bsp_ac_select(bsp_board_get(), brand);
+
+            static const uint8_t test_frame[] = {
+                0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
+            };
+
+            module_t *ac = gateway_module(0);
+            if (ac && ac->sender) {
+                uint8_t ret = sender_send(ac->sender, test_frame,
+                                          sizeof(test_frame), SENDER_PRIO_CMD);
+                int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
+                                 "[test] brand=%s tx:", brand_name);
+                for (uint16_t i = 0; i < sizeof(test_frame) &&
+                                    n < (int)sizeof(s_dbg_rx_buf) - 8; i++) {
+                    n += snprintf((char *)buf + n,
+                                  sizeof(s_dbg_rx_buf) - (size_t)n,
+                                  " %02X", test_frame[i]);
+                }
                 n += snprintf((char *)buf + n,
                               sizeof(s_dbg_rx_buf) - (size_t)n,
-                              " %02X", test_frame[i]);
+                              " ret=%u\r\n", (unsigned)ret);
+                if (n > 0)
+                    sender_send(g_dbg.base.sender, (const uint8_t *)buf,
+                                (uint16_t)n, SENDER_PRIO_CMD);
+            } else {
+                int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
+                                 "[test] ac not ready\r\n");
+                if (n > 0)
+                    sender_send(g_dbg.base.sender, (const uint8_t *)buf,
+                                (uint16_t)n, SENDER_PRIO_CMD);
             }
-            n += snprintf((char *)buf + n,
-                          sizeof(s_dbg_rx_buf) - (size_t)n,
-                          " ret=%u\r\n", (unsigned)ret);
-            if (n > 0)
-                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                            (uint16_t)n, SENDER_PRIO_CMD);
-        } else {
-            int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
-                             "[test] ac not ready\r\n");
-            if (n > 0)
-                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                            (uint16_t)n, SENDER_PRIO_CMD);
+            return 1;
         }
-        return 1;
     }
 
     int pos = snprintf((char *)buf, sizeof(s_dbg_rx_buf), "[rx]");
