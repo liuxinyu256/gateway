@@ -13,7 +13,6 @@ typedef struct {
     receiver_t base;
     timer_t   *timer;         /* 注入的定时器 (专用绑定, 程序员指定编号) */
     uint16_t   timeout_ticks; /* 超时阈值 (定时器周期数) */
-    volatile uint8_t timer_running;
 } receiver_timeout_t;
 
 void receiver_timeout_init(receiver_timeout_t *self,
