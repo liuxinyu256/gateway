@@ -73,6 +73,14 @@ static char s_log_rx_buf[128];    /* AC receive_task 文本/HEX 日志 */
 static char s_log_other_buf[64];  /* 其他任务文本日志（当前未用） */
 static char s_dbg_rx_buf[128];    /* 调试命令回复使用（Debug receive_task） */
 
+/* 日志开关：心跳默认开，其他默认关 */
+static uint8_t s_log_heartbeat_enabled = 1;
+static uint8_t s_log_event_enabled     = 0;
+static uint8_t s_log_rx_enabled        = 0;
+
+uint8_t log_event_enabled(void) { return s_log_event_enabled; }
+uint8_t log_rx_enabled(void)    { return s_log_rx_enabled; }
+
 static int cmd_is(const uint8_t *d, uint16_t len, const char *s)
 {
     size_t n = strlen(s);
@@ -371,6 +379,60 @@ static int debug_cmd_brand(uint8_t *data, uint16_t len)
     return 1;
 }
 
+static int debug_cmd_hb(uint8_t *data, uint16_t len)
+{
+    char *buf = s_dbg_rx_buf;
+    int n;
+
+    if (!cmd_is(data, len, "hb") && !cmd_is(data, len, "heartbeat"))
+        return 0;
+
+    s_log_heartbeat_enabled = !s_log_heartbeat_enabled;
+    n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
+                 "[log] heartbeat %s\r\n",
+                 s_log_heartbeat_enabled ? "on" : "off");
+    if (n > 0)
+        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
+                    (uint16_t)n, SENDER_PRIO_CMD);
+    return 1;
+}
+
+static int debug_cmd_evt(uint8_t *data, uint16_t len)
+{
+    char *buf = s_dbg_rx_buf;
+    int n;
+
+    if (!cmd_is(data, len, "evt") && !cmd_is(data, len, "event"))
+        return 0;
+
+    s_log_event_enabled = !s_log_event_enabled;
+    n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
+                 "[log] event %s\r\n",
+                 s_log_event_enabled ? "on" : "off");
+    if (n > 0)
+        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
+                    (uint16_t)n, SENDER_PRIO_CMD);
+    return 1;
+}
+
+static int debug_cmd_rxlog(uint8_t *data, uint16_t len)
+{
+    char *buf = s_dbg_rx_buf;
+    int n;
+
+    if (!cmd_is(data, len, "rxlog") && !cmd_is(data, len, "rx"))
+        return 0;
+
+    s_log_rx_enabled = !s_log_rx_enabled;
+    n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
+                 "[log] rx %s\r\n",
+                 s_log_rx_enabled ? "on" : "off");
+    if (n > 0)
+        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
+                    (uint16_t)n, SENDER_PRIO_CMD);
+    return 1;
+}
+
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
     char *buf = s_dbg_rx_buf;
@@ -384,6 +446,9 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     while (len > 0 && (data[len - 1] == '\r' || data[len - 1] == '\n' || data[len - 1] == ' '))
         len--;
 
+    if (debug_cmd_hb(data, len))    return 1;
+    if (debug_cmd_evt(data, len))   return 1;
+    if (debug_cmd_rxlog(data, len)) return 1;
     if (debug_cmd_perf(data, len)) return 1;
     if (debug_cmd_stat(data, len)) return 1;
     if (debug_cmd_ack(data, len))  return 1;
@@ -421,10 +486,10 @@ static void on_periodic_send(void *ctx)
 
     halLedRunBlink();   /* 运行指示灯保持原节奏闪烁 */
 
-    /* 心跳 1s 一跳（默认 poll 200ms，1s/200ms = 5 次） */
+    /* 心跳 1s 一跳（默认 poll 200ms，1s/200ms = 5 次），可用 hb 命令开关 */
     if (++alive_div >= 5) {
         alive_div = 0;
-        if (g_dbg.base.sender)
+        if (s_log_heartbeat_enabled && g_dbg.base.sender)
             sender_send(g_dbg.base.sender, (const uint8_t *)alive,
                         sizeof(alive) - 1, SENDER_PRIO_NORM);
     }
@@ -567,7 +632,8 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
 static void dbg_module_rx_log(module_t *m, const uint8_t *data, uint16_t len)
 {
     (void)m;
-    log_hex_dump("ac evt", data, len);
+    if (s_log_rx_enabled)
+        log_hex_dump("ac evt", data, len);
 }
 
 void debug_module_start(void)

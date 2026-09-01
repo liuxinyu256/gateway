@@ -13,4 +13,8 @@ void log_vprintf(const char *fmt, va_list ap);
 /* 调试/日志模块统一管理的 HEX 打印：由 debug 模块负责格式化并发送到 UART1 */
 void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len);
 
+/* 日志开关查询：供其他模块决定是否打印 */
+uint8_t log_event_enabled(void);
+uint8_t log_rx_enabled(void);
+
 #endif /* DEBUG_MODULE_H */

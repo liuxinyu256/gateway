@@ -70,6 +70,9 @@ static void ac_ops_on_event(module_t *m, const event_t *ev)
     (void)m;
     if (!ev) return;
 
+    if (!log_event_enabled())
+        return;
+
     if (ev->type == EVENT_CONTROL_CMD) {
         log_printf("[ac evt] %s cmd=%u val=%u\r\n",
                      ac_event_name(ev->type),
