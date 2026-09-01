@@ -624,6 +624,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\phy\debug_phy.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_phy.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\phy\ble_phy.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -668,6 +673,11 @@
               <FileName>debug_module.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\modules\debug_module.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_module.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\modules\ble_module.c</FilePath>
             </File>
           </Files>
         </Group>
