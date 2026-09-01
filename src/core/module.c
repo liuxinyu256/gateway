@@ -326,8 +326,8 @@ void module_start(module_t *m)
 {
     if (!m) return;
 
-    xTaskCreate(receive_task_fn, "rx", 128, m, 4, &m->receive_task);
-    xTaskCreate(send_task_fn, "tx", 128, m, 3, &m->send_task);
+    xTaskCreate(receive_task_fn, "rx", 96, m, 4, &m->receive_task);
+    xTaskCreate(send_task_fn, "tx", 96, m, 3, &m->send_task);
 
     if (m->receiver)
         receiver_set_callback(m->receiver, frame_done_cb);
