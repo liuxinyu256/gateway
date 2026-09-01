@@ -8,7 +8,6 @@
 #include "debug_module.h"   /* 含 module.h / stdarg.h */
 #include <stdio.h>
 #include "FreeRTOS.h"
-#include "semphr.h"
 #include "debug_phy.h"
 #include "led.h"
 #include "bsp.h"
@@ -66,12 +65,16 @@ typedef struct {
 
 static debug_module_t     g_dbg;
 static debug_io_t        g_dbg_io;
-static SemaphoreHandle_t log_print_mutex;
 
-/* 每个任务独立的静态发送缓冲区：不占任务栈，也不会多任务互相覆盖 */
-static char s_ac_evt_buf[128];   /* AC 事件打印使用（AC send/receive task，已用锁保护） */
-static char s_dbg_rx_buf[128];   /* 调试命令回复使用（Debug receive_task） */
-static char s_dbg_hex_buf[128];  /* HEX 打印专用（目前 AC receive_task 使用，已用锁保护） */
+/* 日志帧队列：log_printf/log_hex_dump 只投递，日志任务负责发送 */
+static frame_queue_t     s_log_q;
+static TaskHandle_t      s_log_task;
+
+/* 每个任务独立的静态格式化缓冲区：不占任务栈，也不加锁 */
+static char s_log_send_buf[64];   /* AC send_task 文本日志 */
+static char s_log_rx_buf[128];    /* AC receive_task 文本/HEX 日志 */
+static char s_log_other_buf[64];  /* 其他任务文本日志（当前未用） */
+static char s_dbg_rx_buf[128];    /* 调试命令回复使用（Debug receive_task） */
 
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
@@ -379,25 +382,54 @@ static void dbg_tx_done(sender_t *tx)
     module_tx_done(&g_dbg.base);
 }
 
-/* 公共发送：每个调用使用独立栈上缓冲区，避免多任务共用同一块内存 */
+/* 根据当前任务选择独立格式化缓冲区：无锁 */
+static char *log_get_buffer(uint16_t *size)
+{
+    module_t *ac = gateway_module(0);
+    TaskHandle_t cur = xTaskGetCurrentTaskHandle();
+
+    if (ac && cur == ac->send_task) {
+        *size = sizeof(s_log_send_buf);
+        return s_log_send_buf;
+    }
+    if (ac && cur == ac->receive_task) {
+        *size = sizeof(s_log_rx_buf);
+        return s_log_rx_buf;
+    }
+    *size = sizeof(s_log_other_buf);
+    return s_log_other_buf;
+}
+
+/* 日志任务：从日志帧队列取帧，再交给 sender 异步发送 */
+static void log_task_fn(void *pv)
+{
+    (void)pv;
+    tx_frame_t frame;
+
+    for (;;) {
+        if (frame_queue_pop(&s_log_q, &frame) == 0) {
+            if (g_dbg.base.sender)
+                sender_send(g_dbg.base.sender, frame.data, frame.len,
+                            SENDER_PRIO_CMD);
+        } else {
+            vTaskDelay(pdMS_TO_TICKS(1));
+        }
+    }
+}
+
+/* 公共发送：只格式化并投递到日志帧队列，不阻塞、不加锁 */
 void log_vprintf(const char *fmt, va_list ap)
 {
-    char *buf = s_ac_evt_buf;   /* AC 事件打印专用静态发送缓冲区 */
+    uint16_t size;
+    char *buf = log_get_buffer(&size);
     int n;
 
     if (!g_dbg.base.sender)
         return;
 
-    if (log_print_mutex)
-        xSemaphoreTake(log_print_mutex, portMAX_DELAY);
-
-    n = vsnprintf(buf, sizeof(s_ac_evt_buf), fmt, ap);
+    n = vsnprintf(buf, size, fmt, ap);
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
-
-    if (log_print_mutex)
-        xSemaphoreGive(log_print_mutex);
+        frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)n);
 }
 
 void log_printf(const char *fmt, ...)
@@ -412,37 +444,27 @@ void log_printf(const char *fmt, ...)
 /* HEX 打印统一由 debug 模块管理，外部模块只传 tag + 数据 */
 void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
 {
+    char *buf = s_log_rx_buf;   /* 当前只有 AC receive_task 调用 */
     int pos;
 
     if (!g_dbg.base.sender || !data || !len || !tag)
         return;
 
-    if (log_print_mutex)
-        xSemaphoreTake(log_print_mutex, portMAX_DELAY);
-
-    pos = snprintf(s_dbg_hex_buf, sizeof(s_dbg_hex_buf),
-                   "[%s] rx:", tag);
+    pos = snprintf(buf, sizeof(s_log_rx_buf), "[%s] rx:", tag);
     for (uint16_t i = 0; i < len; i++) {
-        if (pos + 4 >= (int)sizeof(s_dbg_hex_buf)) {
-            sender_send(g_dbg.base.sender,
-                        (const uint8_t *)s_dbg_hex_buf,
-                        (uint16_t)pos, SENDER_PRIO_CMD);
+        if (pos + 4 >= (int)sizeof(s_log_rx_buf)) {
+            frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)pos);
             pos = 0;
         }
-        pos += snprintf(s_dbg_hex_buf + pos,
-                        sizeof(s_dbg_hex_buf) - (size_t)pos,
+        pos += snprintf(buf + pos,
+                        sizeof(s_log_rx_buf) - (size_t)pos,
                         " %02X", data[i]);
     }
-    if (pos + 2 < (int)sizeof(s_dbg_hex_buf))
-        pos += snprintf(s_dbg_hex_buf + pos,
-                        sizeof(s_dbg_hex_buf) - (size_t)pos, "\r\n");
+    if (pos + 2 < (int)sizeof(s_log_rx_buf))
+        pos += snprintf(buf + pos,
+                        sizeof(s_log_rx_buf) - (size_t)pos, "\r\n");
     if (pos > 0)
-        sender_send(g_dbg.base.sender,
-                    (const uint8_t *)s_dbg_hex_buf,
-                    (uint16_t)pos, SENDER_PRIO_CMD);
-
-    if (log_print_mutex)
-        xSemaphoreGive(log_print_mutex);
+        frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)pos);
 }
 
 /* 调试模块挂接 AC 模块的 RX 日志：AC 模块自身不感知日志 */
@@ -463,7 +485,7 @@ void debug_module_start(void)
 
     halLedInit();   /* 运行 LED 初始化 */
 
-    log_print_mutex = xSemaphoreCreateMutex();
+    frame_queue_init(&s_log_q);
 
     g_dbg.base.ops = &debug_module_ops;
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);
@@ -486,5 +508,9 @@ void debug_module_start(void)
     }
 
     module_start(&g_dbg.base);
+
+    /* 日志帧队列消费任务 */
+    s_log_task = NULL;
+    xTaskCreate(log_task_fn, "log", 96, NULL, 1, &s_log_task);
 
 }
