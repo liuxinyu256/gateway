@@ -1,6 +1,7 @@
 ; *************************************************************
 ; *** Scatter-Loading Description File for Gateway (with BLE) ***
-; *** RAM1: 0x20000000 12KB, BLE reserved middle, RAM2: 0x20006000 8KB ***
+; *** RAM1: FreeRTOS heap 12KB, RAM2: global/static 8KB       ***
+; *** BLE reserved in middle (0x20003000-0x20005FFF)          ***
 ; *************************************************************
 
 LR_IROM1 0x00000000 0x00022800  {
@@ -12,7 +13,7 @@ LR_IROM1 0x00000000 0x00022800  {
   }
 
   RW_IRAM1 0x20000000 0x00003000  {
-    .ANY (+RW +ZI)
+    *(.heap)
   }
 
   RW_IRAM2 0x20006000 0x00002000  {

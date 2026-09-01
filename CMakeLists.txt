@@ -130,6 +130,7 @@ if(CH579)
         app/main.c
         app/hvac_init.c
         app/isr.c
+        app/heap.c
         src/bsp/bsp.c
         src/bsp/bsp_board.c
         src/bsp/bsp_a07s.c

@@ -26,7 +26,8 @@
 #define configTIMER_TASK_STACK_DEPTH             128
 #define configSUPPORT_STATIC_ALLOCATION         0
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
-#define configTOTAL_HEAP_SIZE                   ( ( size_t ) 8192 )
+#define configTOTAL_HEAP_SIZE                   ( ( size_t ) 12288 )
+#define configAPPLICATION_ALLOCATED_HEAP        1
 
 /* 可选 API 函数 (默认0=不编译，需显式开1) */
 #define INCLUDE_vTaskDelay                      1
