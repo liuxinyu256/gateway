@@ -19,7 +19,7 @@ static void test_evt_printf(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    debug_module_vprintf(fmt, ap);
+    debug_vprintf(fmt, ap);
     va_end(ap);
 }
 

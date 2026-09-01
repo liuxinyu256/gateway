@@ -386,7 +386,7 @@ static void dbg_tx_done(sender_t *tx)
 }
 
 /* 公共发送：复用调试模块 tx_buf，发到 UART1 */
-void debug_module_vprintf(const char *fmt, va_list ap)
+void debug_vprintf(const char *fmt, va_list ap)
 {
     int n;
 
@@ -405,12 +405,12 @@ void debug_module_vprintf(const char *fmt, va_list ap)
         xSemaphoreGive(debug_print_mutex);
 }
 
-void debug_module_printf(const char *fmt, ...)
+void debug_printf(const char *fmt, ...)
 {
     va_list ap;
 
     va_start(ap, fmt);
-    debug_module_vprintf(fmt, ap);
+    debug_vprintf(fmt, ap);
     va_end(ap);
 }
 

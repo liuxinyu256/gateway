@@ -58,14 +58,3 @@ void debug_puts(const char *s)
         xSemaphoreGive(debug_mutex);
 }
 
-void debug_printf(const char *fmt, ...)
-{
-    char buf[128];
-    va_list ap;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    debug_puts(buf);
-}
