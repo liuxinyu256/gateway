@@ -538,4 +538,7 @@ void debug_module_start(void)
 
     module_start(&g_dbg.base);
 
+    /* 心跳改为 30s 一跳 */
+    module_set_poll_period(&g_dbg.base, 30000);
+
 }
