@@ -39,14 +39,17 @@ static uint32_t debug_app_ram_total(void)
     return 0x3000u + 0x2000u;   /* RAM1 12KB + RAM2 8KB */
 }
 
+/* 实际占用 = 全局/静态（RW/ZI 减去堆数组） + 堆内已分配 */
 static uint32_t debug_app_ram_used(void)
 {
 #ifdef __CC_ARM
-    uint32_t r1 = (uint32_t)&Image$$RW_IRAM1$$ZI$$Limit -
-                  (uint32_t)&Image$$RW_IRAM1$$Base;
-    uint32_t r2 = (uint32_t)&Image$$RW_IRAM2$$ZI$$Limit -
-                  (uint32_t)&Image$$RW_IRAM2$$Base;
-    return r1 + r2;
+    uint32_t rw_zi =
+        ((uint32_t)&Image$$RW_IRAM1$$ZI$$Limit - (uint32_t)&Image$$RW_IRAM1$$Base) +
+        ((uint32_t)&Image$$RW_IRAM2$$ZI$$Limit - (uint32_t)&Image$$RW_IRAM2$$Base);
+    uint32_t heap_reserved = (uint32_t)configTOTAL_HEAP_SIZE;
+    uint32_t static_used = rw_zi > heap_reserved ? rw_zi - heap_reserved : 0;
+    uint32_t heap_used = heap_reserved - (uint32_t)xPortGetFreeHeapSize();
+    return static_used + heap_used;
 #else
     return 0;
 #endif
