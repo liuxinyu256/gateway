@@ -29,20 +29,27 @@ static int test_on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
     (void)ctx;
     module_t *dbg = gateway_module(1);
-    char buf[160];
+    char buf[64];   /* 小缓冲，分段发送，避免大局部数组 */
     int pos;
 
     if (!dbg || !dbg->sender || !data || !len)
         return 1;
 
     pos = snprintf(buf, sizeof(buf), "[ac rx]");
-    for (uint16_t i = 0; i < len && pos < (int)sizeof(buf) - 6; i++)
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, " %02X", data[i]);
-    if (pos < (int)sizeof(buf) - 3)
+    for (uint16_t i = 0; i < len; i++) {
+        if (pos + 4 >= (int)sizeof(buf)) {
+            sender_send(dbg->sender, (const uint8_t *)buf,
+                        (uint16_t)pos, SENDER_PRIO_CMD);
+            pos = 0;
+        }
+        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos,
+                        " %02X", data[i]);
+    }
+    if (pos + 2 < (int)sizeof(buf))
         pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
-
-    sender_send(dbg->sender, (const uint8_t *)buf, (uint16_t)pos,
-                SENDER_PRIO_CMD);
+    if (pos > 0)
+        sender_send(dbg->sender, (const uint8_t *)buf,
+                    (uint16_t)pos, SENDER_PRIO_CMD);
     return 1;
 }
 
