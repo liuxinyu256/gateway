@@ -411,9 +411,7 @@ void debug_module_start(void)
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);
 
     /* 物理层装配：固定 UART1，由 debug_phy_init 创建具体对象并注入 */
-    if (debug_phy_init(&g_dbg.base.bus,
-                        g_dbg.rx_buf, sizeof(g_dbg.rx_buf),
-                        &g_dbg_io) != 0) {
+    if (debug_phy_init(&g_dbg.base.bus, &g_dbg_io) != 0) {
         return;
     }
     g_dbg.base.sender   = g_dbg_io.sender;

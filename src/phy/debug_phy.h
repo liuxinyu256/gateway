@@ -20,8 +20,6 @@ typedef struct {
     receiver_t *receiver;
 } debug_io_t;
 
-uint8_t debug_phy_init(bus_t *bus,
-                        uint8_t *rx_buf, uint16_t rx_size,
-                        debug_io_t *io);
+uint8_t debug_phy_init(bus_t *bus, debug_io_t *io);
 
 #endif /* DEBUG_PHY_H */

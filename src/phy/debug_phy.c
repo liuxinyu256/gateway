@@ -15,10 +15,9 @@ static uart_encoder_t     s_enc;
 static uart_decoder_t     s_dec;
 static sender_poll_t      s_sender;
 static receiver_timeout_t s_rx;
+static uint8_t            s_rx_buf[128];   /* 物理层接收环形缓冲区，独立于模块 rx_buf */
 
-uint8_t debug_phy_init(bus_t *bus,
-                        uint8_t *rx_buf, uint16_t rx_size,
-                        debug_io_t *io)
+uint8_t debug_phy_init(bus_t *bus, debug_io_t *io)
 {
     uart_encoder_cfg_t enc_cfg = {
         .port = &uart1,
@@ -52,7 +51,7 @@ uint8_t debug_phy_init(bus_t *bus,
         return 1;
 
     timer_t *rx_timer = timer_hw_create(1);
-    receiver_timeout_init(&s_rx, rx_timer, 5, NULL, rx_buf, rx_size);
+    receiver_timeout_init(&s_rx, rx_timer, 5, NULL, s_rx_buf, sizeof(s_rx_buf));
     receiver_set_bus(&s_rx.base, bus);
     uart_decoder_attach_receiver(&s_dec, &s_rx.base);
 
