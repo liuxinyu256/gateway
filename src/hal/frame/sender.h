@@ -50,7 +50,6 @@ typedef struct
 {
     encoder_t *encoder; /* 物理层编码器 */
     bus_t *bus;         /* 要绑定的发送总线 (通常是 module->bus) */
-    const sender_complete_ops_t *complete_ops; /* 发送完成策略（可空） */
 } sender_cfg_t;
 
 uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg);

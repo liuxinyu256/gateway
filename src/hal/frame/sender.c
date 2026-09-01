@@ -29,9 +29,8 @@ uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg)
 
     memset(tx, 0, sizeof(*tx));
 
-    tx->encoder      = cfg->encoder;
-    tx->bus          = cfg->bus;
-    tx->complete_ops = cfg->complete_ops;
+    tx->encoder = cfg->encoder;
+    tx->bus     = cfg->bus;
 
     frame_queue_init(&tx->cmd_q);
     frame_queue_init(&tx->norm_q);

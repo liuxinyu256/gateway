@@ -49,13 +49,12 @@ const sender_complete_ops_t sender_complete_poll_ops = {
 
 uint8_t sender_poll_init(sender_poll_t *tx, const sender_cfg_t *cfg)
 {
-    sender_cfg_t cfg2;
-
     if (!tx || !cfg)
         return 1;
 
     tx->timer = NULL;
-    cfg2 = *cfg;
-    cfg2.complete_ops = &sender_complete_poll_ops;
-    return sender_init(&tx->base, &cfg2);
+    if (sender_init(&tx->base, cfg) != 0)
+        return 1;
+    tx->base.complete_ops = &sender_complete_poll_ops;
+    return 0;
 }
