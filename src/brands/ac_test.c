@@ -130,11 +130,21 @@ static const event_handler_t ac_test_evt = {
     .on_timeout        = test_on_timeout,
 };
 
+/* 测试品牌物理层：UART 9600, 8N1, 帧间隙 5ms */
+static const ac_phy_cfg_t ac_test_phy_cfg = {
+    .phy_type   = AC_PHY_UART,
+    .baudrate   = 9600,
+    .data_bits  = 8,
+    .stop_bits  = 1,
+    .parity     = 0,
+    .receiver_timeout_ticks = 5,
+};
+
 /* 测试品牌配置：能力全部放开，覆盖所有模型 */
 const ac_brand_config_t ac_test_cfg = {
     .brand_id = ac_test,
+    .phy_cfg = &ac_test_phy_cfg,
     .evt_table = &ac_test_evt,
-    .receiver_timeout_ticks = 5,
     .ability = {
         .mode_caps = (1u << MODE_COOL) | (1u << MODE_HEAT) |
                      (1u << MODE_FAN)  | (1u << MODE_DRY) |

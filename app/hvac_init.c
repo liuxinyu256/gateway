@@ -43,6 +43,56 @@ static uart_decoder_t     g_hvac_dec;
 static receiver_timeout_t g_hvac_rx;
 static uint8_t            g_hvac_rx_buf[128];
 
+/* 物理层装配：根据品牌 phy_cfg 创建/配置编码器、解码器、发送器、接收器 */
+static uint8_t ac_phy_setup(const ac_phy_cfg_t *phy)
+{
+    if (!phy)
+        return 1;
+
+    switch (phy->phy_type) {
+    case AC_PHY_UART: {
+        uart_encoder_cfg_t enc_cfg = {
+            .port = &uart0,
+            .uart_cfg = {
+                .baudrate  = phy->baudrate,
+                .data_bits = phy->data_bits,
+                .stop_bits = phy->stop_bits,
+                .parity    = phy->parity,
+            },
+        };
+        uart_encoder_init(&g_hvac_enc, &enc_cfg);
+
+        sender_cfg_t sender_cfg = {
+            .encoder = &g_hvac_enc.base,
+            .bus     = &g_ac.base.bus,
+        };
+        sender_poll_init(&g_hvac_sender, &sender_cfg);
+        g_ac.base.sender = &g_hvac_sender.base;
+
+        uart_decoder_cfg_t dec_cfg = {
+            .port = &uart0,
+            .uart_cfg = {
+                .baudrate  = phy->baudrate,
+                .data_bits = phy->data_bits,
+                .stop_bits = phy->stop_bits,
+                .parity    = phy->parity,
+            },
+        };
+        uart_decoder_init(&g_hvac_dec, &dec_cfg);
+
+        timer_t *rx_timer = timer_hw_create(0);
+        receiver_timeout_init(&g_hvac_rx, rx_timer, phy->receiver_timeout_ticks,
+                              NULL, g_hvac_rx_buf, sizeof(g_hvac_rx_buf));
+        receiver_set_bus(&g_hvac_rx.base, &g_ac.base.bus);
+        uart_decoder_attach_receiver(&g_hvac_dec, &g_hvac_rx.base);
+        g_ac.base.receiver = &g_hvac_rx.base;
+        return 0;
+    }
+    default:
+        return 1;
+    }
+}
+
 void hvac_start(void) {
     gateway_init();
 
@@ -60,45 +110,11 @@ void hvac_start(void) {
     }
 #endif
 
-    /* TX：上层创建 UART 编码器和 sender 并注入 */
-    uart_encoder_cfg_t enc_cfg = {
-        .port     = &uart0,
-        .uart_cfg = {
-            .baudrate  = 9600,
-            .data_bits = 8,
-            .stop_bits = 1,
-            .parity    = 0,
-        },
-    };
-    uart_encoder_init(&g_hvac_enc, &enc_cfg);
-
-    sender_cfg_t sender_cfg = {
-        .encoder = &g_hvac_enc.base,
-        .bus     = &g_ac.base.bus,
-    };
-    sender_poll_init(&g_hvac_sender, &sender_cfg);
-    g_ac.base.sender = &g_hvac_sender.base;
-
-    /* RX：上层创建 UART 解码器 + 超时接收器并注入
-     * 放在 encoder 之后: 最后一次 uart_configure 会开启 RX 中断 */
-    uart_decoder_cfg_t dec_cfg = {
-        .port     = &uart0,
-        .uart_cfg = {
-            .baudrate  = 9600,
-            .data_bits = 8,
-            .stop_bits = 1,
-            .parity    = 0,
-        },
-    };
-    uart_decoder_init(&g_hvac_dec, &dec_cfg);
-
-    timer_t *rx_timer = timer_hw_create(0);
-
-    receiver_timeout_init(&g_hvac_rx, rx_timer, 5, NULL,
-                          g_hvac_rx_buf, sizeof(g_hvac_rx_buf));
-    receiver_set_bus(&g_hvac_rx.base, &g_ac.base.bus);
-    uart_decoder_attach_receiver(&g_hvac_dec, &g_hvac_rx.base);
-    g_ac.base.receiver = &g_hvac_rx.base;
+    /* 物理层装配：由品牌 phy_cfg 决定编码器/解码器/发送器/接收器 */
+    if (ac_phy_setup(ac_test_cfg.phy_cfg) != 0) {
+        /* 物理层配置失败，保持不启动 */
+        return;
+    }
 
     ac_init_cfg_t cfg = {
         .baudrate    = 9600,

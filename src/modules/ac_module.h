@@ -92,11 +92,27 @@ typedef struct
     uint16_t features;   /* 扩展功能位: AC_FEAT_* */
 } ac_ability_t;
 
+/* 物理层类型：品牌声明自己用什么物理层 */
+typedef enum {
+    AC_PHY_UART = 0,
+    AC_PHY_MANCHESTER,   /* 预留 */
+} ac_phy_type_t;
+
+/* 物理层配置：品牌知道自己的物理参数 */
+typedef struct {
+    ac_phy_type_t phy_type;
+    uint32_t baudrate;
+    uint8_t  data_bits;
+    uint8_t  stop_bits;
+    uint8_t  parity;
+    uint16_t receiver_timeout_ticks; /* 帧间隙超时 */
+} ac_phy_cfg_t;
+
 typedef struct
 {
     ac_brand_id_t brand_id; /* 品牌唯一编码 */
+    const ac_phy_cfg_t *phy_cfg;   /* 物理层配置 */
     const event_handler_t *evt_table;
-    uint16_t receiver_timeout_ticks;
     ac_ability_t ability; /* 品牌能力描述 (静态, 注册时填入) */
 } ac_brand_config_t;
 
