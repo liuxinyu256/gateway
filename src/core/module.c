@@ -139,18 +139,25 @@ void module_rx_frame_done(module_t *m, uint16_t len)
 #endif
 }
 
+/* 发送完成回调：当前 CH579 用 poll 策略，回调运行在软件定时器任务上下文，
+ * 所以这里用任务版 xTimerStart。若将来用 ISR 策略，请改用 module_tx_done_from_isr()。 */
 void module_tx_done(module_t *m)
 {
+    if (!m || !m->gap_timer) return;
+    xTimerStart(m->gap_timer, 0);
+}
+
+/* ISR 版：供有 TX 完成中断的发送策略在中断里调用 */
+void module_tx_done_from_isr(module_t *m)
+{
     if (!m) return;
+    if (!m->gap_timer) return;
 #ifdef FAKE_FREERTOS
-    if (m->gap_timer)
-        xTimerStart(m->gap_timer, 0);
+    xTimerStart(m->gap_timer, 0);
 #else
-    if (m->gap_timer) {
-        BaseType_t woken = pdFALSE;
-        xTimerStartFromISR(m->gap_timer, &woken);
-        portYIELD_FROM_ISR(woken);
-    }
+    BaseType_t woken = pdFALSE;
+    xTimerStartFromISR(m->gap_timer, &woken);
+    portYIELD_FROM_ISR(woken);
 #endif
 }
 
