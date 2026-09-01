@@ -225,7 +225,12 @@ uint8_t module_base_init(module_t *m, uint32_t baudrate)
 {
     if (!m) return 1;
 
-    bus_init(&m->bus, baudrate);
+    if (baudrate != 0) {
+        bus_init(&m->bus, baudrate);
+    } else {
+        /* 非 UART/无总线模块：不初始化半双工总线 */
+        memset(&m->bus, 0, sizeof(m->bus));
+    }
 
 #ifndef FAKE_FREERTOS
     m->send_queue = xQueueCreate(MODULE_EVENT_QUEUE_LEN, sizeof(event_t));
