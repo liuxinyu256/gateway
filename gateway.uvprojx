@@ -479,6 +479,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\hal\frame\sender.c</FilePath>
             </File>
+            <File>
+              <FileName>sender_complete_poll.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\frame\sender_complete_poll.c</FilePath>
+            </File>
+            <File>
+              <FileName>sender_complete_isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\hal\frame\sender_complete_isr.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

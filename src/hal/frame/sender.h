@@ -4,18 +4,7 @@
 #include "frame_queue.h"
 #include "encoder.h"
 #include "bus.h"
-
-/* 发送完成策略：等最后一位上总线（TX_COMPLETE）
- * 与 receiver 的 framing 策略对称：
- *   - poll 策略：无 TX 完成中断的 MCU，用软件定时器轮询状态位
- *   - isr  策略：有 TX 完成中断的 MCU，由 UART ISR 直接完成
- */
-typedef struct sender sender_t;
-
-typedef struct sender_complete_ops {
-    void (*start)(sender_t *tx);  /* THR 空后开始等待 TX_COMPLETE */
-    void (*stop)(sender_t *tx);   /* 完成/取消时停止等待 */
-} sender_complete_ops_t;
+#include "sender_complete.h"
 
 /* 发送回调 */
 typedef struct
@@ -64,10 +53,6 @@ typedef struct
     bus_t *bus;         /* 要绑定的发送总线 (通常是 module->bus) */
     const sender_complete_ops_t *complete_ops; /* 发送完成策略（可空） */
 } sender_cfg_t;
-
-/* 两种内置策略 */
-extern const sender_complete_ops_t sender_complete_poll_ops; /* 软件定时器轮询 */
-extern const sender_complete_ops_t sender_complete_isr_ops;   /* UART ISR 完成 */
 
 uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg);
 uint8_t sender_send(sender_t *tx,
