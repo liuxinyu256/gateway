@@ -9,10 +9,7 @@
 #include <stdio.h>
 #include "FreeRTOS.h"
 #include "semphr.h"
-#include "uart_encoder.h"
-#include "uart_decoder.h"
-#include "uart_instance.h"
-#include "timer_instance.h"
+#include "hal_io.h"
 #include "led.h"
 #include "bsp.h"
 #include "gateway.h"
