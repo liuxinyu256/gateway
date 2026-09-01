@@ -1,5 +1,6 @@
 #ifndef DEBUG_MODULE_H
 #define DEBUG_MODULE_H
+#include "module.h"   /* 框架核心：统一提供 sender/receiver/bus 等抽象 */
 #include <stdarg.h>
 
 /* 调试模块：用 module_t 框架跑 UART1 收发，验证收发链路 */

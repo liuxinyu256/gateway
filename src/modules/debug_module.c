@@ -5,18 +5,13 @@
  *   - 周期发送 alive（测试发送链路）
  *   - 收到数据 HEX 回显（测试接收+发送链路）
  */
-#include "debug_module.h"
+#include "debug_module.h"   /* 含 module.h / stdarg.h */
 #include <stdio.h>
-#include <stdarg.h>
-#include "module.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
-#include "sender.h"
 #include "uart_encoder.h"
 #include "uart_decoder.h"
 #include "uart_instance.h"
-#include "receiver_timeout.h"
-#include "timer.h"
 #include "timer_instance.h"
 #include "led.h"
 #include "bsp.h"
