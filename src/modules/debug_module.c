@@ -346,10 +346,26 @@ static uint8_t *debug_ops_get_rx_buf(module_t *m, uint16_t *size)
     return self->rx_buf;
 }
 
+static void dbg_frame_done(receiver_t *rx, uint16_t len);
+static void dbg_tx_done(sender_t *tx);
+
+static void debug_ops_register_io_callbacks(module_t *m)
+{
+    if (!m) return;
+
+    if (m->receiver)
+        receiver_set_callback(m->receiver, dbg_frame_done);
+    if (m->sender) {
+        sender_callbacks_t cbs = { .done = dbg_tx_done };
+        sender_set_callbacks(m->sender, &cbs);
+    }
+}
+
 static const module_ops_t debug_module_ops = {
-    .init       = debug_ops_init,
-    .start      = NULL,
-    .get_rx_buf = debug_ops_get_rx_buf,
+    .init                  = debug_ops_init,
+    .start                 = NULL,
+    .get_rx_buf            = debug_ops_get_rx_buf,
+    .register_io_callbacks = debug_ops_register_io_callbacks,
 };
 
 /* Debug 模块自己注册的接收/发送完成回调 */
@@ -420,11 +436,4 @@ void debug_module_start(void)
 
     module_start(&g_dbg.base);
 
-    /* Debug 模块自己注册 IO 回调 */
-    if (g_dbg.base.receiver)
-        receiver_set_callback(g_dbg.base.receiver, dbg_frame_done);
-    if (g_dbg.base.sender) {
-        sender_callbacks_t cbs = { .done = dbg_tx_done };
-        sender_set_callbacks(g_dbg.base.sender, &cbs);
-    }
 }

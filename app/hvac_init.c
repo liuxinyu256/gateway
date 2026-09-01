@@ -121,14 +121,6 @@ void hvac_start(void) {
 
     module_start(&g_ac.base);
 
-    /* AC 模块自己注册 IO 回调 */
-    if (g_ac.base.receiver)
-        receiver_set_callback(g_ac.base.receiver, ac_frame_done);
-    if (g_ac.base.sender) {
-        sender_callbacks_t cbs = { .done = ac_tx_done };
-        sender_set_callbacks(g_ac.base.sender, &cbs);
-    }
-
     module_set_poll_period(&g_ac.base, 1000);   /* 测试：1s 周期发读请求 */
     ac_module_start_scan(&g_ac);
 

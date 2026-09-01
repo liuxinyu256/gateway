@@ -49,10 +49,42 @@ static uint8_t *ac_ops_get_rx_buf(module_t *m, uint16_t *size)
     return self->rx_buf;
 }
 
+/* ---- AC 模块自己注册 IO 回调 ---- */
+static ac_module_t *s_ac_self;
+
+static void ac_frame_done(receiver_t *rx, uint16_t len)
+{
+    (void)rx;
+    if (s_ac_self)
+        module_rx_frame_done(&s_ac_self->base, len);
+}
+
+static void ac_tx_done(sender_t *tx)
+{
+    (void)tx;
+    if (s_ac_self)
+        module_tx_done(&s_ac_self->base);
+}
+
+static void ac_ops_register_io_callbacks(module_t *m)
+{
+    if (!m) return;
+
+    s_ac_self = (ac_module_t *)m;
+
+    if (m->receiver)
+        receiver_set_callback(m->receiver, ac_frame_done);
+    if (m->sender) {
+        sender_callbacks_t cbs = { .done = ac_tx_done };
+        sender_set_callbacks(m->sender, &cbs);
+    }
+}
+
 const module_ops_t ac_module_ops = {
-    .init       = ac_ops_init,
-    .start      = NULL,
-    .get_rx_buf = ac_ops_get_rx_buf,
+    .init                  = ac_ops_init,
+    .start                 = NULL,
+    .get_rx_buf            = ac_ops_get_rx_buf,
+    .register_io_callbacks = ac_ops_register_io_callbacks,
 };
 
 /* 激活品牌: 验证已登记 → 绑定事件表 */
