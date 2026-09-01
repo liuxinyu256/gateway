@@ -66,10 +66,6 @@ typedef struct {
 static debug_module_t     g_dbg;
 static debug_io_t        g_dbg_io;
 
-/* 日志帧队列：log_printf/log_hex_dump 只投递，日志任务负责发送 */
-static frame_queue_t     s_log_q;
-static TaskHandle_t      s_log_task;
-
 /* 每个任务独立的静态格式化缓冲区：不占任务栈，也不加锁 */
 static char s_log_send_buf[64];   /* AC send_task 文本日志 */
 static char s_log_rx_buf[128];    /* AC receive_task 文本/HEX 日志 */
@@ -400,31 +396,7 @@ static char *log_get_buffer(uint16_t *size)
     return s_log_other_buf;
 }
 
-/* 日志任务：阻塞等待通知，再取日志帧队列发送，空闲时不占 CPU */
-static void log_task_fn(void *pv)
-{
-    (void)pv;
-    tx_frame_t frame;
-
-    for (;;) {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-        while (frame_queue_pop(&s_log_q, &frame) == 0) {
-            if (g_dbg.base.sender)
-                sender_send(g_dbg.base.sender, frame.data, frame.len,
-                            SENDER_PRIO_CMD);
-        }
-    }
-}
-
-/* 投递后唤醒日志任务 */
-static void log_notify(void)
-{
-    if (s_log_task)
-        xTaskNotifyGive(s_log_task);
-}
-
-/* 公共发送：只格式化并投递到日志帧队列，不阻塞、不加锁 */
+/* 公共发送：直接交给 debug 模块自己的 sender，由帧队列异步发送 */
 void log_vprintf(const char *fmt, va_list ap)
 {
     uint16_t size;
@@ -435,10 +407,9 @@ void log_vprintf(const char *fmt, va_list ap)
         return;
 
     n = vsnprintf(buf, size, fmt, ap);
-    if (n > 0) {
-        if (frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)n) == 0)
-            log_notify();
-    }
+    if (n > 0)
+        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
+                    (uint16_t)n, SENDER_PRIO_CMD);
 }
 
 void log_printf(const char *fmt, ...)
@@ -462,8 +433,8 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
     pos = snprintf(buf, sizeof(s_log_rx_buf), "[%s] rx:", tag);
     for (uint16_t i = 0; i < len; i++) {
         if (pos + 4 >= (int)sizeof(s_log_rx_buf)) {
-            if (frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)pos) == 0)
-                log_notify();
+            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
+                        (uint16_t)pos, SENDER_PRIO_CMD);
             pos = 0;
         }
         pos += snprintf(buf + pos,
@@ -473,10 +444,9 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
     if (pos + 2 < (int)sizeof(s_log_rx_buf))
         pos += snprintf(buf + pos,
                         sizeof(s_log_rx_buf) - (size_t)pos, "\r\n");
-    if (pos > 0) {
-        if (frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)pos) == 0)
-            log_notify();
-    }
+    if (pos > 0)
+        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
+                    (uint16_t)pos, SENDER_PRIO_CMD);
 }
 
 /* 调试模块挂接 AC 模块的 RX 日志：AC 模块自身不感知日志 */
@@ -496,8 +466,6 @@ void debug_module_start(void)
 #endif
 
     halLedInit();   /* 运行 LED 初始化 */
-
-    frame_queue_init(&s_log_q);
 
     g_dbg.base.ops = &debug_module_ops;
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);
@@ -520,13 +488,5 @@ void debug_module_start(void)
     }
 
     module_start(&g_dbg.base);
-
-    /* 日志帧队列消费任务 */
-    s_log_task = NULL;
-    xTaskCreate(log_task_fn, "log", 96, NULL, 1, &s_log_task);
-
-    /* 如果创建任务前已经有日志入队，补一次唤醒 */
-    if (s_log_task && !frame_queue_empty(&s_log_q))
-        xTaskNotifyGive(s_log_task);
 
 }
