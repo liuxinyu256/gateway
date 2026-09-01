@@ -69,7 +69,7 @@ static debug_module_t     g_dbg;
 static SemaphoreHandle_t debug_print_mutex;
 static debug_io_t        g_dbg_io;
 
-static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
+static int on_rx_frame_locked(void *ctx, uint8_t *data, uint16_t len)
 {
     (void)ctx;
 
@@ -300,6 +300,25 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     sender_send(g_dbg.base.sender, g_dbg.tx_buf,
                 (uint16_t)pos, SENDER_PRIO_CMD);
     return 1;
+}
+
+/* 所有 debug 回复都经过同一把锁，避免和 debug_vprintf() 共用 tx_buf 时互相覆盖 */
+static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
+{
+    int r;
+
+    if (!g_dbg.base.sender)
+        return 1;
+
+    if (debug_print_mutex)
+        xSemaphoreTake(debug_print_mutex, portMAX_DELAY);
+
+    r = on_rx_frame_locked(ctx, data, len);
+
+    if (debug_print_mutex)
+        xSemaphoreGive(debug_print_mutex);
+
+    return r;
 }
 
 static void on_periodic_send(void *ctx)
