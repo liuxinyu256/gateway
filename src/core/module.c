@@ -17,26 +17,6 @@ static module_t *g_modules[MODULE_MAX];
 
 
 
-static module_t *module_from_receiver(const receiver_t *receiver)
-{
-    if (!receiver) return NULL;
-    for (uint8_t i = 0; i < MODULE_MAX; i++) {
-        if (g_modules[i] && g_modules[i]->receiver == receiver)
-            return g_modules[i];
-    }
-    return NULL;
-}
-
-static module_t *module_from_sender(const sender_t *sender)
-{
-    if (!sender) return NULL;
-    for (uint8_t i = 0; i < MODULE_MAX; i++) {
-        if (g_modules[i] && g_modules[i]->sender == sender)
-            return g_modules[i];
-    }
-    return NULL;
-}
-
 /* ---- 入队 (FreeRTOS 队列 / PC 模拟队列统一入口) ---- */
 static uint8_t module_enqueue_send_event(module_t *m, const event_t *ev)
 {
@@ -133,56 +113,39 @@ static void module_handle_rx(module_t *m)
         m->handler->on_rx_frame(m->handler_ctx, buf, n);
 }
 
-/* ---- 帧完成回调 ---- */
-#ifdef FAKE_FREERTOS
-static void frame_done_cb(receiver_t *receiver, uint16_t len)
+/* ---- 模块公共回调辅助：供各模块自己注册的回调调用 ---- */
+void module_rx_frame_done(module_t *m, uint16_t len)
 {
-    module_t *m = module_from_receiver(receiver);
     if (!m) return;
 
     event_t ev = {
         .type = EVENT_RX_FRAME,
         .len  = len,
     };
+#ifdef FAKE_FREERTOS
     module_enqueue_receive_event(m, &ev);
-}
 #else
-static void frame_done_cb(receiver_t *receiver, uint16_t len)
-{
-    module_t *m = module_from_receiver(receiver);
-    if (!m || !m->receive_queue) return;
-
-    event_t ev = {
-        .type = EVENT_RX_FRAME,
-        .len  = len,
-    };
-
+    if (!m->receive_queue) return;
     BaseType_t woken = pdFALSE;
     xQueueSendFromISR(m->receive_queue, &ev, &woken);
     portYIELD_FROM_ISR(woken);
-}
 #endif
+}
 
-/* ---- tx_done: 当前帧发完，启动 gap 定时器 ---- */
+void module_tx_done(module_t *m)
+{
+    if (!m) return;
 #ifdef FAKE_FREERTOS
-static void tx_done_cb(sender_t *tx)
-{
-    module_t *m = module_from_sender(tx);
-    if (m && m->gap_timer)
+    if (m->gap_timer)
         xTimerStart(m->gap_timer, 0);
-}
 #else
-static void tx_done_cb(sender_t *tx)
-{
-    module_t *m = module_from_sender(tx);
-    BaseType_t woken = pdFALSE;
-
-    if (m && m->gap_timer)
+    if (m->gap_timer) {
+        BaseType_t woken = pdFALSE;
         xTimerStartFromISR(m->gap_timer, &woken);
-
-    portYIELD_FROM_ISR(woken);
-}
+        portYIELD_FROM_ISR(woken);
+    }
 #endif
+}
 
 /* ---- gap 到期: 投递 EVENT_BUS_IDLE ---- */
 static void gap_timer_cb(TimerHandle_t t)
@@ -305,16 +268,6 @@ void module_start(module_t *m)
 
     xTaskCreate(receive_task_fn, "rx", 96, m, 4, &m->receive_task);
     xTaskCreate(send_task_fn, "tx", 96, m, 3, &m->send_task);
-
-    if (m->receiver)
-        receiver_set_callback(m->receiver, frame_done_cb);
-
-    if (m->sender) {
-        sender_callbacks_t cbs = {
-            .done = tx_done_cb,
-        };
-        sender_set_callbacks(m->sender, &cbs);
-    }
 
     m->poll_timer = xTimerCreate("poll", pdMS_TO_TICKS(200), pdTRUE,
                                  (void *)m, poll_timer_cb);

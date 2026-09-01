@@ -352,6 +352,19 @@ static const module_ops_t debug_module_ops = {
     .get_rx_buf = debug_ops_get_rx_buf,
 };
 
+/* Debug 模块自己注册的接收/发送完成回调 */
+static void dbg_frame_done(receiver_t *rx, uint16_t len)
+{
+    (void)rx;
+    module_rx_frame_done(&g_dbg.base, len);
+}
+
+static void dbg_tx_done(sender_t *tx)
+{
+    (void)tx;
+    module_tx_done(&g_dbg.base);
+}
+
 void debug_module_start(void)
 {
     uint32_t baudrate = 115200;
@@ -406,4 +419,12 @@ void debug_module_start(void)
     gateway_set_module(1, &g_dbg.base);
 
     module_start(&g_dbg.base);
+
+    /* Debug 模块自己注册 IO 回调 */
+    if (g_dbg.base.receiver)
+        receiver_set_callback(g_dbg.base.receiver, dbg_frame_done);
+    if (g_dbg.base.sender) {
+        sender_callbacks_t cbs = { .done = dbg_tx_done };
+        sender_set_callbacks(g_dbg.base.sender, &cbs);
+    }
 }

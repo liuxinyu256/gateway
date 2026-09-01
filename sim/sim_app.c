@@ -7,6 +7,21 @@
 #include "decoder.h"
 #include "fake_freertos.h"
 
+static module_t *g_sim_module;
+
+/* 模拟模块自己注册的回调 */
+static void sim_frame_done(receiver_t *rx, uint16_t len)
+{
+    (void)rx;
+    module_rx_frame_done(g_sim_module, len);
+}
+
+static void sim_tx_done(sender_t *tx)
+{
+    (void)tx;
+    module_tx_done(g_sim_module);
+}
+
 /* ---- 模拟编码器：字节直接进入 TX 捕获缓冲 ---- */
 static uint8_t  g_tx_buf[128];
 static uint16_t g_tx_len;
@@ -211,6 +226,13 @@ int main(void)
     }
     ac_module_register(&ac, &test_brand);
     module_start(m);
+    g_sim_module = m;
+    if (m->receiver)
+        receiver_set_callback(m->receiver, sim_frame_done);
+    if (m->sender) {
+        sender_callbacks_t cbs = { .done = sim_tx_done };
+        sender_set_callbacks(m->sender, &cbs);
+    }
 
     /* 1. 控制命令 → send_queue → on_control_cmd → sender → TX 字节 */
     printf("-- send cmd --\n");
