@@ -297,7 +297,7 @@ void module_start(module_t *m)
     if (m->poll_timer)
         xTimerStart(m->poll_timer, 0);
 
-    m->timeout_timer = xTimerCreate("tmo", pdMS_TO_TICKS(50), pdTRUE,
+    m->timeout_timer = xTimerCreate("tmo", pdMS_TO_TICKS(100), pdTRUE,
                                     (void *)m, timeout_timer_cb);
     if (m->timeout_timer)
         xTimerStart(m->timeout_timer, 0);
