@@ -46,8 +46,3 @@ void receiver_set_bus(receiver_t *rx, bus_t *bus) {
     if (!rx) return;
     rx->bus = bus;
 }
-
-void receiver_set_rs485(receiver_t *rx, rs485_t *rs) {
-    if (!rx) return;
-    rx->rs485 = rs;
-}

@@ -10,7 +10,6 @@
  * 具体实现在 sender_complete_poll.c / sender_complete_isr.c。
  */
 #include "sender.h"
-#include "rs485.h"
 #include <string.h>
 
 #ifdef FAKE_FREERTOS
@@ -32,7 +31,6 @@ uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg)
 
     tx->encoder = cfg->encoder;
     tx->bus     = cfg->bus;
-    tx->rs485   = cfg->rs485;
 
     frame_queue_init(&tx->cmd_q);
     frame_queue_init(&tx->norm_q);
@@ -81,9 +79,7 @@ void sender_pump(sender_t *tx)
     tx->wait_tx_complete = 0;
     tx->sending          = 1;
 
-    bus_mark_busy(tx->bus);
-    if (tx->rs485)
-        rs485_set_dir(tx->rs485, 1);  /* RS485: 进入发送方向 */
+    bus_mark_busy(tx->bus);           /* bus 负责方向控制: 进入发送方向 */
     encoder_tx_enable(tx->encoder);   /* 只开中断/定时器，ISR/tick 自己取字节 */
 
     S_EXIT_CRITICAL();
@@ -103,8 +99,8 @@ static void on_thr_empty(sender_t *tx)
     /* 当前帧的字节已经全部写进 THR */
     encoder_tx_disable(tx->encoder);
 
-    if (tx->rs485) {
-        /* 最后一位还在移位寄存器，不能释放 DE */
+    if (tx->bus && tx->bus->need_tx_complete) {
+        /* 方向控制（如 RS485）最后一位还在移位寄存器，不能换向 */
         tx->wait_tx_complete = 1;
         if (tx->ops && tx->ops->start)
             tx->ops->start(tx);
@@ -113,7 +109,7 @@ static void on_thr_empty(sender_t *tx)
 
     tx->sending = 0;
     if (tx->bus)
-        bus_on_thr_empty(tx->bus);    /* 非RS485：直接进入 gap */
+        bus_on_thr_empty(tx->bus);    /* 不需要等 TX 完成：直接进入 gap */
 
     if (tx->on_done)
         tx->on_done(tx);              /* tx_done */
@@ -131,9 +127,7 @@ static void on_tx_complete(sender_t *tx)
         tx->ops->stop(tx);
 
     if (tx->bus)
-        bus_on_tx_complete(tx->bus);  /* 真正发完，进入 gap */
-    if (tx->rs485)
-        rs485_set_dir(tx->rs485, 0);  /* RS485: 释放 DE，转回接收 */
+        bus_on_tx_complete(tx->bus);  /* 真正发完，进入 gap 并释放方向 */
 
     if (tx->on_done)
         tx->on_done(tx);              /* tx_done */
@@ -178,10 +172,4 @@ void sender_set_callbacks(sender_t *tx, const sender_callbacks_t *cb)
     if (!tx || !cb) return;
 
     tx->on_done = cb->done;
-}
-
-void sender_set_rs485(sender_t *tx, rs485_t *rs)
-{
-    if (!tx) return;
-    tx->rs485 = rs;
 }

@@ -19,6 +19,18 @@
 static ac_module_t   g_ac = { .base.ops = &ac_module_ops };
 static ac_io_t       g_ac_io;
 
+/* 0. AC 模块基础初始化：先建好 bus/队列，物理层再往 bus 上装配方向控制 */
+static uint8_t init_ac_module_base(void)
+{
+    ac_init_cfg_t cfg = {
+        .baudrate    = 9600,
+        .brand_table = brand_table,
+        .brand_count = AC_BRAND_NUM,
+    };
+
+    return module_init(&g_ac.base, &cfg);
+}
+
 /* 1. AC 物理层装配：由品牌 phy_cfg 决定（内部包含 RS485 方向控制） */
 static uint8_t init_ac_phy(void)
 {
@@ -30,17 +42,9 @@ static uint8_t init_ac_phy(void)
     return 0;
 }
 
-/* 3. AC 模块初始化 + 品牌注册 + 启动 */
+/* 3. AC 模块注册 + 启动 */
 static void init_ac_module(void)
 {
-    ac_init_cfg_t cfg = {
-        .baudrate    = 9600,
-        .brand_table = brand_table,
-        .brand_count = AC_BRAND_NUM,
-    };
-
-    module_init(&g_ac.base, &cfg);
-
     ac_module_register(&g_ac, &ac_test_cfg);
     gateway_set_module(0, &g_ac.base);
 
@@ -54,9 +58,14 @@ void hvac_start(void)
     gateway_init();
 
     bsp_board_init();       /* 板级外围电路选择 */
-    if (init_ac_phy() != 0) /* 物理层装配（含 RS485） */
+
+    /* 顺序：先 module_init（内部 bus_init 会清零 bus），
+     * 再 ac_phy_init 装配物理层，此时方向控制写进 bus 不会被清掉 */
+    if (init_ac_module_base() != 0)
+        return;
+    if (init_ac_phy() != 0) /* 物理层装配（含 RS485 方向控制） */
         return;
 
-    init_ac_module();       /* AC 模块初始化/注册/启动 */
+    init_ac_module();       /* AC 模块注册/启动 */
     debug_module_start();   /* 调试模块 */
 }

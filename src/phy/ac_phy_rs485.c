@@ -20,6 +20,12 @@ static receiver_timeout_t s_rx;
 static rs485_ch579_t      s_rs485;
 static uint8_t            s_rx_buf[128];
 
+/* bus 方向回调适配：bus 层调用 (tx, ctx)，转给 rs485 HAL */
+static void rs485_bus_dir(uint8_t tx, void *ctx)
+{
+    rs485_set_dir((rs485_t *)ctx, tx);
+}
+
 static uint8_t rs485_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
 {
     const uart_phy_cfg_t *u = (const uart_phy_cfg_t *)cfg;
@@ -74,9 +80,9 @@ static uint8_t rs485_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
         if (rs485_ch579_init(&s_rs485, &rs_cfg) != 0)
             return 1;
     }
-    /* 方向控制注入 sender/receiver，bus 本身不感知 485 */
-    sender_set_rs485(&s_sender.base, &s_rs485.base);
-    receiver_set_rs485(&s_rx.base, &s_rs485.base);
+    /* 方向控制交给 bus：RS485 只是 bus 方向控制的一种实现 */
+    bus_set_dir_callback(bus, rs485_bus_dir, &s_rs485.base);
+    bus_set_need_tx_complete(bus, 1);
 #endif
 
     io->encoder  = &s_enc.base;
