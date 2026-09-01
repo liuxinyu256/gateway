@@ -28,13 +28,13 @@ typedef struct
  */
 typedef struct sender
 {
+    const sender_ops_t *ops; /* 发送完成策略（由子类设置），首成员与 receiver 对齐 */
+
     frame_queue_t cmd_q;  /* CMD 帧：优先发 */
     frame_queue_t norm_q; /* 普通帧 */
 
     encoder_t *encoder; /* 物理层编码器 (UART / 定时器 bit-bang) */
     bus_t *bus;         /* 绑定的发送总线: 与 module 共享同一总线状态机 */
-
-    const sender_ops_t *ops; /* 发送完成策略（由子类设置） */
 
     tx_frame_t current; /* 当前正在发送的帧 */
     uint16_t current_pos;
