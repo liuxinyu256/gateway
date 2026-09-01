@@ -357,12 +357,19 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 
 static void on_periodic_send(void *ctx)
 {
+    static uint16_t alive_div = 0;
     (void)ctx;
     static const char alive[] = "alive\r\n";
-    halLedRunBlink();   /* 每次 alive 翻转一次运行 LED */
-    if (g_dbg.base.sender)
-        sender_send(g_dbg.base.sender, (const uint8_t *)alive,
-                    sizeof(alive) - 1, SENDER_PRIO_NORM);
+
+    halLedRunBlink();   /* 运行指示灯保持原节奏闪烁 */
+
+    /* 心跳 30s 一跳（默认 poll 200ms，30s/200ms = 150 次） */
+    if (++alive_div >= 150) {
+        alive_div = 0;
+        if (g_dbg.base.sender)
+            sender_send(g_dbg.base.sender, (const uint8_t *)alive,
+                        sizeof(alive) - 1, SENDER_PRIO_NORM);
+    }
 }
 
 static void on_control_cmd(void *ctx, uint8_t cmd, uint8_t val)
@@ -537,8 +544,5 @@ void debug_module_start(void)
     }
 
     module_start(&g_dbg.base);
-
-    /* 心跳改为 30s 一跳 */
-    module_set_poll_period(&g_dbg.base, 30000);
 
 }
