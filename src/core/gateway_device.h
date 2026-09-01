@@ -11,6 +11,7 @@
 #endif
 
 typedef struct module module_t;
+#include "event_handler.h"
 
 #define GATEWAY_MODULE_MAX 5
 
@@ -72,6 +73,7 @@ typedef struct gateway_device {
 
 void gateway_init(void);
 uint8_t gateway_send_cmd(uint8_t module_id, uint8_t cmd, uint8_t val);
+uint8_t gateway_send_event(uint8_t module_id, event_type_t type);
 
 /* 模块状态上报/读取：按 module_id 独立保存 */
 void    gateway_module_state_update(uint8_t module_id,

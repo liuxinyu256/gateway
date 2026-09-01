@@ -159,6 +159,12 @@ uint8_t gateway_send_cmd(uint8_t module_id, uint8_t cmd, uint8_t val) {
     return module_send_cmd(m, cmd, val);
 }
 
+uint8_t gateway_send_event(uint8_t module_id, event_type_t type) {
+    module_t *m = gateway_module(module_id);
+    if (!m) return 1;
+    return module_send_event(m, type);
+}
+
 module_t *gateway_module(uint8_t id) {
     if (id >= GATEWAY_MODULE_MAX) return NULL;
     return g_gw.modules[id];

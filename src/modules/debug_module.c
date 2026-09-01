@@ -150,7 +150,7 @@ static int debug_cmd_ack(uint8_t *data, uint16_t len)
     if (!cmd_is(data, len, "ack") && !(len == 1 && (data[0] == 'A' || data[0] == 'a')))
         return 0;
 
-    ret = module_send_event(gateway_module(0), EVENT_NEED_ACK);
+    ret = gateway_send_event(0, EVENT_NEED_ACK);
     n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                  "[evt] need_ack ret=%u\r\n", (unsigned)ret);
     if (n > 0)
@@ -169,7 +169,7 @@ static int debug_cmd_tick(uint8_t *data, uint16_t len)
         !(len == 1 && (data[0] == 'O' || data[0] == 'o')))
         return 0;
 
-    ret = module_send_event(gateway_module(0), EVENT_TICK);
+    ret = gateway_send_event(0, EVENT_TICK);
     n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                  "[evt] tick ret=%u\r\n", (unsigned)ret);
     if (n > 0)
@@ -187,7 +187,7 @@ static int debug_cmd_idle(uint8_t *data, uint16_t len)
     if (!cmd_is(data, len, "idle") && !(len == 1 && (data[0] == 'B' || data[0] == 'b')))
         return 0;
 
-    ret = module_send_event(gateway_module(0), EVENT_BUS_IDLE);
+    ret = gateway_send_event(0, EVENT_BUS_IDLE);
     n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                  "[evt] bus_idle ret=%u\r\n", (unsigned)ret);
     if (n > 0)
@@ -218,7 +218,7 @@ static int debug_cmd_ctrl(uint8_t *data, uint16_t len)
         val = (uint8_t)((data[3] - '0') * 10 + (data[4] - '0'));
     }
 
-    ret = module_send_cmd(gateway_module(0), cmd, val);
+    ret = gateway_send_cmd(0, cmd, val);
     n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                  "[evt] cmd=%u val=%u ret=%u\r\n",
                  (unsigned)cmd, (unsigned)val, (unsigned)ret);
