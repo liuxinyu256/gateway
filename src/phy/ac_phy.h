@@ -29,6 +29,6 @@ typedef struct ac_phy_ops {
 extern const ac_phy_ops_t ac_phy_uart_ops;
 
 /* 根据品牌 phy_cfg 装配（分发到具体物理层类） */
-uint8_t ac_phy_setup(const ac_phy_cfg_t *phy, bus_t *bus, ac_io_t *io);
+uint8_t ac_phy_init(const ac_phy_cfg_t *phy, bus_t *bus, ac_io_t *io);
 
 #endif /* AC_PHY_H */

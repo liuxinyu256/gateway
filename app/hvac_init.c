@@ -3,7 +3,7 @@
  *
  * 上层负责装配并启动：
  *   - bsp/rs485 板级初始化
- *   - ac_phy_setup 装配编码器/解码器/发送器/接收器
+ *   - ac_phy_init 装配编码器/解码器/发送器/接收器
  *   - 注册品牌并启动模块
  *   - 启动调试模块
  */
@@ -48,7 +48,7 @@ static void init_rs485(void)
 /* 2. AC 物理层装配：由品牌 phy_cfg 决定 */
 static uint8_t init_ac_phy(void)
 {
-    if (ac_phy_setup(ac_test_cfg.phy_cfg, &g_ac.base.bus, &g_ac_io) != 0)
+    if (ac_phy_init(ac_test_cfg.phy_cfg, &g_ac.base.bus, &g_ac_io) != 0)
         return 1;
 
     g_ac.base.sender   = g_ac_io.sender;

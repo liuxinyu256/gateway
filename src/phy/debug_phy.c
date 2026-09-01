@@ -16,7 +16,7 @@ static uart_decoder_t     s_dec;
 static sender_poll_t      s_sender;
 static receiver_timeout_t s_rx;
 
-uint8_t debug_phy_setup(bus_t *bus,
+uint8_t debug_phy_init(bus_t *bus,
                         uint8_t *rx_buf, uint16_t rx_size,
                         debug_io_t *io)
 {

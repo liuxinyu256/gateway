@@ -13,7 +13,7 @@ static const ac_phy_ops_t *phy_ops(ac_phy_type_t type)
     }
 }
 
-uint8_t ac_phy_setup(const ac_phy_cfg_t *phy, bus_t *bus, ac_io_t *io)
+uint8_t ac_phy_init(const ac_phy_cfg_t *phy, bus_t *bus, ac_io_t *io)
 {
     const ac_phy_ops_t *ops;
 
