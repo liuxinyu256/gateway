@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "FreeRTOS.h"
 #include "semphr.h"
-#include "hal_io.h"
+#include "debug_phy.h"
 #include "led.h"
 #include "bsp.h"
 #include "gateway.h"
@@ -67,10 +67,7 @@ typedef struct {
 
 static debug_module_t     g_dbg;
 static SemaphoreHandle_t debug_print_mutex;
-static sender_t           g_dbg_sender;
-static uart_encoder_t     g_dbg_enc;
-static uart_decoder_t     g_dbg_dec;
-static receiver_timeout_t g_dbg_rx;
+static debug_io_t        g_dbg_io;
 
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
@@ -422,41 +419,14 @@ void debug_module_start(void)
     g_dbg.base.ops = &debug_module_ops;
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);
 
-    uart_encoder_cfg_t enc_cfg = {
-        .port     = &uart1,
-        .uart_cfg = {
-            .baudrate  = baudrate,
-            .data_bits = 8,
-            .stop_bits = 1,
-            .parity    = 0,
-        },
-    };
-    uart_encoder_init(&g_dbg_enc, &enc_cfg);
-
-    sender_cfg_t sender_cfg = {
-        .encoder = &g_dbg_enc.base,
-        .bus     = &g_dbg.base.bus,
-    };
-    sender_init(&g_dbg_sender, &sender_cfg);
-    g_dbg.base.sender = &g_dbg_sender;
-
-    uart_decoder_cfg_t dec_cfg = {
-        .port     = &uart1,
-        .uart_cfg = {
-            .baudrate  = baudrate,
-            .data_bits = 8,
-            .stop_bits = 1,
-            .parity    = 0,
-        },
-    };
-    uart_decoder_init(&g_dbg_dec, &dec_cfg);
-
-    timer_t *rx_timer = timer_hw_create(1);
-    receiver_timeout_init(&g_dbg_rx, rx_timer, 5, NULL,
-                          g_dbg.rx_buf, sizeof(g_dbg.rx_buf));
-    receiver_set_bus(&g_dbg_rx.base, &g_dbg.base.bus);
-    uart_decoder_attach_receiver(&g_dbg_dec, &g_dbg_rx.base);
-    g_dbg.base.receiver = &g_dbg_rx.base;
+    /* 物理层装配：固定 UART1，由 debug_phy_setup 创建具体对象并注入 */
+    if (debug_phy_setup(&g_dbg.base.bus,
+                        g_dbg.rx_buf, sizeof(g_dbg.rx_buf),
+                        &g_dbg_io) != 0) {
+        return;
+    }
+    g_dbg.base.sender   = g_dbg_io.sender;
+    g_dbg.base.receiver = g_dbg_io.receiver;
 
     module_init(&g_dbg.base, &baudrate);
     gateway_set_module(1, &g_dbg.base);

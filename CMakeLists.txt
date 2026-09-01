@@ -137,6 +137,7 @@ if(CH579)
         src/bsp/bsp_board.c
         src/bsp/bsp_a07s.c
         src/phy/ac_phy_uart.c
+        src/phy/debug_phy.c
         src/modules/debug_module.c
         csp/CH579/startup_ARMCM0.s
         csp/CH579/StdPeriphDriver/CH57x_clk.c
