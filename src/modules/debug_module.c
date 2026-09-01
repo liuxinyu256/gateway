@@ -636,6 +636,20 @@ static void dbg_module_rx_log(module_t *m, const uint8_t *data, uint16_t len)
         log_hex_dump("ac evt", data, len);
 }
 
+/* 网关状态观察者：用于验证发布/订阅链路 */
+static void debug_on_state_change(uint8_t module_id,
+                                  const gateway_state_t *s,
+                                  void *ctx)
+{
+    (void)ctx;
+    log_printf("[gw] module=%u power=%u mode=%u set=%u room=%u fan=%u swing=%u err=%u\r\n",
+               (unsigned)module_id,
+               (unsigned)s->power, (unsigned)s->mode,
+               (unsigned)s->set_temp, (unsigned)s->room_temp,
+               (unsigned)s->fan, (unsigned)s->swing,
+               (unsigned)s->error_code);
+}
+
 void debug_module_start(void)
 {
     uint32_t baudrate = 115200;
@@ -659,6 +673,9 @@ void debug_module_start(void)
 
     module_init(&g_dbg.base, &baudrate);
     gateway_set_module(1, &g_dbg.base);
+
+    /* 注册网关状态观察者，验证状态发布/订阅链路 */
+    gateway_on_state_change(debug_on_state_change, NULL);
 
     /* RX 日志由 debug 模块统一管理：挂到 AC 模块的运行时日志钩子 */
     {
