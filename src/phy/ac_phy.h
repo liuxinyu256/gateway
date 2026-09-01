@@ -22,4 +22,7 @@ typedef struct {
 
 uint8_t ac_phy_setup(const ac_phy_cfg_t *phy, bus_t *bus, ac_io_t *io);
 
+/* 各物理层实现 */
+uint8_t ac_phy_uart_setup(const uart_phy_cfg_t *cfg, bus_t *bus, ac_io_t *io);
+
 #endif /* AC_PHY_H */

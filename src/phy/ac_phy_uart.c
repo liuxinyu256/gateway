@@ -15,7 +15,7 @@ static sender_poll_t      s_sender;
 static receiver_timeout_t s_rx;
 static uint8_t            s_rx_buf[128];
 
-static uint8_t setup_uart(const uart_phy_cfg_t *u, bus_t *bus, ac_io_t *io)
+uint8_t ac_phy_uart_setup(const uart_phy_cfg_t *u, bus_t *bus, ac_io_t *io)
 {
     if (!u || !bus || !io)
         return 1;
@@ -62,17 +62,4 @@ static uint8_t setup_uart(const uart_phy_cfg_t *u, bus_t *bus, ac_io_t *io)
     io->sender   = &s_sender.base;
     io->receiver = &s_rx.base;
     return 0;
-}
-
-uint8_t ac_phy_setup(const ac_phy_cfg_t *phy, bus_t *bus, ac_io_t *io)
-{
-    if (!phy || !bus || !io)
-        return 1;
-
-    switch (phy->phy_type) {
-    case AC_PHY_UART:
-        return setup_uart((const uart_phy_cfg_t *)phy->cfg, bus, io);
-    default:
-        return 1;
-    }
 }

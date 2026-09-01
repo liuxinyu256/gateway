@@ -136,6 +136,7 @@ if(CH579)
         src/bsp/bsp.c
         src/bsp/bsp_board.c
         src/bsp/bsp_a07s.c
+        src/phy/ac_phy.c
         src/phy/ac_phy_uart.c
         src/phy/debug_phy.c
         src/modules/debug_module.c

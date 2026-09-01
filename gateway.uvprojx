@@ -605,6 +605,11 @@
           <GroupName>phy</GroupName>
           <Files>
             <File>
+              <FileName>ac_phy.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\phy\ac_phy.c</FilePath>
+            </File>
+            <File>
               <FileName>ac_phy_uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\phy\ac_phy_uart.c</FilePath>
