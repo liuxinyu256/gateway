@@ -93,10 +93,24 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 
     /* 命令：help = 显示命令列表 */
     if (cmd_is(data, len, "help") || (len == 1 && (data[0] == '?' || data[0] == 'h'))) {
-        static const char help[] =
-            "[cmd] help perf stat tx brand0/1/2 ack tick idle cmd state\r\n";
-        sender_send(g_dbg.base.sender, (const uint8_t *)help,
-                    sizeof(help) - 1, SENDER_PRIO_CMD);
+        static const char * const help[] = {
+            "[cmd] help                显示本列表\r\n",
+            "[cmd] perf / p            CPU + RAM\r\n",
+            "[cmd] stat / s            队列/健康状态\r\n",
+            "[cmd] tx / f              发 Modbus 测试帧\r\n",
+            "[cmd] brand0|1|2 / b0|1|2 切换品牌并发测试帧\r\n",
+            "[cmd] ack / a             触发 need_ack\r\n",
+            "[cmd] tick / timeout / o  触发 tick\r\n",
+            "[cmd] idle / b            触发 bus_idle\r\n",
+            "[cmd] cmd<cmd>,<val>      发控制命令，如 cmd1,25\r\n",
+            "[cmd] state / g           查询 AC 状态\r\n",
+        };
+        uint8_t i;
+
+        for (i = 0; i < sizeof(help) / sizeof(help[0]); i++) {
+            sender_send(g_dbg.base.sender, (const uint8_t *)help[i],
+                        (uint16_t)(sizeof(help[i]) - 1), SENDER_PRIO_CMD);
+        }
         return 1;
     }
 
