@@ -145,11 +145,24 @@ static const event_handler_t test_table = {
     .on_timeout       = test_on_timeout,
 };
 
-static const ac_brand_config_t test_brand = {
-    .brand_id             = 1,
-    .evt_table            = &test_table,
+static const uart_phy_cfg_t test_uart_cfg = {
+    .baudrate   = 9600,
+    .data_bits  = 8,
+    .stop_bits  = 1,
+    .parity     = 0,
     .receiver_timeout_ticks = 5,
-    .ability              = { 0 },
+};
+
+static const ac_phy_cfg_t test_phy_cfg = {
+    .phy_type = AC_PHY_UART,
+    .cfg      = &test_uart_cfg,
+};
+
+static const ac_brand_config_t test_brand = {
+    .brand_id = 1,
+    .phy_cfg  = &test_phy_cfg,
+    .evt_table = &test_table,
+    .ability  = { 0 },
 };
 
 static const ac_brand_config_t *const test_brand_table[] = {
@@ -189,8 +202,8 @@ int main(void)
 
     /* 接收器实例由上层创建并注入 */
     receiver_timeout_init(&rx_timeout, &rx_timer,
-                          test_brand.receiver_timeout_ticks, NULL,
-                          rx_ring_buf, sizeof(rx_ring_buf));
+                          ((const uart_phy_cfg_t *)test_brand.phy_cfg->cfg)->receiver_timeout_ticks,
+                          NULL, rx_ring_buf, sizeof(rx_ring_buf));
     receiver_set_bus(&rx_timeout.base, &m->bus);
     /* 解码器通过回调把字节喂给接收器 */
     decoder_set_rx_callback(&sim_decoder, sim_decoder_to_receiver,

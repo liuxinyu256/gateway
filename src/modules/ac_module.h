@@ -98,14 +98,19 @@ typedef enum {
     AC_PHY_MANCHESTER,   /* 预留 */
 } ac_phy_type_t;
 
-/* 物理层配置：品牌知道自己的物理参数 */
+/* UART 物理层配置（仅 UART 使用） */
 typedef struct {
-    ac_phy_type_t phy_type;
     uint32_t baudrate;
     uint8_t  data_bits;
     uint8_t  stop_bits;
     uint8_t  parity;
     uint16_t receiver_timeout_ticks; /* 帧间隙超时 */
+} uart_phy_cfg_t;
+
+/* 物理层配置：通用结构只保存类型 + 私有配置指针 */
+typedef struct {
+    ac_phy_type_t phy_type;
+    const void   *cfg;   /* 指向具体物理层配置（uart_phy_cfg_t / manchester_phy_cfg_t ...） */
 } ac_phy_cfg_t;
 
 typedef struct

@@ -51,13 +51,16 @@ static uint8_t ac_phy_setup(const ac_phy_cfg_t *phy)
 
     switch (phy->phy_type) {
     case AC_PHY_UART: {
+        const uart_phy_cfg_t *u = (const uart_phy_cfg_t *)phy->cfg;
+        if (!u) return 1;
+
         uart_encoder_cfg_t enc_cfg = {
             .port = &uart0,
             .uart_cfg = {
-                .baudrate  = phy->baudrate,
-                .data_bits = phy->data_bits,
-                .stop_bits = phy->stop_bits,
-                .parity    = phy->parity,
+                .baudrate  = u->baudrate,
+                .data_bits = u->data_bits,
+                .stop_bits = u->stop_bits,
+                .parity    = u->parity,
             },
         };
         uart_encoder_init(&g_hvac_enc, &enc_cfg);
@@ -72,16 +75,16 @@ static uint8_t ac_phy_setup(const ac_phy_cfg_t *phy)
         uart_decoder_cfg_t dec_cfg = {
             .port = &uart0,
             .uart_cfg = {
-                .baudrate  = phy->baudrate,
-                .data_bits = phy->data_bits,
-                .stop_bits = phy->stop_bits,
-                .parity    = phy->parity,
+                .baudrate  = u->baudrate,
+                .data_bits = u->data_bits,
+                .stop_bits = u->stop_bits,
+                .parity    = u->parity,
             },
         };
         uart_decoder_init(&g_hvac_dec, &dec_cfg);
 
         timer_t *rx_timer = timer_hw_create(0);
-        receiver_timeout_init(&g_hvac_rx, rx_timer, phy->receiver_timeout_ticks,
+        receiver_timeout_init(&g_hvac_rx, rx_timer, u->receiver_timeout_ticks,
                               NULL, g_hvac_rx_buf, sizeof(g_hvac_rx_buf));
         receiver_set_bus(&g_hvac_rx.base, &g_ac.base.bus);
         uart_decoder_attach_receiver(&g_hvac_dec, &g_hvac_rx.base);

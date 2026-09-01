@@ -131,13 +131,17 @@ static const event_handler_t ac_test_evt = {
 };
 
 /* 测试品牌物理层：UART 9600, 8N1, 帧间隙 5ms */
-static const ac_phy_cfg_t ac_test_phy_cfg = {
-    .phy_type   = AC_PHY_UART,
+static const uart_phy_cfg_t ac_test_uart_cfg = {
     .baudrate   = 9600,
     .data_bits  = 8,
     .stop_bits  = 1,
     .parity     = 0,
     .receiver_timeout_ticks = 5,
+};
+
+static const ac_phy_cfg_t ac_test_phy_cfg = {
+    .phy_type = AC_PHY_UART,
+    .cfg      = &ac_test_uart_cfg,
 };
 
 /* 测试品牌配置：能力全部放开，覆盖所有模型 */
