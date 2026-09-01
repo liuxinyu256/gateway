@@ -87,7 +87,8 @@ typedef struct module
  * 总线/帧间隙由物理层装配时负责初始化，不在这里传波特率。
  */
 uint8_t module_init(module_t *m, void *cfg);
-uint8_t module_base_init(module_t *m, module_bus_type_t bus_type);
+uint8_t module_base_init(module_t *m);
+void    module_set_bus_type(module_t *m, module_bus_type_t bus_type);
 void    module_set_handler(module_t *m, const event_handler_t *handler, void *ctx);
 void    module_start(module_t *m);
 

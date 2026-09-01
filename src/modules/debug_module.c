@@ -509,7 +509,7 @@ static const event_handler_t debug_evt_table = {
 static uint8_t debug_ops_init(module_t *m, void *cfg)
 {
     (void)cfg;
-    if (module_base_init(m, MODULE_BUS_SERIAL) != 0)
+    if (module_base_init(m) != 0)
         return 1;
     return 0;
 }
@@ -670,6 +670,7 @@ void debug_module_start(void)
     }
     g_dbg.base.sender   = g_dbg_io.sender;
     g_dbg.base.receiver = g_dbg_io.receiver;
+    module_set_bus_type(&g_dbg.base, MODULE_BUS_SERIAL);
 
     module_init(&g_dbg.base, &baudrate);
     gateway_set_module(1, &g_dbg.base);

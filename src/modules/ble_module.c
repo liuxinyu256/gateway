@@ -45,7 +45,7 @@ static uint8_t ble_ops_init(module_t *m, void *cfg)
     (void)cfg;
     if (!m) return 1;
 
-    if (module_base_init(m, MODULE_BUS_BLE) != 0)
+    if (module_base_init(m) != 0)
         return 1;
     return 0;
 }
@@ -70,6 +70,8 @@ void ble_module_start(void)
     /* 先初始化 BLE 物理层（CH57xBLEInit + TMOS 任务），再启动模块 */
     if (ble_phy_init() != 0)
         return;
+
+    module_set_bus_type(&g_ble.base, MODULE_BUS_BLE);
 
     g_ble.base.ops = &ble_module_ops;
     module_set_handler(&g_ble.base, &ble_evt_table, &g_ble);

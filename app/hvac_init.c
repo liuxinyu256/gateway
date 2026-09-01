@@ -40,6 +40,7 @@ static uint8_t init_ac_phy(void)
 
     g_ac.base.sender   = g_ac_io.sender;
     g_ac.base.receiver = g_ac_io.receiver;
+    module_set_bus_type(&g_ac.base, MODULE_BUS_SERIAL);
     return 0;
 }
 

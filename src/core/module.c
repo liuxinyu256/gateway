@@ -221,11 +221,11 @@ static void tick_timer_cb(TimerHandle_t t)
 /* ---- API ---- */
 
 /* 公共初始化: 由每个模块自己的 init 函数内部调用 */
-uint8_t module_base_init(module_t *m, module_bus_type_t bus_type)
+uint8_t module_base_init(module_t *m)
 {
     if (!m) return 1;
 
-    m->bus_type = bus_type;
+    m->bus_type = MODULE_BUS_NONE;
 
 #ifndef FAKE_FREERTOS
     m->send_queue = xQueueCreate(MODULE_EVENT_QUEUE_LEN, sizeof(event_t));
@@ -243,6 +243,12 @@ uint8_t module_base_init(module_t *m, module_bus_type_t bus_type)
         }
     }
     return 1;
+}
+
+void module_set_bus_type(module_t *m, module_bus_type_t bus_type)
+{
+    if (!m) return;
+    m->bus_type = bus_type;
 }
 
 /* 统一入口: 只负责调用本模块自己的 init */
