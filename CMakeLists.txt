@@ -136,6 +136,7 @@ if(CH579)
         src/bsp/bsp.c
         src/bsp/bsp_board.c
         src/bsp/bsp_a07s.c
+        src/phy/ac_phy_uart.c
         src/modules/debug_module.c
         csp/CH579/startup_ARMCM0.s
         csp/CH579/StdPeriphDriver/CH57x_clk.c
@@ -160,6 +161,7 @@ if(CH579)
         ${CMAKE_SOURCE_DIR}/src/modules
         ${CMAKE_SOURCE_DIR}/src/brands
         ${CMAKE_SOURCE_DIR}/src/bsp
+        ${CMAKE_SOURCE_DIR}/src/phy
         ${CMAKE_SOURCE_DIR}/app
         ${CMAKE_SOURCE_DIR}/csp/CH579/StdPeriphDriver/inc
         ${CMAKE_SOURCE_DIR}/lib/CMSIS/Include

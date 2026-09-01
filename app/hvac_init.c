@@ -1,24 +1,18 @@
 /**
  * hvac_init.c —— 网关初始化
  *
- * 上层负责创建并注入：
- *   - receiver_timeout -> m->receiver
- *   - uart_encoder + sender -> m->sender
- * 模块只依赖抽象接口。
+ * 上层负责装配并启动：
+ *   - bsp/rs485 板级初始化
+ *   - ac_phy_setup 装配编码器/解码器/发送器/接收器
+ *   - 注册品牌并启动模块
+ *   - 启动调试模块
  */
 
 #include "hvac_init.h"
 #include "gateway.h"
 #include "ac_module.h"
 #include "ac_test.h"
-#include "uart_encoder.h"
-#include "uart_decoder.h"
-#include "uart_instance.h"
-#include "sender.h"
-#include "sender_complete_poll.h"
-#include "receiver_timeout.h"
-#include "timer.h"
-#include "timer_instance.h"
+#include "ac_phy.h"
 #include "debug_module.h"
 #include "rs485.h"
 #include "rs485_ch579.h"
@@ -35,90 +29,36 @@ static void hvac_rs485_dir(uint8_t tx, void *ctx)
 }
 #endif
 
-static ac_module_t        g_ac = { .base.ops = &ac_module_ops };
-static rs485_ch579_t      g_hvac_rs485;
-static sender_poll_t       g_hvac_sender;
-static uart_encoder_t     g_hvac_enc;
-static uart_decoder_t     g_hvac_dec;
-static receiver_timeout_t g_hvac_rx;
-static uint8_t            g_hvac_rx_buf[128];
+static ac_module_t   g_ac = { .base.ops = &ac_module_ops };
+static rs485_ch579_t g_hvac_rs485;
+static ac_io_t       g_ac_io;
 
-/* 物理层装配：根据品牌 phy_cfg 创建/配置编码器、解码器、发送器、接收器 */
-static uint8_t ac_phy_setup(const ac_phy_cfg_t *phy)
+/* 1. RS485 DE 方向初始化 */
+static void init_rs485(void)
 {
-    if (!phy)
-        return 1;
-
-    switch (phy->phy_type) {
-    case AC_PHY_UART: {
-        const uart_phy_cfg_t *u = (const uart_phy_cfg_t *)phy->cfg;
-        if (!u) return 1;
-
-        uart_encoder_cfg_t enc_cfg = {
-            .port = &uart0,
-            .uart_cfg = {
-                .baudrate  = u->baudrate,
-                .data_bits = u->data_bits,
-                .stop_bits = u->stop_bits,
-                .parity    = u->parity,
-            },
-        };
-        uart_encoder_init(&g_hvac_enc, &enc_cfg);
-
-        sender_cfg_t sender_cfg = {
-            .encoder = &g_hvac_enc.base,
-            .bus     = &g_ac.base.bus,
-        };
-        sender_poll_init(&g_hvac_sender, &sender_cfg);
-        g_ac.base.sender = &g_hvac_sender.base;
-
-        uart_decoder_cfg_t dec_cfg = {
-            .port = &uart0,
-            .uart_cfg = {
-                .baudrate  = u->baudrate,
-                .data_bits = u->data_bits,
-                .stop_bits = u->stop_bits,
-                .parity    = u->parity,
-            },
-        };
-        uart_decoder_init(&g_hvac_dec, &dec_cfg);
-
-        timer_t *rx_timer = timer_hw_create(0);
-        receiver_timeout_init(&g_hvac_rx, rx_timer, u->receiver_timeout_ticks,
-                              NULL, g_hvac_rx_buf, sizeof(g_hvac_rx_buf));
-        receiver_set_bus(&g_hvac_rx.base, &g_ac.base.bus);
-        uart_decoder_attach_receiver(&g_hvac_dec, &g_hvac_rx.base);
-        g_ac.base.receiver = &g_hvac_rx.base;
-        return 0;
-    }
-    default:
-        return 1;
-    }
+#ifdef __CH579__
+    rs485_ch579_cfg_t rs_cfg = {
+        .port   = 0,          /* GPIOA */
+        .de_pin = GPIO_Pin_1,
+    };
+    rs485_ch579_init(&g_hvac_rs485, &rs_cfg);
+#endif
 }
 
-void hvac_start(void) {
-    gateway_init();
+/* 2. AC 物理层装配：由品牌 phy_cfg 决定 */
+static uint8_t init_ac_phy(void)
+{
+    if (ac_phy_setup(ac_test_cfg.phy_cfg, &g_ac.base.bus, &g_ac_io) != 0)
+        return 1;
 
-    bsp_board_init();   /* AC 模块外围电路选择（按 BSP_BOARD_SELECT 切换） */
+    g_ac.base.sender   = g_ac_io.sender;
+    g_ac.base.receiver = g_ac_io.receiver;
+    return 0;
+}
 
-    /* RS485, UART0, 9600bps, rx=PB4, tx=PB7, de=PA1 */
-#ifdef __CH579__
-    /* PA1 作为 RS485 DE，由 rs485 HAL 驱动配置 */
-    {
-        rs485_ch579_cfg_t rs_cfg = {
-            .port   = 0,          /* GPIOA */
-            .de_pin = GPIO_Pin_1,
-        };
-        rs485_ch579_init(&g_hvac_rs485, &rs_cfg);
-    }
-#endif
-
-    /* 物理层装配：由品牌 phy_cfg 决定编码器/解码器/发送器/接收器 */
-    if (ac_phy_setup(ac_test_cfg.phy_cfg) != 0) {
-        /* 物理层配置失败，保持不启动 */
-        return;
-    }
-
+/* 3. AC 模块初始化 + 品牌注册 + 启动 */
+static void init_ac_module(void)
+{
     ac_init_cfg_t cfg = {
         .baudrate    = 9600,
         .brand_table = brand_table,
@@ -133,15 +73,23 @@ void hvac_start(void) {
     bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, &g_hvac_rs485.base);
 #endif
 
-    /* 注册测试品牌（实现 AC 模块全部事件） */
     ac_module_register(&g_ac, &ac_test_cfg);
-
     gateway_set_module(0, &g_ac.base);
 
     module_start(&g_ac.base);
-
     module_set_poll_period(&g_ac.base, 1000);   /* 测试：1s 周期发读请求 */
     ac_module_start_scan(&g_ac);
+}
 
-    debug_module_start();
+void hvac_start(void)
+{
+    gateway_init();
+
+    bsp_board_init();       /* 板级外围电路选择 */
+    init_rs485();           /* RS485 DE 方向 */
+    if (init_ac_phy() != 0) /* 物理层装配 */
+        return;
+
+    init_ac_module();       /* AC 模块初始化/注册/启动 */
+    debug_module_start();   /* 调试模块 */
 }
