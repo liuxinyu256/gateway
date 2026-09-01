@@ -16,7 +16,6 @@
 #include "HAL.h"
 
 #ifndef OLD
-#include "svcTask.h"
 #endif
                                                 
 tmosTaskID halTaskID;
@@ -144,13 +143,6 @@ tmosEvents HAL_ProcessEvent( tmosTaskID task_id, tmosEvents events )
     }
     return events ^ SYS_EVENT_MSG;
 	}
-  #ifndef OLD
-    if( events & SVC_TASK_EVENT ){
-    svcTaskPoll(1);
-    tmos_start_task( halTaskID , SVC_TASK_EVENT ,MS1_TO_SYSTEM_TIME(5) );  //5ms
-	return events ^ SVC_TASK_EVENT;
-  }
-  #endif
     
   if ( events & LED_BLINK_EVENT ){
 #if (defined HAL_LED) && (HAL_LED == TRUE)
@@ -216,9 +208,6 @@ tmosEvents HAL_ProcessEvent( tmosTaskID task_id, tmosEvents events )
 	tmos_start_task( halTaskID , HAL_REG_INIT_EVENT ,MS1_TO_SYSTEM_TIME(BLE_CALIBRATION_PERIOD) );	// 添加校准任务，单次校准耗时小于10ms
 #endif
 //  tmos_start_task( halTaskID , HAL_TEST_EVENT ,1000 ); // 添加一个测试任务
-  #ifndef OLD
-  tmos_start_task( halTaskID , SVC_TASK_EVENT ,160 ); // 100ms后启动任务
-  #endif
 }
 
 /*******************************************************************************

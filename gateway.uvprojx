@@ -372,8 +372,8 @@
             <DataAddressRange>0x20000000</DataAddressRange>
             <pXoBase></pXoBase>
             <ScatterFile>.\gateway.sct</ScatterFile>
-            <IncludeLibs></IncludeLibs>
-            <IncludeLibsPath></IncludeLibsPath>
+            <IncludeLibs>.\src\ble\lib\CH57xBLE.lib</IncludeLibs>
+            <IncludeLibsPath>.\src\ble\lib</IncludeLibsPath>
             <Misc></Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings></DisabledWarnings>
@@ -723,11 +723,6 @@
               <FileName>devinfoservice.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\ble\profile\devinfoservice.c</FilePath>
-            </File>
-            <File>
-              <FileName>CH57xBLE.lib</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\lib\CH57xBLE.lib</FilePath>
             </File>
           </Files>
         </Group>
