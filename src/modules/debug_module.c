@@ -7,7 +7,10 @@
  */
 #include "debug_module.h"
 #include <stdio.h>
+#include <stdarg.h>
 #include "module.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "sender.h"
 #include "uart_encoder.h"
 #include "uart_decoder.h"
@@ -71,6 +74,7 @@ typedef struct {
 } debug_module_t;
 
 static debug_module_t     g_dbg;
+static SemaphoreHandle_t debug_print_mutex;
 static sender_t           g_dbg_sender;
 static uart_encoder_t     g_dbg_enc;
 static uart_decoder_t     g_dbg_dec;
@@ -381,6 +385,35 @@ static void dbg_tx_done(sender_t *tx)
     module_tx_done(&g_dbg.base);
 }
 
+/* 公共发送：复用调试模块 tx_buf，发到 UART1 */
+void debug_module_vprintf(const char *fmt, va_list ap)
+{
+    int n;
+
+    if (!g_dbg.base.sender)
+        return;
+
+    if (debug_print_mutex)
+        xSemaphoreTake(debug_print_mutex, portMAX_DELAY);
+
+    n = vsnprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf), fmt, ap);
+    if (n > 0)
+        sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                    (uint16_t)n, SENDER_PRIO_CMD);
+
+    if (debug_print_mutex)
+        xSemaphoreGive(debug_print_mutex);
+}
+
+void debug_module_printf(const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    debug_module_vprintf(fmt, ap);
+    va_end(ap);
+}
+
 void debug_module_start(void)
 {
     uint32_t baudrate = 115200;
@@ -391,6 +424,8 @@ void debug_module_start(void)
 #endif
 
     halLedInit();   /* 运行 LED 初始化 */
+
+    debug_print_mutex = xSemaphoreCreateMutex();
 
     g_dbg.base.ops = &debug_module_ops;
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);

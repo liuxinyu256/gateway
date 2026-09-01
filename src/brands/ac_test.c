@@ -8,28 +8,19 @@
 #include "ac_test.h"
 #include "gateway.h"
 #include "sender.h"
+#include "debug_module.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 
-/* 打印事件标记到 UART1 */
+/* 打印事件标记到 UART1：复用 Debug 模块公共发送缓冲区 */
 static void test_evt_printf(const char *fmt, ...)
 {
-    module_t *dbg = gateway_module(1);
-    char buf[48];
     va_list ap;
-    int n;
-
-    if (!dbg || !dbg->sender)
-        return;
 
     va_start(ap, fmt);
-    n = vsnprintf(buf, sizeof(buf), fmt, ap);
+    debug_module_vprintf(fmt, ap);
     va_end(ap);
-
-    if (n > 0)
-        sender_send(dbg->sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
 }
 
 static void test_send_query(ac_module_t *self)
