@@ -375,6 +375,14 @@ uint8_t module_send_cmd(module_t *m, uint8_t cmd, uint8_t val)
     return module_enqueue_send_event(m, &ev);
 }
 
+uint8_t module_send_event(module_t *m, event_type_t type)
+{
+    if (!m) return 1;
+
+    event_t ev = { .type = type };
+    return module_enqueue_send_event(m, &ev);
+}
+
 void module_set_poll_period(module_t *m, uint16_t period_ms)
 {
     if (!m || !m->poll_timer) return;

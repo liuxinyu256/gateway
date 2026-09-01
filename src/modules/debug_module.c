@@ -135,6 +135,72 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         return 1;
     }
 
+    /* 命令：A/O/B = 触发 AC 模块事件 */
+    if (len == 1 && (data[0] == 'A' || data[0] == 'a')) {
+        uint8_t ret = module_send_event(gateway_module(0), EVENT_NEED_ACK);
+        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                         "[evt] need_ack ret=%u\r\n", (unsigned)ret);
+        if (n > 0)
+            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                        (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
+    }
+    if (len == 1 && (data[0] == 'O' || data[0] == 'o')) {
+        uint8_t ret = module_send_event(gateway_module(0), EVENT_TIMEOUT);
+        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                         "[evt] timeout ret=%u\r\n", (unsigned)ret);
+        if (n > 0)
+            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                        (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
+    }
+    if (len == 1 && (data[0] == 'B' || data[0] == 'b')) {
+        uint8_t ret = module_send_event(gateway_module(0), EVENT_BUS_IDLE);
+        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                         "[evt] bus_idle ret=%u\r\n", (unsigned)ret);
+        if (n > 0)
+            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                        (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
+    }
+
+    /* 命令：C<cmd>,<val> = 发送控制命令给 AC 模块 */
+    if ((data[0] == 'C' || data[0] == 'c') && len >= 5) {
+        uint8_t cmd = (uint8_t)(data[1] - '0');
+        uint8_t val = (uint8_t)((data[3] - '0') * 10 + (data[4] - '0'));
+        uint8_t ret = module_send_cmd(gateway_module(0), cmd, val);
+        int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                         "[evt] cmd=%u val=%u ret=%u\r\n",
+                         (unsigned)cmd, (unsigned)val, (unsigned)ret);
+        if (n > 0)
+            sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                        (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
+    }
+
+    /* 命令：G = 查询 AC 模块当前状态 */
+    if (len == 1 && (data[0] == 'G' || data[0] == 'g')) {
+        gateway_state_t s;
+        if (gateway_module_state_get(0, &s) == 0) {
+            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                             "[ac st] power=%u mode=%u set=%u room=%u fan=%u swing=%u err=%u\r\n",
+                             (unsigned)s.power, (unsigned)s.mode,
+                             (unsigned)s.set_temp, (unsigned)s.room_temp,
+                             (unsigned)s.fan, (unsigned)s.swing,
+                             (unsigned)s.error_code);
+            if (n > 0)
+                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                            (uint16_t)n, SENDER_PRIO_CMD);
+        } else {
+            int n = snprintf((char *)g_dbg.tx_buf, sizeof(g_dbg.tx_buf),
+                             "[ac st] unavailable\r\n");
+            if (n > 0)
+                sender_send(g_dbg.base.sender, g_dbg.tx_buf,
+                            (uint16_t)n, SENDER_PRIO_CMD);
+        }
+        return 1;
+    }
+
     /* 命令：F = 485 物理层测试，直接发送一帧带正确 CRC 的 Modbus 帧 */
     if (len == 1 && (data[0] == 'F' || data[0] == 'f')) {
         static const uint8_t test_frame[] = {

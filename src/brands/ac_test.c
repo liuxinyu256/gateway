@@ -1,28 +1,58 @@
 /**
  * ac_test.c —— 测试品牌实现
  *
- * 实现 AC 模块全部事件，便于验证模块基本功能。
+ * 实现 AC 模块全部事件，每个事件都在 UART1 打印标记，
+ * cmd 事件会更新 AC 模块状态并上报网关，便于验证事件响应。
  * 正式品牌协议开发后可移除。
  */
 #include "ac_test.h"
 #include "gateway.h"
 #include "sender.h"
 #include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
 
-static void test_on_activate(void *ctx)
+/* 打印事件标记到 UART1 */
+static void test_evt_printf(const char *fmt, ...)
 {
-    (void)ctx;
+    module_t *dbg = gateway_module(1);
+    char buf[48];
+    va_list ap;
+    int n;
+
+    if (!dbg || !dbg->sender)
+        return;
+
+    va_start(ap, fmt);
+    n = vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+
+    if (n > 0)
+        sender_send(dbg->sender, (const uint8_t *)buf,
+                    (uint16_t)n, SENDER_PRIO_CMD);
 }
 
-static void test_on_periodic_send(void *ctx)
+static void test_send_query(ac_module_t *self)
 {
-    ac_module_t *self = (ac_module_t *)ctx;
     static const uint8_t frame[] = {
         0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
     };
 
     if (self && self->base.sender)
         sender_send(self->base.sender, frame, sizeof(frame), SENDER_PRIO_CMD);
+}
+
+static void test_on_activate(void *ctx)
+{
+    (void)ctx;
+    test_evt_printf("[ac evt] activate\r\n");
+}
+
+static void test_on_periodic_send(void *ctx)
+{
+    ac_module_t *self = (ac_module_t *)ctx;
+    test_evt_printf("[ac evt] periodic\r\n");
+    test_send_query(self);
 }
 
 static int test_on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
@@ -35,7 +65,7 @@ static int test_on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     if (!dbg || !dbg->sender || !data || !len)
         return 1;
 
-    pos = snprintf(buf, sizeof(buf), "[ac rx]");
+    pos = snprintf(buf, sizeof(buf), "[ac evt] rx:");
     for (uint16_t i = 0; i < len; i++) {
         if (pos + 4 >= (int)sizeof(buf)) {
             sender_send(dbg->sender, (const uint8_t *)buf,
@@ -55,25 +85,48 @@ static int test_on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 
 static void test_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val)
 {
-    (void)ctx;
-    (void)cmd;
-    (void)val;
+    ac_module_t   *self = (ac_module_t *)ctx;
+    gateway_state_t s;
+
+    test_evt_printf("[ac evt] cmd=%u val=%u\r\n", (unsigned)cmd, (unsigned)val);
+
+    if (!self)
+        return;
+
+    if (gateway_module_state_get(0, &s) != 0)
+        memset(&s, 0, sizeof(s));
+
+    /* 测试协议：cmd 映射到状态字段 */
+    switch (cmd) {
+    case 0: s.power = val; break;
+    case 1: s.mode = val; break;
+    case 2: s.set_temp = val; break;
+    case 3: s.room_temp = val; break;
+    case 4: s.fan = val; break;
+    case 5: s.swing = val; break;
+    default: break;
+    }
+
+    ac_module_update_state(self, &s);
 }
 
 static void test_on_need_ack(void *ctx)
 {
     (void)ctx;
+    test_evt_printf("[ac evt] need_ack\r\n");
 }
 
 static void test_on_scan(void *ctx)
 {
-    /* 扫描动作：先发一帧查询 */
-    test_on_periodic_send(ctx);
+    ac_module_t *self = (ac_module_t *)ctx;
+    test_evt_printf("[ac evt] scan\r\n");
+    test_send_query(self);
 }
 
 static void test_on_timeout(void *ctx)
 {
     (void)ctx;
+    test_evt_printf("[ac evt] timeout\r\n");
 }
 
 static const event_handler_t ac_test_evt = {

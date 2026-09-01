@@ -79,6 +79,7 @@ uint8_t module_base_init(module_t *m, uint32_t baudrate);
 void    module_set_handler(module_t *m, const event_handler_t *handler, void *ctx);
 void    module_start(module_t *m);
 uint8_t module_send_cmd(module_t *m, uint8_t cmd, uint8_t val);
+uint8_t module_send_event(module_t *m, event_type_t type); /* 测试/通用：投递指定事件 */
 void    module_set_poll_period(module_t *m, uint16_t period_ms);
 
 /* 模块状态更新/上报：统一走网关状态事件队列 */
