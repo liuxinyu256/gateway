@@ -112,7 +112,7 @@ static void on_thr_empty(sender_t *tx)
         bus_on_thr_empty(tx->bus);    /* 非RS485：直接进入 gap */
 
     if (tx->on_done)
-        tx->on_done(tx->done_ctx);    /* tx_done */
+        tx->on_done(tx);              /* tx_done */
 }
 
 static void on_tx_complete(sender_t *tx)
@@ -130,7 +130,7 @@ static void on_tx_complete(sender_t *tx)
         bus_on_tx_complete(tx->bus);  /* 释放 DE + 进入 gap */
 
     if (tx->on_done)
-        tx->on_done(tx->done_ctx);    /* tx_done */
+        tx->on_done(tx);              /* tx_done */
 }
 
 uint8_t sender_poll_tx_complete(sender_t *tx)
@@ -171,6 +171,5 @@ void sender_set_callbacks(sender_t *tx, const sender_callbacks_t *cb)
 {
     if (!tx || !cb) return;
 
-    tx->on_done  = cb->done;
-    tx->done_ctx = cb->done_ctx;
+    tx->on_done = cb->done;
 }

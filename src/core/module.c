@@ -27,6 +27,16 @@ static module_t *module_from_receiver(const receiver_t *receiver)
     return NULL;
 }
 
+static module_t *module_from_sender(const sender_t *sender)
+{
+    if (!sender) return NULL;
+    for (uint8_t i = 0; i < MODULE_MAX; i++) {
+        if (g_modules[i] && g_modules[i]->sender == sender)
+            return g_modules[i];
+    }
+    return NULL;
+}
+
 /* ---- 入队 (FreeRTOS 队列 / PC 模拟队列统一入口) ---- */
 static uint8_t module_enqueue_send_event(module_t *m, const event_t *ev)
 {
@@ -155,16 +165,16 @@ static void frame_done_cb(receiver_t *receiver, uint16_t len)
 
 /* ---- tx_done: 当前帧发完，启动 gap 定时器 ---- */
 #ifdef FAKE_FREERTOS
-static void tx_done_cb(void *ctx)
+static void tx_done_cb(sender_t *tx)
 {
-    module_t *m = (module_t *)ctx;
+    module_t *m = module_from_sender(tx);
     if (m && m->gap_timer)
         xTimerStart(m->gap_timer, 0);
 }
 #else
-static void tx_done_cb(void *ctx)
+static void tx_done_cb(sender_t *tx)
 {
-    module_t *m = (module_t *)ctx;
+    module_t *m = module_from_sender(tx);
     BaseType_t woken = pdFALSE;
 
     if (m && m->gap_timer)
@@ -301,8 +311,7 @@ void module_start(module_t *m)
 
     if (m->sender) {
         sender_callbacks_t cbs = {
-            .done     = tx_done_cb,
-            .done_ctx = m,
+            .done = tx_done_cb,
         };
         sender_set_callbacks(m->sender, &cbs);
     }
