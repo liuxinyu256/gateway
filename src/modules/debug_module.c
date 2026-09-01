@@ -120,8 +120,8 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                          g_dbg.base.send_queue_drop_cnt,
                          g_dbg.base.receive_queue_drop_cnt,
                          gateway_state_event_drop_count(),
-                         frame_queue_drop_count(&g_dbg_sender.cmd_q),
-                         frame_queue_drop_count(&g_dbg_sender.norm_q));
+                         frame_queue_drop_count(&g_dbg.base.sender->cmd_q),
+                         frame_queue_drop_count(&g_dbg.base.sender->norm_q));
         if (n > 0)
             sender_send(g_dbg.base.sender, g_dbg.tx_buf,
                         (uint16_t)n, SENDER_PRIO_CMD);

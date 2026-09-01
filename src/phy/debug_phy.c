@@ -6,8 +6,10 @@
 #include "debug_phy.h"
 #include "hal_io.h"
 #include "sender_complete_poll.h"
+#include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
+#include <stddef.h>
 
 static uart_encoder_t     s_enc;
 static uart_decoder_t     s_dec;
