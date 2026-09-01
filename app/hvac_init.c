@@ -14,16 +14,7 @@
 #include "ac_test.h"
 #include "ac_phy.h"
 #include "debug_module.h"
-#include "rs485.h"
 #include "bsp.h"
-
-#ifdef __CH579__
-/* RS485 方向回调适配：bus 层调用 (tx, ctx)，转给 rs485 HAL */
-static void hvac_rs485_dir(uint8_t tx, void *ctx)
-{
-    rs485_set_dir((rs485_t *)ctx, tx);
-}
-#endif
 
 static ac_module_t   g_ac = { .base.ops = &ac_module_ops };
 static ac_io_t       g_ac_io;
@@ -49,12 +40,6 @@ static void init_ac_module(void)
     };
 
     module_init(&g_ac.base, &cfg);
-
-#ifdef __CH579__
-    /* 必须在 module_init 之后设置：module_base_init 会 bus_init 清零 */
-    bus_set_rs485_enable(&g_ac.base.bus, 1);
-    bus_set_dir_callback(&g_ac.base.bus, hvac_rs485_dir, g_ac_io.rs485);
-#endif
 
     ac_module_register(&g_ac, &ac_test_cfg);
     gateway_set_module(0, &g_ac.base);

@@ -615,6 +615,11 @@
               <FilePath>.\src\phy\ac_phy_uart.c</FilePath>
             </File>
             <File>
+              <FileName>ac_phy_rs485.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\phy\ac_phy_rs485.c</FilePath>
+            </File>
+            <File>
               <FileName>debug_phy.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\phy\debug_phy.c</FilePath>

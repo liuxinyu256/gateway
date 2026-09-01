@@ -140,7 +140,7 @@ static const uart_phy_cfg_t ac_test_uart_cfg = {
 };
 
 static const ac_phy_cfg_t ac_test_phy_cfg = {
-    .phy_type = AC_PHY_UART,
+    .phy_type = AC_PHY_RS485,
     .cfg      = &ac_test_uart_cfg,
 };
 

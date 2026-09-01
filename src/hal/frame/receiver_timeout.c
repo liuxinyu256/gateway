@@ -5,6 +5,7 @@
  * (回调在定时中断上下文, 须轻量)
  */
 #include "receiver_timeout.h"
+#include "rs485.h"
 #include <string.h>
 
 static void to_init(receiver_t *pkt)
@@ -37,6 +38,8 @@ static void to_on_byte(receiver_t *pkt)
     {
         if (pkt->bus)
             bus_mark_rx_busy(pkt->bus); /* 首字节: 接收占用总线 */
+        if (pkt->rs485)
+            rs485_set_dir(pkt->rs485, 0); /* RS485: 确保接收方向 */
         timer_init(s->timer);           /* 首字节: 开启定时中断 */
         s->base.receiving = 1;
     }

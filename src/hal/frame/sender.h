@@ -4,6 +4,7 @@
 #include "frame_queue.h"
 #include "encoder.h"
 #include "bus.h"
+#include "rs485.h"
 #include "sender_complete.h"
 
 /* 发送完成回调类型（与接收 frame_finish_callback 对称） */
@@ -37,6 +38,7 @@ typedef struct sender
 
     encoder_t *encoder; /* 物理层编码器 (UART / 定时器 bit-bang) */
     bus_t *bus;         /* 绑定的发送总线: 与 module 共享同一总线状态机 */
+    rs485_t *rs485;     /* 可选: RS485 方向控制 (由物理层装配注入) */
 
     tx_frame_t current; /* 当前正在发送的帧 */
     uint16_t current_pos;
@@ -51,6 +53,7 @@ typedef struct
 {
     encoder_t *encoder; /* 物理层编码器 */
     bus_t *bus;         /* 要绑定的发送总线 (通常是 module->bus) */
+    rs485_t *rs485;     /* 可选: RS485 方向控制 (非 485 传 NULL) */
 } sender_cfg_t;
 
 uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg);
@@ -62,5 +65,6 @@ void sender_isr(sender_t *tx);                 /* UART ISR 或定时器 tick */
 uint8_t sender_poll_tx_complete(sender_t *tx); /* 1=仍在等 TX_COMPLETE */
 void sender_tx_complete_isr(sender_t *tx);     /* ISR 策略：外部中断调用 */
 void sender_set_callbacks(sender_t *tx, const sender_callbacks_t *cb);
+void sender_set_rs485(sender_t *tx, rs485_t *rs);
 
 #endif

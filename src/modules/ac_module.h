@@ -94,8 +94,10 @@ typedef struct
 
 /* 物理层类型：品牌声明自己用什么物理层 */
 typedef enum {
-    AC_PHY_UART = 0,
-    AC_PHY_MANCHESTER,   /* 预留 */
+    AC_PHY_UART = 0,     /* 纯 UART */
+    AC_PHY_RS485,        /* UART + RS485 方向控制 */
+    AC_PHY_HBS,          /* HBS 总线（预留） */
+    AC_PHY_MANCHESTER,   /* 曼彻斯特（预留） */
 } ac_phy_type_t;
 
 /* UART 物理层配置（仅 UART 使用） */

@@ -2,6 +2,7 @@
 #define RECEIVER_H
 #include "ring.h"
 #include "bus.h"
+#include "rs485.h"
 
 typedef struct receiver receiver_t;
 
@@ -16,6 +17,7 @@ typedef struct {
 struct receiver {
     const receiver_ops_t  *ops;
     bus_t                 *bus;      /* 绑定的半双工总线（接收也维护忙/闲） */
+    rs485_t               *rs485;    /* 可选: RS485 方向控制 (由物理层装配注入) */
     ring_t                 ring;
     frame_finish_callback  on_frame_finish;
     volatile uint8_t       receiving;   /* 1 = 正在接收一帧（与 sender.sending 对称） */
@@ -28,4 +30,5 @@ uint8_t  receiver_put_byte(receiver_t *rx, uint8_t byte);
 uint16_t receiver_read_frame(receiver_t *rx, uint8_t *buf, uint16_t max);
 void     receiver_set_callback(receiver_t *rx, frame_finish_callback cb);
 void     receiver_set_bus(receiver_t *rx, bus_t *bus);
+void     receiver_set_rs485(receiver_t *rx, rs485_t *rs);
 #endif
