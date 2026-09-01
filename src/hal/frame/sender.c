@@ -6,7 +6,7 @@
  * 字节搬移：UART ISR / 定时器 tick -> sender_isr() -> encoder
  * 帧间 gap：tx_done -> gap timer -> EVENT_BUS_IDLE -> sender_pump()
  *
- * 发送完成策略（TX_COMPLETE）通过 complete_ops 注入，
+ * 发送完成策略（TX_COMPLETE）通过 ops 注入，
  * 具体实现在 sender_complete_poll.c / sender_complete_isr.c。
  */
 #include "sender.h"
@@ -102,8 +102,8 @@ static void on_thr_empty(sender_t *tx)
     if (tx->bus && tx->bus->rs485_enable) {
         /* 最后一位还在移位寄存器，不能释放 DE */
         tx->wait_tx_complete = 1;
-        if (tx->complete_ops && tx->complete_ops->start)
-            tx->complete_ops->start(tx);
+        if (tx->ops && tx->ops->start)
+            tx->ops->start(tx);
         return;
     }
 
@@ -123,8 +123,8 @@ static void on_tx_complete(sender_t *tx)
     tx->wait_tx_complete = 0;
     tx->sending = 0;
 
-    if (tx->complete_ops && tx->complete_ops->stop)
-        tx->complete_ops->stop(tx);
+    if (tx->ops && tx->ops->stop)
+        tx->ops->stop(tx);
 
     if (tx->bus)
         bus_on_tx_complete(tx->bus);  /* 释放 DE + 进入 gap */

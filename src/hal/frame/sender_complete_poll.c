@@ -42,7 +42,7 @@ static void poll_stop(sender_t *tx)
 }
 #endif
 
-const sender_complete_ops_t sender_complete_poll_ops = {
+const sender_ops_t sender_poll_ops = {
     .start = poll_start,
     .stop  = poll_stop,
 };
@@ -55,6 +55,6 @@ uint8_t sender_poll_init(sender_poll_t *tx, const sender_cfg_t *cfg)
     tx->timer = NULL;
     if (sender_init(&tx->base, cfg) != 0)
         return 1;
-    tx->base.complete_ops = &sender_complete_poll_ops;
+    tx->base.ops = &sender_poll_ops;
     return 0;
 }

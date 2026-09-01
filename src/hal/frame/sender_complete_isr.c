@@ -19,7 +19,7 @@ static void isr_stop(sender_t *tx)
     /* TODO: 关闭发送完成中断 */
 }
 
-const sender_complete_ops_t sender_complete_isr_ops = {
+const sender_ops_t sender_isr_ops = {
     .start = isr_start,
     .stop  = isr_stop,
 };
@@ -31,6 +31,6 @@ uint8_t sender_isr_init(sender_isr_t *tx, const sender_cfg_t *cfg)
 
     if (sender_init(&tx->base, cfg) != 0)
         return 1;
-    tx->base.complete_ops = &sender_complete_isr_ops;
+    tx->base.ops = &sender_isr_ops;
     return 0;
 }

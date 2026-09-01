@@ -24,7 +24,7 @@ typedef struct
  *   - bus 忙时帧不出队，等 EVENT_BUS_IDLE 再 pump
  *
  * 物理层差异通过 encoder_t 注入（UART / 定时器 bit-bang 等）。
- * 发送完成差异通过 complete_ops 注入（轮询 / 中断）。
+ * 发送完成差异通过 ops 注入（轮询 / 中断）。
  */
 typedef struct sender
 {
@@ -34,7 +34,7 @@ typedef struct sender
     encoder_t *encoder; /* 物理层编码器 (UART / 定时器 bit-bang) */
     bus_t *bus;         /* 绑定的发送总线: 与 module 共享同一总线状态机 */
 
-    const sender_complete_ops_t *complete_ops; /* 发送完成策略（由子类设置） */
+    const sender_ops_t *ops; /* 发送完成策略（由子类设置） */
 
     tx_frame_t current; /* 当前正在发送的帧 */
     uint16_t current_pos;
