@@ -60,9 +60,9 @@ typedef struct module
     uint8_t       receive_queue_storage[MODULE_EVENT_QUEUE_LEN * sizeof(event_t)];
 
     StaticTask_t  receive_task_buf;
-    StackType_t   receive_task_stack[128];
+    StackType_t   receive_task_stack[96];
     StaticTask_t  send_task_buf;
-    StackType_t   send_task_stack[128];
+    StackType_t   send_task_stack[96];
 
     StaticTimer_t poll_timer_buf;
     StaticTimer_t timeout_timer_buf;

@@ -23,7 +23,7 @@
 #define configUSE_TIMERS                        1
 #define configTIMER_TASK_PRIORITY                1
 #define configTIMER_QUEUE_LENGTH                 8
-#define configTIMER_TASK_STACK_DEPTH             128
+#define configTIMER_TASK_STACK_DEPTH             96
 #define configSUPPORT_STATIC_ALLOCATION         1
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
 #define configTOTAL_HEAP_SIZE                   ( ( size_t ) 12288 )

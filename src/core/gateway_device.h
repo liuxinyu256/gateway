@@ -60,7 +60,7 @@ typedef struct gateway_device {
     StaticQueue_t      state_event_queue_buf;
     uint8_t            state_event_queue_storage[GATEWAY_MODULE_MAX];
     StaticTask_t       state_task_buf;
-    StackType_t        state_task_stack[128];
+    StackType_t        state_task_stack[96];
 
 #ifdef FAKE_FREERTOS
     uint8_t            state_q_data[GATEWAY_MODULE_MAX];

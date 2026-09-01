@@ -88,7 +88,7 @@ void gateway_init(void) {
                            &g_gw.state_event_queue_buf);
     if (g_gw.state_event_queue)
         g_gw.state_task =
-            xTaskCreateStatic(gateway_state_task_fn, "gwstate", 128, NULL, 2,
+            xTaskCreateStatic(gateway_state_task_fn, "gwstate", 96, NULL, 2,
                               g_gw.state_task_stack, &g_gw.state_task_buf);
 #endif
 }

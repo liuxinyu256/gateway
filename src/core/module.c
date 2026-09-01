@@ -329,10 +329,10 @@ void module_start(module_t *m)
 {
     if (!m) return;
 
-    m->receive_task = xTaskCreateStatic(receive_task_fn, "rx", 128, m, 4,
+    m->receive_task = xTaskCreateStatic(receive_task_fn, "rx", 96, m, 4,
                                         m->receive_task_stack,
                                         &m->receive_task_buf);
-    m->send_task = xTaskCreateStatic(send_task_fn, "tx", 128, m, 3,
+    m->send_task = xTaskCreateStatic(send_task_fn, "tx", 96, m, 3,
                                      m->send_task_stack, &m->send_task_buf);
 
     if (m->receiver)
