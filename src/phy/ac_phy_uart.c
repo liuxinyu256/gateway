@@ -1,7 +1,8 @@
 /**
- * ac_phy_uart.c —— AC 物理层装配：UART 实现
+ * ac_phy_uart.c —— AC 物理层类：UART 实现
  *
- * 具体对象由本文件静态持有，装配后只暴露抽象指针。
+ * 每个物理层类提供 create_io 方法，负责创建/配置具体对象，
+ * 并把抽象指针填充到 ac_io_t。
  */
 #include "ac_phy.h"
 #include "hal_io.h"
@@ -9,14 +10,18 @@
 #include "timer.h"
 #include "timer_instance.h"
 
+/* 具体对象由本类静态持有（当前单实例） */
 static uart_encoder_t     s_enc;
 static uart_decoder_t     s_dec;
 static sender_poll_t      s_sender;
 static receiver_timeout_t s_rx;
 static uint8_t            s_rx_buf[128];
 
-uint8_t ac_phy_uart_setup(const uart_phy_cfg_t *u, bus_t *bus, ac_io_t *io)
+/* create_io：UART 物理层的“创建对象”方法 */
+static uint8_t uart_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
 {
+    const uart_phy_cfg_t *u = (const uart_phy_cfg_t *)cfg;
+
     if (!u || !bus || !io)
         return 1;
 
@@ -63,3 +68,8 @@ uint8_t ac_phy_uart_setup(const uart_phy_cfg_t *u, bus_t *bus, ac_io_t *io)
     io->receiver = &s_rx.base;
     return 0;
 }
+
+/* UART 物理层类：对外只暴露 ops */
+const ac_phy_ops_t ac_phy_uart_ops = {
+    .create_io = uart_create_io,
+};

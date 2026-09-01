@@ -1,19 +1,28 @@
 /**
  * ac_phy.c —— AC 物理层装配：通用分发
  *
- * 根据品牌 phy_cfg 的 phy_type 分发到具体物理层实现。
+ * 根据品牌 phy_cfg 的 phy_type 找到对应物理层类，调用其 create_io。
  */
 #include "ac_phy.h"
 
+static const ac_phy_ops_t *phy_ops(ac_phy_type_t type)
+{
+    switch (type) {
+    case AC_PHY_UART:     return &ac_phy_uart_ops;
+    default:              return NULL;
+    }
+}
+
 uint8_t ac_phy_setup(const ac_phy_cfg_t *phy, bus_t *bus, ac_io_t *io)
 {
+    const ac_phy_ops_t *ops;
+
     if (!phy || !bus || !io)
         return 1;
 
-    switch (phy->phy_type) {
-    case AC_PHY_UART:
-        return ac_phy_uart_setup((const uart_phy_cfg_t *)phy->cfg, bus, io);
-    default:
+    ops = phy_ops(phy->phy_type);
+    if (!ops || !ops->create_io)
         return 1;
-    }
+
+    return ops->create_io(phy->cfg, bus, io);
 }
