@@ -184,39 +184,6 @@ static void gap_timer_cb(TimerHandle_t t)
     module_enqueue_send_event(m, &ev);
 }
 
-/* ---- RS485: THR 已空，开始等 TX_COMPLETE ---- */
-#ifdef FAKE_FREERTOS
-static void wait_tx_complete_cb(void *ctx)
-{
-    module_t *m = (module_t *)ctx;
-    if (m && m->tx_poll_timer)
-        xTimerStart(m->tx_poll_timer, 0);
-}
-#else
-static void wait_tx_complete_cb(void *ctx)
-{
-    module_t *m = (module_t *)ctx;
-    BaseType_t woken = pdFALSE;
-
-    if (m && m->tx_poll_timer)
-        xTimerStartFromISR(m->tx_poll_timer, &woken);
-
-    portYIELD_FROM_ISR(woken);
-}
-#endif
-
-/* ---- 1ms 后轮询 TX_COMPLETE ---- */
-static void tx_poll_timer_cb(TimerHandle_t t)
-{
-    module_t *m = (module_t *)pvTimerGetTimerID(t);
-    if (!m || !m->sender)
-        return;
-
-    /* 返回 1 = 还在等 TX_COMPLETE，下一毫秒继续看 */
-    if (sender_poll_tx_complete(m->sender))
-        xTimerStart(m->tx_poll_timer, 0);
-}
-
 /* ---- FreeRTOS 任务 ---- */
 static void receive_task_fn(void *pv)
 {
@@ -334,10 +301,8 @@ void module_start(module_t *m)
 
     if (m->sender) {
         sender_callbacks_t cbs = {
-            .done             = tx_done_cb,
-            .done_ctx         = m,
-            .wait_tx_complete = wait_tx_complete_cb,
-            .wait_ctx         = m,
+            .done     = tx_done_cb,
+            .done_ctx = m,
         };
         sender_set_callbacks(m->sender, &cbs);
     }
@@ -354,9 +319,6 @@ void module_start(module_t *m)
 
     m->gap_timer = xTimerCreate("gap", pdMS_TO_TICKS(m->bus.gap_ms),
                                 pdFALSE, (void *)m, gap_timer_cb);
-
-    m->tx_poll_timer = xTimerCreate("txpoll", pdMS_TO_TICKS(1),
-                                    pdFALSE, (void *)m, tx_poll_timer_cb);
 
     if (m->ops && m->ops->start)
         m->ops->start(m);

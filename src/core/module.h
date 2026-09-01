@@ -51,7 +51,6 @@ typedef struct module
     TimerHandle_t poll_timer;    /* 轮询软件定时器 */
     TimerHandle_t timeout_timer; /* 超时软件定时器 */
     TimerHandle_t gap_timer;     /* 帧间 gap 软件定时器 */
-    TimerHandle_t tx_poll_timer; /* RS485: 轮询 TX_COMPLETE 的一次性定时器 */
 
     const event_handler_t *handler; /* 事件表 (由子类/品牌注册) */
     void                  *handler_ctx;

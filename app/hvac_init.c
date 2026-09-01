@@ -72,8 +72,9 @@ void hvac_start(void) {
     uart_encoder_init(&g_hvac_enc, &enc_cfg);
 
     sender_cfg_t sender_cfg = {
-        .encoder = &g_hvac_enc.base,
-        .bus     = &g_ac.base.bus,
+        .encoder      = &g_hvac_enc.base,
+        .bus          = &g_ac.base.bus,
+        .complete_ops = &sender_complete_poll_ops,  /* CH579 无 TX 完成中断，轮询 */
     };
     sender_init(&g_hvac_sender, &sender_cfg);
     g_ac.base.sender = &g_hvac_sender;

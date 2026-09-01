@@ -5,6 +5,10 @@
  * 消费者：sender_pump() 是唯一取帧启动入口
  * 字节搬移：UART ISR / 定时器 tick -> sender_isr() -> encoder
  * 帧间 gap：tx_done -> gap timer -> EVENT_BUS_IDLE -> sender_pump()
+ *
+ * 发送完成策略（TX_COMPLETE）通过 complete_ops 注入：
+ *   - sender_complete_poll_ops：无 TX 完成中断，软件定时器轮询
+ *   - sender_complete_isr_ops：有 TX 完成中断，ISR 直接完成
  */
 #include "sender.h"
 #include <string.h>
@@ -15,9 +19,55 @@
 #else
 #include "FreeRTOS.h"
 #include "task.h"
+#include "timers.h"
 #define S_ENTER_CRITICAL() taskENTER_CRITICAL()
 #define S_EXIT_CRITICAL()  taskEXIT_CRITICAL()
 #endif
+
+/* ---- 发送完成策略：poll（软件定时器轮询） ---- */
+#ifdef FAKE_FREERTOS
+static void poll_start(sender_t *tx) { (void)tx; }
+static void poll_stop(sender_t *tx)  { (void)tx; }
+#else
+static void poll_timer_cb(TimerHandle_t t)
+{
+    sender_t *tx = (sender_t *)pvTimerGetTimerID(t);
+    if (tx && sender_poll_tx_complete(tx))
+        xTimerStart(t, 0);
+}
+
+static void poll_start(sender_t *tx)
+{
+    if (!tx) return;
+
+    if (!tx->complete_timer) {
+        tx->complete_timer = (void *)xTimerCreate(
+            "txcmp", pdMS_TO_TICKS(1), pdFALSE, tx, poll_timer_cb);
+    }
+    if (tx->complete_timer)
+        xTimerStart((TimerHandle_t)tx->complete_timer, 0);
+}
+
+static void poll_stop(sender_t *tx)
+{
+    if (tx && tx->complete_timer)
+        xTimerStop((TimerHandle_t)tx->complete_timer, 0);
+}
+#endif
+
+const sender_complete_ops_t sender_complete_poll_ops = {
+    .start = poll_start,
+    .stop  = poll_stop,
+};
+
+/* ---- 发送完成策略：isr（UART 中断直接完成） ---- */
+static void isr_start(sender_t *tx) { (void)tx; }
+static void isr_stop(sender_t *tx)  { (void)tx; }
+
+const sender_complete_ops_t sender_complete_isr_ops = {
+    .start = isr_start,
+    .stop  = isr_stop,
+};
 
 uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg)
 {
@@ -26,8 +76,9 @@ uint8_t sender_init(sender_t *tx, const sender_cfg_t *cfg)
 
     memset(tx, 0, sizeof(*tx));
 
-    tx->encoder = cfg->encoder;
-    tx->bus     = cfg->bus;   /* 绑定发送总线 */
+    tx->encoder      = cfg->encoder;
+    tx->bus          = cfg->bus;
+    tx->complete_ops = cfg->complete_ops;
 
     frame_queue_init(&tx->cmd_q);
     frame_queue_init(&tx->norm_q);
@@ -99,8 +150,8 @@ static void on_thr_empty(sender_t *tx)
     if (tx->bus && tx->bus->rs485_enable) {
         /* 最后一位还在移位寄存器，不能释放 DE */
         tx->wait_tx_complete = 1;
-        if (tx->on_wait_tx_complete)
-            tx->on_wait_tx_complete(tx->wait_ctx);
+        if (tx->complete_ops && tx->complete_ops->start)
+            tx->complete_ops->start(tx);
         return;
     }
 
@@ -119,6 +170,9 @@ static void on_tx_complete(sender_t *tx)
 
     tx->wait_tx_complete = 0;
     tx->sending = 0;
+
+    if (tx->complete_ops && tx->complete_ops->stop)
+        tx->complete_ops->stop(tx);
 
     if (tx->bus)
         bus_on_tx_complete(tx->bus);  /* 释放 DE + 进入 gap */
@@ -139,6 +193,15 @@ uint8_t sender_poll_tx_complete(sender_t *tx)
     return 1;
 }
 
+void sender_tx_complete_isr(sender_t *tx)
+{
+    if (!tx || !tx->wait_tx_complete)
+        return;
+
+    if (encoder_tx_complete(tx->encoder))
+        on_tx_complete(tx);
+}
+
 void sender_isr(sender_t *tx)
 {
     if (!tx || !tx->sending)
@@ -156,8 +219,6 @@ void sender_set_callbacks(sender_t *tx, const sender_callbacks_t *cb)
 {
     if (!tx || !cb) return;
 
-    tx->on_done             = cb->done;
-    tx->done_ctx            = cb->done_ctx;
-    tx->on_wait_tx_complete = cb->wait_tx_complete;
-    tx->wait_ctx            = cb->wait_ctx;
+    tx->on_done  = cb->done;
+    tx->done_ctx = cb->done_ctx;
 }
