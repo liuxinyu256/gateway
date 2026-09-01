@@ -110,7 +110,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                          (unsigned long)heap_free,
                          (unsigned long)heap_min);
         if (n > 0)
-            sender_send(g_dbg.base.sender, buf,
+            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -125,7 +125,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                          frame_queue_drop_count(&g_dbg.base.sender->cmd_q),
                          frame_queue_drop_count(&g_dbg.base.sender->norm_q));
         if (n > 0)
-            sender_send(g_dbg.base.sender, buf,
+            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -136,7 +136,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                          "[evt] need_ack ret=%u\r\n", (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, buf,
+            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -145,7 +145,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                          "[evt] timeout ret=%u\r\n", (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, buf,
+            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -154,7 +154,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                          "[evt] bus_idle ret=%u\r\n", (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, buf,
+            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -168,7 +168,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                          "[evt] cmd=%u val=%u ret=%u\r\n",
                          (unsigned)cmd, (unsigned)val, (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, buf,
+            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
@@ -184,13 +184,13 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                              (unsigned)s.fan, (unsigned)s.swing,
                              (unsigned)s.error_code);
             if (n > 0)
-                sender_send(g_dbg.base.sender, buf,
+                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         } else {
             int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                              "[ac st] unavailable\r\n");
             if (n > 0)
-                sender_send(g_dbg.base.sender, buf,
+                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         }
         return 1;
@@ -211,7 +211,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                               (void *)ac->bus.set_dir,
                               (unsigned)ac->bus.need_tx_complete);
             if (dn > 0)
-                sender_send(g_dbg.base.sender, buf,
+                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                             (uint16_t)dn, SENDER_PRIO_CMD);
 
             uint8_t ret = sender_send(ac->sender, test_frame,
@@ -228,13 +228,13 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                           sizeof(s_dbg_rx_buf) - (size_t)n,
                           " ret=%u\r\n", (unsigned)ret);
             if (n > 0)
-                sender_send(g_dbg.base.sender, buf,
+                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         } else {
             int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                              "[test] ac not ready\r\n");
             if (n > 0)
-                sender_send(g_dbg.base.sender, buf,
+                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         }
         return 1;
@@ -274,13 +274,13 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                           sizeof(s_dbg_rx_buf) - (size_t)n,
                           " ret=%u\r\n", (unsigned)ret);
             if (n > 0)
-                sender_send(g_dbg.base.sender, buf,
+                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         } else {
             int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                              "[test] ac not ready\r\n");
             if (n > 0)
-                sender_send(g_dbg.base.sender, buf,
+                sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                             (uint16_t)n, SENDER_PRIO_CMD);
         }
         return 1;
@@ -299,7 +299,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     } else {
         buf[sizeof(s_dbg_rx_buf) - 1] = 0;
     }
-    sender_send(g_dbg.base.sender, buf,
+    sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                 (uint16_t)pos, SENDER_PRIO_CMD);
     return 1;
 }
