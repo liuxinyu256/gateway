@@ -69,6 +69,7 @@ static debug_io_t        g_dbg_io;
 /* 每个任务独立的静态发送缓冲区：不占任务栈，也不会多任务互相覆盖 */
 static char s_ac_evt_buf[128];   /* AC 事件打印使用（AC send_task） */
 static char s_dbg_rx_buf[128];   /* 调试命令回复使用（Debug receive_task） */
+static char s_dbg_hex_buf[128];  /* HEX 打印专用（目前 AC receive_task 使用） */
 
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
@@ -398,6 +399,36 @@ void debug_printf(const char *fmt, ...)
     va_start(ap, fmt);
     debug_vprintf(fmt, ap);
     va_end(ap);
+}
+
+/* HEX 打印统一由 debug 模块管理，外部模块只传 tag + 数据 */
+void debug_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
+{
+    int pos;
+
+    if (!g_dbg.base.sender || !data || !len || !tag)
+        return;
+
+    pos = snprintf(s_dbg_hex_buf, sizeof(s_dbg_hex_buf),
+                   "[%s] rx:", tag);
+    for (uint16_t i = 0; i < len; i++) {
+        if (pos + 4 >= (int)sizeof(s_dbg_hex_buf)) {
+            sender_send(g_dbg.base.sender,
+                        (const uint8_t *)s_dbg_hex_buf,
+                        (uint16_t)pos, SENDER_PRIO_CMD);
+            pos = 0;
+        }
+        pos += snprintf(s_dbg_hex_buf + pos,
+                        sizeof(s_dbg_hex_buf) - (size_t)pos,
+                        " %02X", data[i]);
+    }
+    if (pos + 2 < (int)sizeof(s_dbg_hex_buf))
+        pos += snprintf(s_dbg_hex_buf + pos,
+                        sizeof(s_dbg_hex_buf) - (size_t)pos, "\r\n");
+    if (pos > 0)
+        sender_send(g_dbg.base.sender,
+                    (const uint8_t *)s_dbg_hex_buf,
+                    (uint16_t)pos, SENDER_PRIO_CMD);
 }
 
 void debug_module_start(void)

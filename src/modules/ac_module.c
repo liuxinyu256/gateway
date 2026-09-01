@@ -6,8 +6,6 @@
 #include "ac_module.h"
 #include "ac_test.h"
 #include "debug_module.h"
-#include "gateway.h"
-#include <stdio.h>
 #include <string.h>
 
 /* 品牌注册表: 由清单生成 (单一数据源, 见 ac_module.h)
@@ -83,29 +81,8 @@ static void ac_ops_on_event(module_t *m, const event_t *ev)
 
 static void ac_ops_on_rx_log(module_t *m, const uint8_t *data, uint16_t len)
 {
-    module_t *dbg = gateway_module(1);
-    char buf[64];
-    int pos;
     (void)m;
-
-    if (!dbg || !dbg->sender || !data || !len)
-        return;
-
-    pos = snprintf(buf, sizeof(buf), "[ac evt] rx:");
-    for (uint16_t i = 0; i < len; i++) {
-        if (pos + 4 >= (int)sizeof(buf)) {
-            sender_send(dbg->sender, (const uint8_t *)buf,
-                        (uint16_t)pos, SENDER_PRIO_CMD);
-            pos = 0;
-        }
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos,
-                        " %02X", data[i]);
-    }
-    if (pos + 2 < (int)sizeof(buf))
-        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "\r\n");
-    if (pos > 0)
-        sender_send(dbg->sender, (const uint8_t *)buf,
-                    (uint16_t)pos, SENDER_PRIO_CMD);
+    debug_hex_dump("ac evt", data, len);
 }
 
 /* ---- AC 模块自己注册 IO 回调 ---- */

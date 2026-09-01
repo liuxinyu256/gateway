@@ -10,4 +10,7 @@ void debug_module_start(void);
 void debug_printf(const char *fmt, ...);
 void debug_vprintf(const char *fmt, va_list ap);
 
+/* 调试模块统一管理的 HEX 打印：由 debug 模块负责格式化并发送到 UART1 */
+void debug_hex_dump(const char *tag, const uint8_t *data, uint16_t len);
+
 #endif
