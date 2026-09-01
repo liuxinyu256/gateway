@@ -509,7 +509,7 @@ static const event_handler_t debug_evt_table = {
 static uint8_t debug_ops_init(module_t *m, void *cfg)
 {
     (void)cfg;
-    if (module_base_init(m) != 0)
+    if (module_base_init(m, MODULE_BUS_SERIAL) != 0)
         return 1;
     return 0;
 }

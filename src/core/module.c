@@ -221,9 +221,11 @@ static void tick_timer_cb(TimerHandle_t t)
 /* ---- API ---- */
 
 /* 公共初始化: 由每个模块自己的 init 函数内部调用 */
-uint8_t module_base_init(module_t *m)
+uint8_t module_base_init(module_t *m, module_bus_type_t bus_type)
 {
     if (!m) return 1;
+
+    m->bus_type = bus_type;
 
 #ifndef FAKE_FREERTOS
     m->send_queue = xQueueCreate(MODULE_EVENT_QUEUE_LEN, sizeof(event_t));
@@ -300,7 +302,7 @@ void module_start(module_t *m)
     if (m->tick_timer)
         xTimerStart(m->tick_timer, 0);
 
-    if (m->bus.gap_ms > 0)
+    if (m->bus_type == MODULE_BUS_SERIAL)
         m->gap_timer = xTimerCreate("gap", pdMS_TO_TICKS(m->bus.gap_ms),
                                     pdFALSE, (void *)m, gap_timer_cb);
 

@@ -45,7 +45,7 @@ static uint8_t ble_ops_init(module_t *m, void *cfg)
     (void)cfg;
     if (!m) return 1;
 
-    if (module_base_init(m) != 0)
+    if (module_base_init(m, MODULE_BUS_BLE) != 0)
         return 1;
     return 0;
 }
