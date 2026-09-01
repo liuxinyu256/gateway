@@ -24,25 +24,13 @@ static void ble_on_connect(void *ctx)
     module_update_state(&self->base, &s);
 }
 
-static void ble_on_disconnect(void *ctx)
-{
-    ble_module_t *self = (ble_module_t *)ctx;
-    gateway_state_t s;
-
-    self->connected = 0;
-
-    if (gateway_module_state_get(2, &s) != 0)
-        memset(&s, 0, sizeof(s));
-    s.power = 0;
-    module_update_state(&self->base, &s);
-}
-
-static void ble_on_rx(void *ctx, uint8_t *data, uint16_t len)
+static int ble_on_rx(void *ctx, uint8_t *data, uint16_t len)
 {
     (void)ctx;
     (void)data;
     (void)len;
     /* TODO: 解析 APP 下发的数据并更新状态 */
+    return 1;
 }
 
 static const event_handler_t ble_evt_table = {
