@@ -109,7 +109,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 
         for (i = 0; i < sizeof(help) / sizeof(help[0]); i++) {
             sender_send(g_dbg.base.sender, (const uint8_t *)help[i],
-                        (uint16_t)(sizeof(help[i]) - 1), SENDER_PRIO_CMD);
+                        (uint16_t)strlen(help[i]), SENDER_PRIO_CMD);
         }
         return 1;
     }
