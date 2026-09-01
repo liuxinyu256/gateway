@@ -8,6 +8,7 @@
 #include "debug_module.h"   /* 含 module.h / stdarg.h */
 #include <stdio.h>
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "debug_phy.h"
 #include "led.h"
 #include "bsp.h"
@@ -65,11 +66,12 @@ typedef struct {
 
 static debug_module_t     g_dbg;
 static debug_io_t        g_dbg_io;
+static SemaphoreHandle_t log_print_mutex;
 
 /* 每个任务独立的静态发送缓冲区：不占任务栈，也不会多任务互相覆盖 */
-static char s_ac_evt_buf[128];   /* AC 事件打印使用（AC send_task） */
+static char s_ac_evt_buf[128];   /* AC 事件打印使用（AC send/receive task，已用锁保护） */
 static char s_dbg_rx_buf[128];   /* 调试命令回复使用（Debug receive_task） */
-static char s_dbg_hex_buf[128];  /* HEX 打印专用（目前 AC receive_task 使用） */
+static char s_dbg_hex_buf[128];  /* HEX 打印专用（目前 AC receive_task 使用，已用锁保护） */
 
 static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
 {
@@ -386,10 +388,16 @@ void log_vprintf(const char *fmt, va_list ap)
     if (!g_dbg.base.sender)
         return;
 
+    if (log_print_mutex)
+        xSemaphoreTake(log_print_mutex, portMAX_DELAY);
+
     n = vsnprintf(buf, sizeof(s_ac_evt_buf), fmt, ap);
     if (n > 0)
         sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                     (uint16_t)n, SENDER_PRIO_CMD);
+
+    if (log_print_mutex)
+        xSemaphoreGive(log_print_mutex);
 }
 
 void log_printf(const char *fmt, ...)
@@ -408,6 +416,9 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
 
     if (!g_dbg.base.sender || !data || !len || !tag)
         return;
+
+    if (log_print_mutex)
+        xSemaphoreTake(log_print_mutex, portMAX_DELAY);
 
     pos = snprintf(s_dbg_hex_buf, sizeof(s_dbg_hex_buf),
                    "[%s] rx:", tag);
@@ -429,6 +440,9 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
         sender_send(g_dbg.base.sender,
                     (const uint8_t *)s_dbg_hex_buf,
                     (uint16_t)pos, SENDER_PRIO_CMD);
+
+    if (log_print_mutex)
+        xSemaphoreGive(log_print_mutex);
 }
 
 /* 调试模块挂接 AC 模块的 RX 日志：AC 模块自身不感知日志 */
@@ -448,6 +462,8 @@ void debug_module_start(void)
 #endif
 
     halLedInit();   /* 运行 LED 初始化 */
+
+    log_print_mutex = xSemaphoreCreateMutex();
 
     g_dbg.base.ops = &debug_module_ops;
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);
