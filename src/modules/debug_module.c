@@ -91,12 +91,27 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     while (len > 0 && (data[len - 1] == '\r' || data[len - 1] == '\n' || data[len - 1] == ' '))
         len--;
 
-    /* 命令：help = 显示命令列表（一行简洁版，避免分包） */
+    /* 命令：help = 显示命令列表（多行详细版，行间加小延时减少串口分包） */
     if (cmd_is(data, len, "help") || (len == 1 && (data[0] == '?' || data[0] == 'h'))) {
-        static const char help[] =
-            "[cmd] help perf stat tx brand0|1|2 ack tick idle cmd state\r\n";
-        sender_send(g_dbg.base.sender, (const uint8_t *)help,
-                    sizeof(help) - 1, SENDER_PRIO_CMD);
+        static const char * const help[] = {
+            "[cmd] help                show this list\r\n",
+            "[cmd] perf / p            CPU + RAM\r\n",
+            "[cmd] stat / s            queue/status\r\n",
+            "[cmd] tx / f              send Modbus test frame\r\n",
+            "[cmd] brand0|1|2 / b0|1|2 switch brand + test frame\r\n",
+            "[cmd] ack / a             trigger need_ack\r\n",
+            "[cmd] tick / timeout / o  trigger tick\r\n",
+            "[cmd] idle / b            trigger bus_idle\r\n",
+            "[cmd] cmd<cmd>,<val>      send control cmd, e.g. cmd1,25\r\n",
+            "[cmd] state / g           query AC state\r\n",
+        };
+        uint8_t i;
+
+        for (i = 0; i < sizeof(help) / sizeof(help[0]); i++) {
+            sender_send(g_dbg.base.sender, (const uint8_t *)help[i],
+                        (uint16_t)strlen(help[i]), SENDER_PRIO_CMD);
+            vTaskDelay(pdMS_TO_TICKS(2));
+        }
         return 1;
     }
 
