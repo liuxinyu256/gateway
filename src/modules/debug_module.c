@@ -400,21 +400,28 @@ static char *log_get_buffer(uint16_t *size)
     return s_log_other_buf;
 }
 
-/* 日志任务：从日志帧队列取帧，再交给 sender 异步发送 */
+/* 日志任务：阻塞等待通知，再取日志帧队列发送，空闲时不占 CPU */
 static void log_task_fn(void *pv)
 {
     (void)pv;
     tx_frame_t frame;
 
     for (;;) {
-        if (frame_queue_pop(&s_log_q, &frame) == 0) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        while (frame_queue_pop(&s_log_q, &frame) == 0) {
             if (g_dbg.base.sender)
                 sender_send(g_dbg.base.sender, frame.data, frame.len,
                             SENDER_PRIO_CMD);
-        } else {
-            vTaskDelay(pdMS_TO_TICKS(1));
         }
     }
+}
+
+/* 投递后唤醒日志任务 */
+static void log_notify(void)
+{
+    if (s_log_task)
+        xTaskNotifyGive(s_log_task);
 }
 
 /* 公共发送：只格式化并投递到日志帧队列，不阻塞、不加锁 */
@@ -428,8 +435,10 @@ void log_vprintf(const char *fmt, va_list ap)
         return;
 
     n = vsnprintf(buf, size, fmt, ap);
-    if (n > 0)
-        frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)n);
+    if (n > 0) {
+        if (frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)n) == 0)
+            log_notify();
+    }
 }
 
 void log_printf(const char *fmt, ...)
@@ -453,7 +462,8 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
     pos = snprintf(buf, sizeof(s_log_rx_buf), "[%s] rx:", tag);
     for (uint16_t i = 0; i < len; i++) {
         if (pos + 4 >= (int)sizeof(s_log_rx_buf)) {
-            frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)pos);
+            if (frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)pos) == 0)
+                log_notify();
             pos = 0;
         }
         pos += snprintf(buf + pos,
@@ -463,8 +473,10 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
     if (pos + 2 < (int)sizeof(s_log_rx_buf))
         pos += snprintf(buf + pos,
                         sizeof(s_log_rx_buf) - (size_t)pos, "\r\n");
-    if (pos > 0)
-        frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)pos);
+    if (pos > 0) {
+        if (frame_queue_push(&s_log_q, (const uint8_t *)buf, (uint16_t)pos) == 0)
+            log_notify();
+    }
 }
 
 /* 调试模块挂接 AC 模块的 RX 日志：AC 模块自身不感知日志 */
@@ -512,5 +524,9 @@ void debug_module_start(void)
     /* 日志帧队列消费任务 */
     s_log_task = NULL;
     xTaskCreate(log_task_fn, "log", 96, NULL, 1, &s_log_task);
+
+    /* 如果创建任务前已经有日志入队，补一次唤醒 */
+    if (s_log_task && !frame_queue_empty(&s_log_q))
+        xTaskNotifyGive(s_log_task);
 
 }
