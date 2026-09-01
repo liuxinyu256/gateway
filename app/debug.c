@@ -6,9 +6,6 @@
 #ifdef __CH579__
 #include "CH57x_common.h"
 #endif
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 
 static SemaphoreHandle_t debug_mutex;
 
