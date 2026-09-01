@@ -15,6 +15,7 @@
 #include "uart_decoder.h"
 #include "uart_instance.h"
 #include "sender.h"
+#include "sender_complete_poll.h"
 #include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
@@ -36,7 +37,7 @@ static void hvac_rs485_dir(uint8_t tx, void *ctx)
 
 static ac_module_t        g_ac = { .base.ops = &ac_module_ops };
 static rs485_ch579_t      g_hvac_rs485;
-static sender_t           g_hvac_sender;
+static sender_poll_t       g_hvac_sender;
 static uart_encoder_t     g_hvac_enc;
 static uart_decoder_t     g_hvac_dec;
 static receiver_timeout_t g_hvac_rx;
@@ -72,12 +73,11 @@ void hvac_start(void) {
     uart_encoder_init(&g_hvac_enc, &enc_cfg);
 
     sender_cfg_t sender_cfg = {
-        .encoder      = &g_hvac_enc.base,
-        .bus          = &g_ac.base.bus,
-        .complete_ops = &sender_complete_poll_ops,  /* CH579 无 TX 完成中断，轮询 */
+        .encoder = &g_hvac_enc.base,
+        .bus     = &g_ac.base.bus,
     };
-    sender_init(&g_hvac_sender, &sender_cfg);
-    g_ac.base.sender = &g_hvac_sender;
+    sender_poll_init(&g_hvac_sender, &sender_cfg);
+    g_ac.base.sender = &g_hvac_sender.base;
 
     /* RX：上层创建 UART 解码器 + 超时接收器并注入
      * 放在 encoder 之后: 最后一次 uart_configure 会开启 RX 中断 */

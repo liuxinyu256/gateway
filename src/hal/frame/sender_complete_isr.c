@@ -5,7 +5,7 @@
  * start/stop 用于使能/关闭发送完成中断，具体由平台 UART ISR 调用
  * sender_tx_complete_isr() 或 sender_isr() 完成检测。
  */
-#include "sender.h"
+#include "sender_complete_isr.h"
 
 static void isr_start(sender_t *tx)
 {
@@ -23,3 +23,15 @@ const sender_complete_ops_t sender_complete_isr_ops = {
     .start = isr_start,
     .stop  = isr_stop,
 };
+
+uint8_t sender_isr_init(sender_isr_t *tx, const sender_cfg_t *cfg)
+{
+    sender_cfg_t cfg2;
+
+    if (!tx || !cfg)
+        return 1;
+
+    cfg2 = *cfg;
+    cfg2.complete_ops = &sender_complete_isr_ops;
+    return sender_init(&tx->base, &cfg2);
+}

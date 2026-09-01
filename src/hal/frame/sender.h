@@ -34,8 +34,7 @@ typedef struct sender
     encoder_t *encoder; /* 物理层编码器 (UART / 定时器 bit-bang) */
     bus_t *bus;         /* 绑定的发送总线: 与 module 共享同一总线状态机 */
 
-    const sender_complete_ops_t *complete_ops; /* 发送完成策略 */
-    void *complete_timer;                      /* 策略私有：poll 用 TimerHandle_t */
+    const sender_complete_ops_t *complete_ops; /* 发送完成策略（由子类设置） */
 
     tx_frame_t current; /* 当前正在发送的帧 */
     uint16_t current_pos;
