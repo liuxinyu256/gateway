@@ -84,7 +84,7 @@ void gateway_init(void) {
 #ifndef FAKE_FREERTOS
     g_gw.state_event_queue = xQueueCreate(GATEWAY_MODULE_MAX, sizeof(uint8_t));
     if (g_gw.state_event_queue)
-        xTaskCreate(gateway_state_task_fn, "gwstate", 80, NULL, 2,
+        xTaskCreate(gateway_state_task_fn, "gwstate", 128, NULL, 2,
                     &g_gw.state_task);
 #endif
 }
