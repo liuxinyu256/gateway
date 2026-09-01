@@ -87,6 +87,10 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     if (!g_dbg.base.sender)
         return 1;
 
+    /* 去掉串口助手可能附加的回车/换行/空格 */
+    while (len > 0 && (data[len - 1] == '\r' || data[len - 1] == '\n' || data[len - 1] == ' '))
+        len--;
+
     /* 命令：help = 显示命令列表 */
     if (cmd_is(data, len, "help") || (len == 1 && (data[0] == '?' || data[0] == 'h'))) {
         static const char help[] =
