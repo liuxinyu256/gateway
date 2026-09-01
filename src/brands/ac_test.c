@@ -126,7 +126,7 @@ static void test_on_scan(void *ctx)
 static void test_on_timeout(void *ctx)
 {
     (void)ctx;
-    /* timeout 事件每 50ms 自动触发，不打印避免刷屏；需要时可用 O 命令触发验证 */
+    test_evt_printf("[ac evt] timeout\r\n");
 }
 
 static const event_handler_t ac_test_evt = {
