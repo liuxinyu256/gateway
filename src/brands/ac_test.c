@@ -75,7 +75,7 @@ static void test_on_scan(void *ctx)
     test_send_query(self);
 }
 
-static void test_on_timeout(void *ctx)
+static void test_on_tick(void *ctx)
 {
     (void)ctx;
 }
@@ -87,7 +87,7 @@ static const event_handler_t ac_test_evt = {
     .on_control_cmd    = test_on_control_cmd,
     .on_need_ack       = test_on_need_ack,
     .on_scan           = test_on_scan,
-    .on_timeout        = test_on_timeout,
+    .on_tick           = test_on_tick,
 };
 
 /* 测试品牌物理层：UART 9600, 8N1, 帧间隙 5ms */

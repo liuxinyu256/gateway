@@ -86,9 +86,9 @@ static void module_handle_event(module_t *m, const event_t *ev)
         if (m->handler && m->handler->on_scan)
             m->handler->on_scan(m->handler_ctx);
         break;
-    case EVENT_TIMEOUT:
-        if (m->handler && m->handler->on_timeout)
-            m->handler->on_timeout(m->handler_ctx);
+    case EVENT_TICK:
+        if (m->handler && m->handler->on_tick)
+            m->handler->on_tick(m->handler_ctx);
         break;
     case EVENT_BUS_IDLE:
         if (m->sender)
@@ -209,12 +209,12 @@ static void poll_timer_cb(TimerHandle_t t)
     module_enqueue_send_event(m, &ev);
 }
 
-static void timeout_timer_cb(TimerHandle_t t)
+static void tick_timer_cb(TimerHandle_t t)
 {
     module_t *m = (module_t *)pvTimerGetTimerID(t);
     if (!m) return;
 
-    event_t ev = { .type = EVENT_TIMEOUT };
+    event_t ev = { .type = EVENT_TICK };
     module_enqueue_send_event(m, &ev);
 }
 
@@ -297,10 +297,10 @@ void module_start(module_t *m)
     if (m->poll_timer)
         xTimerStart(m->poll_timer, 0);
 
-    m->timeout_timer = xTimerCreate("tmo", pdMS_TO_TICKS(100), pdTRUE,
-                                    (void *)m, timeout_timer_cb);
-    if (m->timeout_timer)
-        xTimerStart(m->timeout_timer, 0);
+    m->tick_timer = xTimerCreate("tick", pdMS_TO_TICKS(100), pdTRUE,
+                                    (void *)m, tick_timer_cb);
+    if (m->tick_timer)
+        xTimerStart(m->tick_timer, 0);
 
     m->gap_timer = xTimerCreate("gap", pdMS_TO_TICKS(m->bus.gap_ms),
                                 pdFALSE, (void *)m, gap_timer_cb);

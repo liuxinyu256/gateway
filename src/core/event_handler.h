@@ -8,7 +8,7 @@ typedef enum {
     EVENT_CONTROL_CMD,
     EVENT_NEED_ACK,
     EVENT_SCAN_AC,
-    EVENT_TIMEOUT,
+    EVENT_TICK,
     EVENT_BUS_IDLE,
 } event_type_t;
 
@@ -26,7 +26,7 @@ typedef struct {
     void (*on_control_cmd)  (void *ctx, uint8_t cmd, uint8_t val);
     void (*on_need_ack)     (void *ctx);
     void (*on_scan)         (void *ctx);
-    void (*on_timeout)      (void *ctx);
+    void (*on_tick)         (void *ctx);
 } event_handler_t;
 
 #endif

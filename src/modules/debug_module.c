@@ -94,7 +94,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     /* 命令：help = 显示命令列表 */
     if (cmd_is(data, len, "help") || (len == 1 && (data[0] == '?' || data[0] == 'h'))) {
         static const char help[] =
-            "[cmd] help perf stat tx brand0/1/2 ack timeout idle cmd state\r\n";
+            "[cmd] help perf stat tx brand0/1/2 ack tick idle cmd state\r\n";
         sender_send(g_dbg.base.sender, (const uint8_t *)help,
                     sizeof(help) - 1, SENDER_PRIO_CMD);
         return 1;
@@ -162,10 +162,10 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
                         (uint16_t)n, SENDER_PRIO_CMD);
         return 1;
     }
-    if (cmd_is(data, len, "timeout") || (len == 1 && (data[0] == 'O' || data[0] == 'o'))) {
-        uint8_t ret = module_send_event(gateway_module(0), EVENT_TIMEOUT);
+    if (cmd_is(data, len, "tick") || cmd_is(data, len, "timeout") || (len == 1 && (data[0] == 'O' || data[0] == 'o'))) {
+        uint8_t ret = module_send_event(gateway_module(0), EVENT_TICK);
         int n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
-                         "[evt] timeout ret=%u\r\n", (unsigned)ret);
+                         "[evt] tick ret=%u\r\n", (unsigned)ret);
         if (n > 0)
             sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                         (uint16_t)n, SENDER_PRIO_CMD);

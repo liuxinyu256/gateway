@@ -59,7 +59,7 @@ static const char *ac_event_name(event_type_t type)
     case EVENT_CONTROL_CMD:   return "cmd";
     case EVENT_NEED_ACK:      return "need_ack";
     case EVENT_SCAN_AC:       return "scan";
-    case EVENT_TIMEOUT:       return "timeout";
+    case EVENT_TICK:          return "tick";
     case EVENT_BUS_IDLE:      return "bus_idle";
     default:                  return "?";
     }
