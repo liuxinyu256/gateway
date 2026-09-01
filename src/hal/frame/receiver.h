@@ -18,7 +18,7 @@ struct receiver {
     bus_t                 *bus;      /* 绑定的半双工总线（接收也维护忙/闲） */
     ring_t                 ring;
     frame_finish_callback  on_frame_finish;
-    uint16_t               frame_len;   /* 当前已完成帧的长度 */
+    volatile uint16_t      frame_len;   /* 当前已完成帧的长度（中断/任务共享） */
 };
 
 void     receiver_init(receiver_t *rx);
