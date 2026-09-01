@@ -300,8 +300,9 @@ void module_start(module_t *m)
     if (m->tick_timer)
         xTimerStart(m->tick_timer, 0);
 
-    m->gap_timer = xTimerCreate("gap", pdMS_TO_TICKS(m->bus.gap_ms),
-                                pdFALSE, (void *)m, gap_timer_cb);
+    if (m->bus.gap_ms > 0)
+        m->gap_timer = xTimerCreate("gap", pdMS_TO_TICKS(m->bus.gap_ms),
+                                    pdFALSE, (void *)m, gap_timer_cb);
 
     if (m->ops && m->ops->start)
         m->ops->start(m);
