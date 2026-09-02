@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>__CH579__,DEBUG,BLE_ENABLE</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\bsp;.\src\phy;.\src\core;.\src\modules;.\src\brands;.\app;.\csp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0;.\src\ble\lib;.\src\ble\hal;.\src\ble\app;.\src\ble\profile</IncludePath>
+              <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\bsp;.\src\phy;.\src\core;.\src\modules;.\src\brands;.\app;.\csp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0;.\src\ble\lib;.\src\ble\hal;.\src\ble\app;.\src\ble\profile;.\src\ble_proto</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
