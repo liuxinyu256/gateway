@@ -19,6 +19,7 @@
 #include "devinfoservice.h"
 #include "gattprofile.h"
 #include "peripheral.h"
+#include "debug_module.h"
 
 /*********************************************************************
  * MACROS
@@ -538,8 +539,9 @@ static void peripheralStateNotificationCB( gapRole_States_t newState, gapRoleEve
       {
         Peripheral_LinkTerminated( pEvent );
         PRINT( "Disconnected.. Reason:%x\n",pEvent->linkTerminate.reason );
+        log_printf("[ble] disconnected\r\n");
       }
-      PRINT( "Advertising..\n" );
+      log_printf("[ble] advertising\r\n");
       break;
 
     case GAPROLE_CONNECTED:
@@ -547,7 +549,7 @@ static void peripheralStateNotificationCB( gapRole_States_t newState, gapRoleEve
       {
         Peripheral_LinkEstablished( pEvent );
       }
-      PRINT( "Connected..\n" );
+      log_printf("[ble] connected\r\n");
       break;
 
     case GAPROLE_CONNECTED_ADV:
