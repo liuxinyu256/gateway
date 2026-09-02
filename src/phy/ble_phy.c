@@ -25,7 +25,7 @@ void ble_phy_notify_from_isr(void)
     BaseType_t woken = pdFALSE;
 
     if (ble_task_handle)
-        xTaskNotifyFromISR(ble_task_handle, 0, eSetBits, &woken);
+        xTaskNotifyFromISR(ble_task_handle, 1, eSetBits, &woken);
     portYIELD_FROM_ISR(woken);
 }
 
