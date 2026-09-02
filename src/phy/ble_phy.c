@@ -9,8 +9,6 @@
  * 未定义 BLE_ENABLE 时编译为空实现，避免影响非 BLE 构建。
  */
 #include "ble_phy.h"
-
-#ifdef BLE_ENABLE
 #include "CONFIG.h"
 #include "HAL.h"
 #include "peripheral.h"
@@ -20,6 +18,7 @@
 /* BLE 协议栈内存，固定放在 0x20003800，不能动 */
 __align(4) u32 MEM_BUF[BLE_MEMHEAP_SIZE / 4] __attribute__((at(0x20003800)));
 
+#ifdef BLE_ENABLE
 /* BLE 初始化 + TMOS 调度任务 */
 static void ble_tmos_task(void *arg)
 {
