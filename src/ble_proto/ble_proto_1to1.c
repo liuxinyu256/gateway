@@ -131,6 +131,22 @@ static uint16_t handle_basic_info(uint8_t dev_type,
     return sizeof(ble1to1_basic_info);
 }
 
+static uint16_t handle_query_fault(uint8_t dev_type,
+                                      uint8_t *resp, uint16_t resp_max)
+{
+    gateway_state_t s;
+    uint8_t data[3];
+
+    if (gateway_module_state_get(BLE1TO1_MODULE_ID, &s) != 0)
+        memset(&s, 0, sizeof(s));
+
+    data[0] = 0x01;              /* 通讯正常 */
+    data[1] = 0x01;              /* 在线 */
+    data[2] = s.error_code;      /* 故障码 */
+    return build_frame(BLE1TO1_CMD_28, 0x12, data, sizeof(data),
+                       resp, resp_max, dev_type);
+}
+
 static uint16_t handle_mini_program_info(uint8_t dev_type,
                                          uint8_t *resp, uint16_t resp_max)
 {
@@ -166,6 +182,8 @@ uint16_t ble_proto_1to1_on_rx(const uint8_t *data, uint16_t len,
         return handle_query_state(data, dev_type, resp, resp_max);
     case BLE1TO1_CMD_22:
         return handle_set_state(data, len, dev_type, resp, resp_max);
+    case BLE1TO1_CMD_28:
+        return handle_query_fault(dev_type, resp, resp_max);
     default:
         return 0;
     }

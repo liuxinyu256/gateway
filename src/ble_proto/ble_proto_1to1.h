@@ -31,6 +31,8 @@
 #define BLE1TO1_CMD_1F  0x1F  /* 传送小程序基础信息 */
 #define BLE1TO1_CMD_21  0x21  /* 查询模块状态 */
 #define BLE1TO1_CMD_22  0x22  /* 设置模块状态 */
+#define BLE1TO1_CMD_24  0x24  /* 获取空调设定权限 */
+#define BLE1TO1_CMD_28  0x28  /* 查询模块故障信息 */
 
 void ble_proto_1to1_init(void);
 
