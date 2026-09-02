@@ -498,7 +498,8 @@ static void Peripheral_LinkTerminated( gapRoleEvent_t * pEvent )
  */
 static void peripheralRssiCB( uint16 connHandle, int8 rssi )
 {
-  PRINT( "RSSI -%d dB Conn  %x \n", -rssi, connHandle);
+  /* RSSI 日志已关闭，避免刷屏 */
+  (void)rssi; (void)connHandle;
 }
 
 /*********************************************************************
