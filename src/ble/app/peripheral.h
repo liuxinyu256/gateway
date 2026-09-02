@@ -31,6 +31,9 @@ extern "C"
 #define SBP_PERIODIC_EVT                                  0x0002
 #define SBP_READ_RSSI_EVT                                 0x0004
 #define SBP_PARAM_UPDATE_EVT                              0x0008
+#include "gateway_device.h"
+
+#define SBP_INDICATION_EVT                              0x0010
 
 /*********************************************************************
  * MACROS
@@ -52,6 +55,7 @@ typedef struct
  * Task Initialization for the BLE Application
  */
 extern void Peripheral_Init( void );
+void ble_peripheral_notify_state(const gateway_state_t *s);
 
 /*
  * Task Event Processor for the BLE Application

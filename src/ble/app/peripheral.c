@@ -19,6 +19,7 @@
 #include "devinfoservice.h"
 #include "gattprofile.h"
 #include "peripheral.h"
+#include "ble_proto_1to1.h"
 #include "debug_module.h"
 
 /*********************************************************************
@@ -80,6 +81,9 @@
  * LOCAL VARIABLES
  */
 static uint8 Peripheral_TaskID = INVALID_TASK_ID;   // Task ID for internal task/event processing
+
+static uint8_t notiData[64];
+static uint16_t sendlen;
 
 // GAP - SCAN RSP data (max size = 31 bytes)
 static uint8 scanRspData[ ] =
@@ -334,6 +338,13 @@ uint16 Peripheral_ProcessEvent( uint8 task_id, uint16 events )
 	// Start the Device
     GAPRole_PeripheralStartDevice( Peripheral_TaskID, &Peripheral_BondMgrCBs, &Peripheral_PeripheralCBs );
     return ( events ^ SBP_START_DEVICE_EVT );
+  }
+
+  if ( events & SBP_INDICATION_EVT )
+  {
+    if ( sendlen > 0 )
+      peripheralChar4Notify( notiData, sendlen );
+    return ( events ^ SBP_INDICATION_EVT );
   }
 
   if ( events & SBP_PERIODIC_EVT )
@@ -640,6 +651,26 @@ static void peripheralChar4Notify( uint8 *pValue, uint16 len )
 }
   
 /*********************************************************************
+ * @fn      ble_peripheral_notify_state
+ *
+ * @brief   模块状态变化时通过 BLE 通知上位机
+ */
+void ble_peripheral_notify_state(const gateway_state_t *s)
+{
+    uint16_t n;
+
+    if (!s)
+        return;
+
+    n = ble_proto_1to1_on_state_changed(s, notiData, sizeof(notiData));
+    if (n > 0) {
+        sendlen = n;
+        if (Peripheral_TaskID != INVALID_TASK_ID)
+            tmos_set_event(Peripheral_TaskID, SBP_INDICATION_EVT);
+    }
+}
+
+/*********************************************************************
  * @fn      simpleProfileChangeCB
  *
  * @brief   Callback from SimpleBLEProfile indicating a value change
@@ -659,7 +690,11 @@ static void simpleProfileChangeCB( uint8 paramID, uint8 *pValue, uint16 len )
 		{
 			uint8 newValue[SIMPLEPROFILE_CHAR1_LEN];
       tmos_memcpy( newValue, pValue, len );
-			PRINT("profile ChangeCB CHAR1.. \n");
+      sendlen = ble_proto_1to1_on_rx( newValue, len, notiData, sizeof(notiData) );
+      if ( sendlen > 0 )
+      {
+        tmos_set_event( Peripheral_TaskID, SBP_INDICATION_EVT );
+      }
       break;
 		}
 

@@ -11,6 +11,8 @@
 #include "CONFIG.h"
 #include "HAL.h"
 #include "peripheral.h"
+#include "ble_proto_1to1.h"
+#include "gateway.h"
 #include "debug_module.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -30,6 +32,14 @@ void ble_phy_notify_from_isr(void)
 }
 
 #ifdef BLE_ENABLE
+/* 模块状态变化 -> BLE 通知上位机 */
+static void ble_state_change_cb(uint8_t module_id, const gateway_state_t *s, void *ctx)
+{
+    (void)ctx;
+    if (module_id == BLE1TO1_MODULE_ID)
+        ble_peripheral_notify_state(s);
+}
+
 static void ble_tmos_task(void *arg)
 {
     (void)arg;
@@ -42,6 +52,7 @@ static void ble_tmos_task(void *arg)
     GAPRole_PeripheralInit();
     log_printf("[ble] gap init ok\r\n");
     Peripheral_Init();
+    gateway_on_state_change(ble_state_change_cb, NULL);
     log_printf("[ble] peri init ok\r\n");
 
     for (;;) {
