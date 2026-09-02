@@ -21,6 +21,7 @@
 #include "peripheral.h"
 #include "ble_proto_1to1.h"
 #include "debug_module.h"
+#include "debug_module.h"
 
 /*********************************************************************
  * MACROS
@@ -342,6 +343,7 @@ uint16 Peripheral_ProcessEvent( uint8 task_id, uint16 events )
 
   if ( events & SBP_INDICATION_EVT )
   {
+    log_printf("[ble] ind len=%u\r\n", (unsigned)sendlen);
     if ( sendlen > 0 )
       peripheralChar4Notify( notiData, sendlen );
     return ( events ^ SBP_INDICATION_EVT );
@@ -691,6 +693,8 @@ static void simpleProfileChangeCB( uint8 paramID, uint8 *pValue, uint16 len )
 			uint8 newValue[SIMPLEPROFILE_CHAR1_LEN];
       tmos_memcpy( newValue, pValue, len );
       sendlen = ble_proto_1to1_on_rx( newValue, len, notiData, sizeof(notiData) );
+      log_printf("[ble] rx cmd=%02X len=%u resp=%u\r\n",
+                 (unsigned)newValue[6], (unsigned)len, (unsigned)sendlen);
       if ( sendlen > 0 )
       {
         tmos_set_event( Peripheral_TaskID, SBP_INDICATION_EVT );

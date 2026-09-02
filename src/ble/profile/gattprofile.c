@@ -123,7 +123,7 @@ static uint8 simpleProfileChar3UserDesp[] = "Characteristic 3\0";
 
 
 // Simple Profile Characteristic 4 Properties
-static uint8 simpleProfileChar4Props = GATT_PROP_NOTIFY;
+static uint8 simpleProfileChar4Props = GATT_PROP_NOTIFY | GATT_PROP_INDICATE;
 
 // Characteristic 4 Value
 static uint8 simpleProfileChar4[SIMPLEPROFILE_CHAR4_LEN] = { 0 };
