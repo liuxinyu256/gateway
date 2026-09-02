@@ -50,7 +50,9 @@ void ble_module_start(void)
 
     g_ble.base.ops = &ble_module_ops;
     module_set_handler(&g_ble.base, &ble_evt_table, &g_ble);
-    module_init(&g_ble.base, NULL);
+
+    /* 只注册 BLE 模块状态，不创建额外任务，避免影响调度 */
+    if (module_init(&g_ble.base, NULL) != 0)
+        return;
     gateway_set_module(2, &g_ble.base);
-    module_start(&g_ble.base);
 }

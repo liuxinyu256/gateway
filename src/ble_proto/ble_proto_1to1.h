@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include "gateway_device.h"
 
-#define BLE1TO1_MODULE_ID        0   /* 当前只桥接 module 0 */
+#define BLE1TO1_MODULE_ID        2   /* BLE 模块自己的 module id */
 
 /* 帧位置 */
 #define BLE1TO1_IDX_NUM_H        0

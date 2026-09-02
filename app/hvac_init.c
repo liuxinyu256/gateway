@@ -14,7 +14,7 @@
 #include "ac_test.h"
 #include "ac_phy.h"
 #include "debug_module.h"
-#include "ble_phy.h"
+#include "ble_module.h"
 #include "bsp.h"
 
 static ac_module_t   g_ac = { .base.ops = &ac_module_ops };
@@ -70,6 +70,6 @@ void hvac_start(void)
     init_ac_module();       /* AC 模块注册/启动 */
     debug_module_start();   /* 调试模块 */
 #ifdef BLE_ENABLE
-    ble_phy_init();         /* BLE 物理层：事件驱动 TMOS 任务 */
+    ble_module_start();     /* BLE 模块注册（内部会启动 BLE 物理层） */
 #endif
 }
