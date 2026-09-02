@@ -35,6 +35,11 @@ void UART2_IRQHandler(void) { ch579_uart_irq_handler(2); }
 void UART3_IRQHandler(void) { ch579_uart_irq_handler(3); }
 
 /* ---- 未使用外设中断：空实现，防止默认 B . 死循环 ---- */
+#ifndef BLE_ENABLE
+void RTC_IRQHandler(void)   { }
+void LLE_IRQHandler(void)   { }
+#endif
+
 void GPIO_IRQHandler(void)  { }
 void SLAVE_IRQHandler(void) { }
 void SPI0_IRQHandler(void)  { }
