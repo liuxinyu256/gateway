@@ -165,7 +165,7 @@ uint16_t gateway_state_event_drop_count(void) {
 uint8_t gateway_send_cmd(uint8_t module_id, uint8_t cmd, uint8_t val) {
     module_t *m = gateway_module(module_id);
     if (!m) return 1;
-    return module_send_cmd(m, cmd, val);
+    return module_send_gateway_cmd(m, cmd, val);
 }
 
 uint8_t gateway_send_event(uint8_t module_id, event_type_t type) {

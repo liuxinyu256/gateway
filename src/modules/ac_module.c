@@ -56,7 +56,7 @@ static const char *ac_event_name(event_type_t type)
     switch (type) {
     case EVENT_PERIODIC_SEND: return "periodic";
     case EVENT_RX_FRAME:      return "rx";
-    case EVENT_CONTROL_CMD:   return "cmd";
+    case EVENT_GATEWAY_CMD:   return "cmd";
     case EVENT_NEED_ACK:      return "need_ack";
     case EVENT_SCAN_AC:       return "scan";
     case EVENT_TICK:          return "tick";
@@ -73,7 +73,7 @@ static void ac_ops_on_event(module_t *m, const event_t *ev)
     if (!log_event_enabled())
         return;
 
-    if (ev->type == EVENT_CONTROL_CMD) {
+    if (ev->type == EVENT_GATEWAY_CMD) {
         log_printf("[ac evt] %s cmd=%u val=%u\r\n",
                      ac_event_name(ev->type),
                      (unsigned)ev->cmd_val, (unsigned)ev->cmd_arg);

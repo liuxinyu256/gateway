@@ -86,7 +86,7 @@ void    module_start(module_t *m);
 void    module_rx_frame_done(module_t *m, uint16_t len); /* 接收完成入队 */
 void    module_tx_done(module_t *m);                     /* 发送完成启动 gap (任务上下文) */
 void    module_tx_done_from_isr(module_t *m);          /* 发送完成启动 gap (ISR 上下文) */
-uint8_t module_send_cmd(module_t *m, uint8_t cmd, uint8_t val);
+uint8_t module_send_gateway_cmd(module_t *m, uint8_t cmd, uint8_t val);
 uint8_t module_send_state_sync(module_t *m, const gateway_state_t *s); /* 完整状态同步 cmd 事件 */
 uint8_t module_send_event(module_t *m, event_type_t type); /* 测试/通用：投递指定事件 */
 void    module_set_poll_period(module_t *m, uint16_t period_ms);

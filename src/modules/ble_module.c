@@ -15,7 +15,7 @@ static int ble_on_rx(void *ctx, uint8_t *data, uint16_t len)
     return 1;
 }
 
-static void ble_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val,
+static void ble_on_gateway_cmd(void *ctx, uint8_t cmd, uint8_t val,
                                 const gateway_state_t *state)
 {
     ble_module_t *self = (ble_module_t *)ctx;
@@ -44,7 +44,7 @@ static void ble_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val,
 
 static const event_handler_t ble_evt_table = {
     .on_activate    = NULL,
-    .on_control_cmd = ble_on_control_cmd,
+    .on_gateway_cmd = ble_on_gateway_cmd,
     .on_rx_frame    = ble_on_rx,
     .on_tick        = NULL,
 };

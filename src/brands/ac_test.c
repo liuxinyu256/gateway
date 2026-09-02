@@ -39,7 +39,7 @@ static int test_on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     return 1;
 }
 
-static void test_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val,
+static void test_on_gateway_cmd(void *ctx, uint8_t cmd, uint8_t val,
                                  const gateway_state_t *state)
 {
     ac_module_t   *self = (ac_module_t *)ctx;
@@ -89,7 +89,7 @@ static const event_handler_t ac_test_evt = {
     .on_activate       = test_on_activate,
     .on_periodic_send  = test_on_periodic_send,
     .on_rx_frame       = test_on_rx_frame,
-    .on_control_cmd    = test_on_control_cmd,
+    .on_gateway_cmd    = test_on_gateway_cmd,
     .on_need_ack       = test_on_need_ack,
     .on_scan           = test_on_scan,
     .on_tick           = test_on_tick,

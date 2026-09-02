@@ -74,9 +74,9 @@ static void module_handle_event(module_t *m, const event_t *ev)
     case EVENT_RX_FRAME:
         module_handle_rx(m);
         break;
-    case EVENT_CONTROL_CMD:
-        if (m->handler && m->handler->on_control_cmd)
-            m->handler->on_control_cmd(m->handler_ctx, ev->cmd_val, ev->cmd_arg,
+    case EVENT_GATEWAY_CMD:
+        if (m->handler && m->handler->on_gateway_cmd)
+            m->handler->on_gateway_cmd(m->handler_ctx, ev->cmd_val, ev->cmd_arg,
                                        (const gateway_state_t *)ev->state);
         break;
     case EVENT_NEED_ACK:
@@ -310,12 +310,12 @@ void module_start(module_t *m)
         m->ops->start(m);
 }
 
-uint8_t module_send_cmd(module_t *m, uint8_t cmd, uint8_t val)
+uint8_t module_send_gateway_cmd(module_t *m, uint8_t cmd, uint8_t val)
 {
     if (!m) return 1;
 
     event_t ev = {
-        .type    = EVENT_CONTROL_CMD,
+        .type    = EVENT_GATEWAY_CMD,
         .cmd_val = cmd,
         .cmd_arg = val,
     };
@@ -328,7 +328,7 @@ uint8_t module_send_state_sync(module_t *m, const gateway_state_t *s)
     if (!m || !s) return 1;
 
     event_t ev = {
-        .type  = EVENT_CONTROL_CMD,
+        .type  = EVENT_GATEWAY_CMD,
         .state = s,
     };
     return module_enqueue_send_event(m, &ev);

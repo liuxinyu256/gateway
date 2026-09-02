@@ -6,7 +6,7 @@
 typedef enum {
     EVENT_PERIODIC_SEND,
     EVENT_RX_FRAME,
-    EVENT_CONTROL_CMD,
+    EVENT_GATEWAY_CMD,
     EVENT_NEED_ACK,
     EVENT_SCAN_AC,
     EVENT_TICK,
@@ -25,7 +25,7 @@ typedef struct {
     void (*on_activate)     (void *ctx);
     void (*on_periodic_send)(void *ctx);
     int  (*on_rx_frame)     (void *ctx, uint8_t *data, uint16_t len);
-    void (*on_control_cmd)  (void *ctx, uint8_t cmd, uint8_t val,
+    void (*on_gateway_cmd)  (void *ctx, uint8_t cmd, uint8_t val,
                              const gateway_state_t *state);
     void (*on_need_ack)     (void *ctx);
     void (*on_scan)         (void *ctx);

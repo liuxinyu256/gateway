@@ -495,7 +495,7 @@ static void on_periodic_send(void *ctx)
     }
 }
 
-static void on_control_cmd(void *ctx, uint8_t cmd, uint8_t val,
+static void on_gateway_cmd(void *ctx, uint8_t cmd, uint8_t val,
                             const gateway_state_t *state)
 {
     (void)ctx; (void)cmd; (void)val; (void)state;
@@ -504,7 +504,7 @@ static void on_control_cmd(void *ctx, uint8_t cmd, uint8_t val,
 static const event_handler_t debug_evt_table = {
     .on_rx_frame    = on_rx_frame,
     .on_periodic_send = on_periodic_send,
-    .on_control_cmd = on_control_cmd,
+    .on_gateway_cmd = on_gateway_cmd,
 };
 
 static uint8_t debug_ops_init(module_t *m, void *cfg)
