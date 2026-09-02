@@ -682,56 +682,6 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>ble</GroupName>
-          <Files>
-            <File>
-              <FileName>MCU.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\hal\MCU.c</FilePath>
-            </File>
-            <File>
-              <FileName>RTC.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\hal\RTC.c</FilePath>
-            </File>
-            <File>
-              <FileName>LED.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\hal\LED.c</FilePath>
-            </File>
-            <File>
-              <FileName>KEY.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\hal\KEY.c</FilePath>
-            </File>
-            <File>
-              <FileName>SLEEP.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\hal\SLEEP.c</FilePath>
-            </File>
-            <File>
-              <FileName>peripheral.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\app\peripheral.c</FilePath>
-            </File>
-            <File>
-              <FileName>gattprofile.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\profile\gattprofile.c</FilePath>
-            </File>
-            <File>
-              <FileName>devinfoservice.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ble\profile\devinfoservice.c</FilePath>
-            </File>
-            <File>
-              <FileName>CH57xBLE.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>.\src\ble\lib\CH57xBLE.lib</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>brands</GroupName>
           <Files>
             <File>
