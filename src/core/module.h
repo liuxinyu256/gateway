@@ -21,13 +21,6 @@
 
 typedef struct module module_t;
 
-/* 模块总线类型：用于明确模块是否有串行半双工总线 */
-typedef enum {
-    MODULE_BUS_NONE   = 0,  /* 无总线，如 BLE 骨架 */
-    MODULE_BUS_SERIAL,      /* UART/RS485 等串行半双工总线 */
-    MODULE_BUS_BLE,         /* BLE 2.4G（无 gap 定时器） */
-} module_bus_type_t;
-
 typedef struct module_ops
 {
     uint8_t (*init)(module_t *m, void *cfg); /* 模块自己的初始化 */
@@ -45,7 +38,6 @@ typedef struct module
     gateway_state_t state;     /* 模块自己的完整状态 */
 
     bus_t      bus;            /* 总线状态 */
-    module_bus_type_t bus_type; /* 总线类型：由 module_base_init 指定 */
     sender_t   *sender;        /* 发送抽象：指针注入 */
     receiver_t *receiver;      /* 接收抽象：指针注入 */
 
@@ -83,12 +75,10 @@ typedef struct module
 
 /* 通用模块接口
  * module_init 只做分发: 调用 m->ops->init(m, cfg)
- * module_base_init 是公共初始化 (队列/模块注册), 由各模块 init 内部调用。
- * 总线/帧间隙由物理层装配时负责初始化，不在这里传波特率。
+ * module_base_init 是公共初始化 (bus/队列/模块注册), 由各模块 init 内部调用
  */
 uint8_t module_init(module_t *m, void *cfg);
-uint8_t module_base_init(module_t *m);
-void    module_set_bus_type(module_t *m, module_bus_type_t bus_type);
+uint8_t module_base_init(module_t *m, uint32_t baudrate);
 void    module_set_handler(module_t *m, const event_handler_t *handler, void *ctx);
 void    module_start(module_t *m);
 

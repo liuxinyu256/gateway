@@ -14,7 +14,6 @@
 #include "ac_test.h"
 #include "ac_phy.h"
 #include "debug_module.h"
-#include "ble_module.h"
 #include "bsp.h"
 
 static ac_module_t   g_ac = { .base.ops = &ac_module_ops };
@@ -40,7 +39,6 @@ static uint8_t init_ac_phy(void)
 
     g_ac.base.sender   = g_ac_io.sender;
     g_ac.base.receiver = g_ac_io.receiver;
-    module_set_bus_type(&g_ac.base, MODULE_BUS_SERIAL);
     return 0;
 }
 
@@ -70,6 +68,4 @@ void hvac_start(void)
 
     init_ac_module();       /* AC 模块注册/启动 */
     debug_module_start();   /* 调试模块 */
-    /* BLE 模块暂不启动，避免额外任务影响当前稳定性 */
-    /* ble_module_start(); */
 }

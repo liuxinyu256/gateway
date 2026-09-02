@@ -140,9 +140,7 @@ if(CH579)
         src/phy/ac_phy_uart.c
         src/phy/ac_phy_rs485.c
         src/phy/debug_phy.c
-        src/phy/ble_phy.c
         src/modules/debug_module.c
-        src/modules/ble_module.c
         csp/CH579/startup_ARMCM0.s
         csp/CH579/StdPeriphDriver/CH57x_clk.c
         csp/CH579/StdPeriphDriver/CH57x_flash.c

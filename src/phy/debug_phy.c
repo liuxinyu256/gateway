@@ -19,8 +19,6 @@ static uint8_t            s_rx_buf[128];   /* 物理层接收环形缓冲区，�
 
 uint8_t debug_phy_init(bus_t *bus, debug_io_t *io)
 {
-    bus_init(bus, 115200);   /* Debug 固定 115200，帧间隙由物理层初始化 */
-
     uart_encoder_cfg_t enc_cfg = {
         .port = &uart1,
         .uart_cfg = {
