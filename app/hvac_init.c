@@ -14,6 +14,7 @@
 #include "ac_test.h"
 #include "ac_phy.h"
 #include "debug_module.h"
+#include "ble_phy.h"
 #include "bsp.h"
 
 static ac_module_t   g_ac = { .base.ops = &ac_module_ops };
