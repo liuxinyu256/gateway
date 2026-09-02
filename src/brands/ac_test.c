@@ -49,6 +49,8 @@ static void test_on_gateway_cmd(void *ctx, uint8_t cmd, uint8_t val,
     if (!self)
         return;
 
+    log_printf("[ac] gwcmd state=%p cmd=%u\r\n", (void *)state, (unsigned)cmd);
+
     /* 完整状态同步事件：AC 模块更新本地状态并打印，便于验证 */
     if (state) {
         self->base.state = *state;
