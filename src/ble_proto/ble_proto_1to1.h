@@ -26,7 +26,9 @@
 #define BLE1TO1_ID_CODE_MASTER   0x5A
 #define BLE1TO1_ID_CODE_GATEWAY  0xA5
 
-/* 命令字：只实现状态相关 */
+/* 命令字 */
+#define BLE1TO1_CMD_00  0x00  /* 获取网关基础信息 */
+#define BLE1TO1_CMD_1F  0x1F  /* 传送小程序基础信息 */
 #define BLE1TO1_CMD_21  0x21  /* 查询模块状态 */
 #define BLE1TO1_CMD_22  0x22  /* 设置模块状态 */
 

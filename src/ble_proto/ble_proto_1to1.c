@@ -16,6 +16,18 @@
 #define BLE1TO1_QUERY_DATA_LEN  8   /* 0x21 响应数据长度 */
 #define BLE1TO1_SET_DATA_LEN    5   /* 0x22 请求数据长度 */
 
+#define BLE1TO1_CMD_00  0x00
+#define BLE1TO1_CMD_1F  0x1F
+
+/* 0x00 响应：参考旧项目基础信息帧，先用固定模板 */
+static const uint8_t ble1to1_basic_info[] = {
+    0x00, 0x1d, 0x00, 0x2d, 0x7c, 0xa5, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x2a, 0x00, 0x00, 0x00,
+    0x00, 0x01, 0x9e, 0x3f, 0x11, 0x26, 0x3b, 0x38,
+    0xf2, 0xf9, 0xf7, 0xaa, 0x5d, 0x68, 0xbe, 0x4f,
+    0x01, 0xc6
+};
+
 void ble_proto_1to1_init(void)
 {
 }
@@ -106,13 +118,31 @@ static uint16_t handle_set_state(const uint8_t *rx, uint16_t rx_len,
                        resp, resp_max, dev_type);
 }
 
+static uint16_t handle_basic_info(uint8_t dev_type,
+                                     uint8_t *resp, uint16_t resp_max)
+{
+    (void)dev_type;
+    if (resp_max < sizeof(ble1to1_basic_info))
+        return 0;
+    memcpy(resp, ble1to1_basic_info, sizeof(ble1to1_basic_info));
+    return sizeof(ble1to1_basic_info);
+}
+
+static uint16_t handle_mini_program_info(uint8_t dev_type,
+                                         uint8_t *resp, uint16_t resp_max)
+{
+    uint8_t data[1] = { 0x00 }; /* 成功 */
+    return build_frame(BLE1TO1_CMD_1F, 0xC4, data, sizeof(data),
+                       resp, resp_max, dev_type);
+}
+
 uint16_t ble_proto_1to1_on_rx(const uint8_t *data, uint16_t len,
                               uint8_t *resp, uint16_t resp_max)
 {
     uint16_t length;
     uint8_t dev_type;
 
-    if (!data || len < 8 || !resp || resp_max < 8)
+    if (!data || len < 7 || !resp || resp_max < 8)
         return 0;
 
     length = ((uint16_t)data[BLE1TO1_IDX_NUM_H] << 8) | data[BLE1TO1_IDX_NUM_L];
@@ -125,6 +155,10 @@ uint16_t ble_proto_1to1_on_rx(const uint8_t *data, uint16_t len,
     dev_type = data[BLE1TO1_IDX_DEV_TYPE];
 
     switch (data[BLE1TO1_IDX_CMD]) {
+    case BLE1TO1_CMD_00:
+        return handle_basic_info(dev_type, resp, resp_max);
+    case BLE1TO1_CMD_1F:
+        return handle_mini_program_info(dev_type, resp, resp_max);
     case BLE1TO1_CMD_21:
         return handle_query_state(data, dev_type, resp, resp_max);
     case BLE1TO1_CMD_22:
