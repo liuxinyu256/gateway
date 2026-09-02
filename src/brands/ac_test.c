@@ -7,6 +7,7 @@
  */
 #include "ac_test.h"
 #include "gateway.h"
+#include "debug_module.h"
 #include "sender.h"
 #include <string.h>
 
@@ -48,9 +49,14 @@ static void test_on_gateway_cmd(void *ctx, uint8_t cmd, uint8_t val,
     if (!self)
         return;
 
-    /* 完整状态同步事件由网关广播给其他模块；AC 作为源/执行模块暂不直接镜像 */
-    if (state)
+    /* 完整状态同步事件：AC 模块更新本地状态并打印，便于验证 */
+    if (state) {
+        self->base.state = *state;
+        log_printf("[ac] state sync p=%u m=%u t=%u f=%u\r\n",
+                   (unsigned)state->power, (unsigned)state->mode,
+                   (unsigned)state->set_temp, (unsigned)state->fan);
         return;
+    }
 
     if (gateway_module_state_get(0, &s) != 0)
         memset(&s, 0, sizeof(s));

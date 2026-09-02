@@ -498,7 +498,14 @@ static void on_periodic_send(void *ctx)
 static void on_gateway_cmd(void *ctx, uint8_t cmd, uint8_t val,
                             const gateway_state_t *state)
 {
-    (void)ctx; (void)cmd; (void)val; (void)state;
+    (void)ctx; (void)cmd; (void)val;
+
+    if (state) {
+        g_dbg.base.state = *state;
+        log_printf("[dbg] state sync p=%u m=%u t=%u f=%u\r\n",
+                   (unsigned)state->power, (unsigned)state->mode,
+                   (unsigned)state->set_temp, (unsigned)state->fan);
+    }
 }
 
 static const event_handler_t debug_evt_table = {
