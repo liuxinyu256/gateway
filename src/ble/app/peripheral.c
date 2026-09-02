@@ -637,18 +637,26 @@ static void performPeriodicTask( void )
  */
 static void peripheralChar4Notify( uint8 *pValue, uint16 len )
 {
-  attHandleValueNoti_t noti;
+  attHandleValueInd_t indi;
+  uint8 ret;
+
   if(len > (peripheralMTU - 3))
   {
       PRINT("Too large noti\n");
       return;
   }
-  noti.len = len;
-  noti.pValue = GATT_bm_alloc( peripheralConnList.connHandle, ATT_HANDLE_VALUE_NOTI, noti.len, NULL, 0 );
-  tmos_memcpy( noti.pValue, pValue, noti.len );
-  if( simpleProfile_Notify( peripheralConnList.connHandle, &noti ) != SUCCESS )
+
+  indi.len = len;
+  indi.pValue = GATT_bm_alloc( peripheralConnList.connHandle, ATT_HANDLE_VALUE_IND, indi.len, NULL, 0 );
+  if(!indi.pValue)
+      return;
+  tmos_memcpy( indi.pValue, pValue, indi.len );
+
+  ret = simpleProfile_Indication( peripheralConnList.connHandle, &indi, Peripheral_TaskID );
+  log_printf("[ble] ind ret=%u len=%u\r\n", (unsigned)ret, (unsigned)len);
+  if( ret != SUCCESS )
   {
-    GATT_bm_free( (gattMsg_t *)&noti, ATT_HANDLE_VALUE_NOTI );
+    GATT_bm_free( (gattMsg_t *)&indi, ATT_HANDLE_VALUE_IND );
   }
 }
   
