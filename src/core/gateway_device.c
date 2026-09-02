@@ -64,6 +64,7 @@ static void gateway_state_process_event(uint8_t module_id)
     for (uint8_t i = 0; i < GATEWAY_MODULE_MAX; i++) {
         if (i == module_id)
             continue;
+        log_printf("[gw] sync check %u=%p\r\n", (unsigned)i, (void *)g_gw.modules[i]);
         if (g_gw.modules[i]) {
             log_printf("[gw] sync send to %u\r\n", (unsigned)i);
             module_send_state_sync(g_gw.modules[i], &s);
