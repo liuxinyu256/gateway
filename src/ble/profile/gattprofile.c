@@ -532,6 +532,23 @@ bStatus_t simpleProfile_Notify( uint16 connHandle, attHandleValueNoti_t *pNoti )
 }
 
 /*********************************************************************
+ * @fn          simpleProfile_Indication
+ *
+ * @brief       Send an indication on CHAR4.
+ */
+bStatus_t simpleProfile_Indication( uint16 connHandle, attHandleValueInd_t *pInd, uint8 taskId )
+{
+  uint16 value = GATTServApp_ReadCharCfg( connHandle, simpleProfileChar4Config );
+
+  if ( value & GATT_CLIENT_CFG_INDICATE )
+  {
+    pInd->handle = simpleProfileAttrTbl[SIMPLEPROFILE_CHAR4_VALUE_POS].handle;
+    return GATT_Indication( connHandle, pInd, FALSE, taskId );
+  }
+  return bleIncorrectMode;
+}
+
+/*********************************************************************
  * @fn          simpleProfile_ReadAttrCB
  *
  * @brief       Read an attribute.

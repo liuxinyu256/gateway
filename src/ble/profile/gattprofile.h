@@ -129,6 +129,7 @@ extern bStatus_t SimpleProfile_GetParameter( uint8 param, void *value );
  *    pNoti - pointer to structure to notify.  
  */
 extern bStatus_t simpleProfile_Notify( uint16 connHandle, attHandleValueNoti_t *pNoti );
+extern bStatus_t simpleProfile_Indication( uint16 connHandle, attHandleValueInd_t *pInd, uint8 taskId );
 
 /*********************************************************************
 *********************************************************************/
