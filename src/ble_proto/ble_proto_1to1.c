@@ -1,28 +1,28 @@
 /**
- * ble_proto_1to1.c —— 模块状态 <-> BLE 1to1 协议桥接
+ * ble_proto_1to1.c —— 模块状态 <-> 旧项目 1to1 BLE 协议
  *
- * 只处理 module 0 的 gateway_state_t：
- *   - 0x21 查询模块状态
- *   - 0x22 设置模块状态
- * 帧格式按协议文档示例：
- *   [len_hi,len_lo,flag,dev_type,param_type,id_code,cmd,data...]
- *   len = 总长度 - 5
+ * 按旧项目 proBLEComm1to1_v1d0 的一控一空调帧格式：
+ *   0x21 查询：响应 15 字节
+ *     data[0..1]=通讯/在线
+ *     data[2]=power data[3]=mode data[4]=wind/fan
+ *     data[5]=room_temp data[6]=set_temp data[7]=master/slave
+ *   0x22 设置：请求 data[0..4]=power/mode/wind/set_temp/master
  */
 #include "ble_proto_1to1.h"
 #include "gateway.h"
 #include "module.h"
 #include <string.h>
 
-#define BLE1TO1_STATE_LEN  10
+#define BLE1TO1_QUERY_DATA_LEN  8   /* 0x21 响应数据长度 */
+#define BLE1TO1_SET_DATA_LEN    5   /* 0x22 请求数据长度 */
 
 void ble_proto_1to1_init(void)
 {
 }
 
-/* 将 gateway_state_t 打包成 10 字节状态块 */
-static void pack_state(const gateway_state_t *s, uint8_t out[BLE1TO1_STATE_LEN])
+static void pack_state(const gateway_state_t *s, uint8_t out[BLE1TO1_QUERY_DATA_LEN])
 {
-    memset(out, 0, BLE1TO1_STATE_LEN);
+    memset(out, 0, BLE1TO1_QUERY_DATA_LEN);
     out[0] = 0x01;              /* 通讯正常 */
     out[1] = 0x01;              /* 在线 */
     out[2] = s->power;
@@ -30,21 +30,16 @@ static void pack_state(const gateway_state_t *s, uint8_t out[BLE1TO1_STATE_LEN])
     out[4] = s->fan;
     out[5] = s->room_temp;
     out[6] = s->set_temp;
-    out[7] = s->swing;
-    out[8] = s->error_code;
-    out[9] = 0x00;              /* 保留 */
+    out[7] = 0x00;              /* master/slave */
 }
 
-/* 将 10 字节状态块解包到 gateway_state_t（只取本模块关心的字段） */
-static void unpack_state(const uint8_t in[BLE1TO1_STATE_LEN], gateway_state_t *s)
+static void unpack_set_data(const uint8_t in[BLE1TO1_SET_DATA_LEN], gateway_state_t *s)
 {
-    s->power      = in[2];
-    s->mode       = in[3];
-    s->fan        = in[4];
-    s->room_temp  = in[5];
-    s->set_temp   = in[6];
-    s->swing      = in[7];
-    s->error_code = in[8];
+    s->power    = in[0];
+    s->mode     = in[1];
+    s->fan      = in[2];
+    s->set_temp = in[3];
+    /* in[4] = master/slave，暂不处理 */
 }
 
 static uint16_t build_frame(uint8_t cmd, uint8_t param, const uint8_t *data,
@@ -71,57 +66,43 @@ static uint16_t build_frame(uint8_t cmd, uint8_t param, const uint8_t *data,
     return total;
 }
 
-/* 0x21：查询模块状态 */
 static uint16_t handle_query_state(const uint8_t *rx, uint8_t dev_type,
                                    uint8_t *resp, uint16_t resp_max)
 {
     gateway_state_t s;
-    uint8_t st[BLE1TO1_STATE_LEN];
-    uint8_t data[2 + BLE1TO1_STATE_LEN];
+    uint8_t data[BLE1TO1_QUERY_DATA_LEN];
 
     if (gateway_module_state_get(BLE1TO1_MODULE_ID, &s) != 0)
         memset(&s, 0, sizeof(s));
 
-    pack_state(&s, st);
-    data[0] = 0xFF;  /* AC Address 默认 0xFFFF */
-    data[1] = 0xFF;
-    memcpy(&data[2], st, BLE1TO1_STATE_LEN);
-
-    /* 0x21 响应 param_type 示例为 0xF0 */
-    return build_frame(BLE1TO1_CMD_21, 0xF0, data, sizeof(data),
+    pack_state(&s, data);
+    /* 旧项目 0x21 响应 param_type=0x11, id=0xA5 */
+    return build_frame(BLE1TO1_CMD_21, 0x11, data, sizeof(data),
                        resp, resp_max, dev_type);
 }
 
-/* 0x22：设置模块状态 */
 static uint16_t handle_set_state(const uint8_t *rx, uint16_t rx_len,
                                  uint8_t dev_type,
                                  uint8_t *resp, uint16_t resp_max)
 {
     const uint8_t *p = &rx[BLE1TO1_IDX_DATA];
     uint16_t remain = rx_len - BLE1TO1_IDX_DATA;
-    uint8_t st[BLE1TO1_STATE_LEN];
     gateway_state_t s;
     uint8_t result = 0x00;
     uint8_t data[1];
 
-    /* 请求数据：2字节地址 + 状态块（或只给状态块，兼容处理） */
-    if (remain >= 2 + BLE1TO1_STATE_LEN)
-        memcpy(st, &p[2], BLE1TO1_STATE_LEN);
-    else if (remain >= BLE1TO1_STATE_LEN)
-        memcpy(st, p, BLE1TO1_STATE_LEN);
-    else
-        result = 0x01; /* 数据解析错误 */
-
-    if (result == 0x00) {
+    if (remain < BLE1TO1_SET_DATA_LEN) {
+        result = 0x01;
+    } else {
         if (gateway_module_state_get(BLE1TO1_MODULE_ID, &s) != 0)
             memset(&s, 0, sizeof(s));
-        unpack_state(st, &s);
+        unpack_set_data(p, &s);
         module_update_state(gateway_module(BLE1TO1_MODULE_ID), &s);
     }
 
     data[0] = result;
-    /* 0x22 响应 param_type 示例为 0xC7 */
-    return build_frame(BLE1TO1_CMD_22, 0xC7, data, sizeof(data),
+    /* 旧项目 0x22 响应 param_type=0x21 */
+    return build_frame(BLE1TO1_CMD_22, 0x21, data, sizeof(data),
                        resp, resp_max, dev_type);
 }
 
@@ -149,24 +130,19 @@ uint16_t ble_proto_1to1_on_rx(const uint8_t *data, uint16_t len,
     case BLE1TO1_CMD_22:
         return handle_set_state(data, len, dev_type, resp, resp_max);
     default:
-        return 0; /* 其他命令暂不处理 */
+        return 0;
     }
 }
 
 uint16_t ble_proto_1to1_on_state_changed(const gateway_state_t *s,
                                          uint8_t *resp, uint16_t resp_max)
 {
-    uint8_t st[BLE1TO1_STATE_LEN];
-    uint8_t data[2 + BLE1TO1_STATE_LEN];
+    uint8_t data[BLE1TO1_QUERY_DATA_LEN];
 
-    if (!s || !resp || resp_max < 19)
+    if (!s || !resp || resp_max < (7 + BLE1TO1_QUERY_DATA_LEN))
         return 0;
 
-    pack_state(s, st);
-    data[0] = 0xFF;
-    data[1] = 0xFF;
-    memcpy(&data[2], st, BLE1TO1_STATE_LEN);
-
-    return build_frame(BLE1TO1_CMD_21, 0xF0, data, sizeof(data),
+    pack_state(s, data);
+    return build_frame(BLE1TO1_CMD_21, 0x11, data, sizeof(data),
                        resp, resp_max, 0x2D);
 }
