@@ -1,131 +1,137 @@
 /**
- * ble_proto_1to1.c —— 1to1 BLE 协议（事件驱动版，逐步完善）
+ * ble_proto_1to1.c —— 模块状态 <-> BLE 1to1 协议桥接
  *
- * 当前实现：
- *   - 0x21 查询空调设定状态
- *   - 0x22 设置空调设定参数
- *   - 0x24 读取空调设定权限
- *   - 0x28 查询空调运行/故障信息
- * 其余命令先返回“不支持”响应，后续按业务补充。
+ * 只处理 module 0 的 gateway_state_t：
+ *   - 0x21 查询模块状态
+ *   - 0x22 设置模块状态
+ * 帧格式按协议文档示例：
+ *   [len_hi,len_lo,flag,dev_type,param_type,id_code,cmd,data...]
+ *   len = 总长度 - 5
  */
 #include "ble_proto_1to1.h"
 #include "gateway.h"
+#include "module.h"
 #include <string.h>
+
+#define BLE1TO1_STATE_LEN  10
 
 void ble_proto_1to1_init(void)
 {
 }
 
-static uint16_t build_error_resp(const uint8_t *rx, uint16_t rx_len,
-                                 uint8_t *resp, uint16_t resp_max)
+/* 将 gateway_state_t 打包成 10 字节状态块 */
+static void pack_state(const gateway_state_t *s, uint8_t out[BLE1TO1_STATE_LEN])
 {
-    uint16_t n;
-
-    if (rx_len < 7 || resp_max < 8)
-        return 0;
-
-    n = 8; /* 头7字节 + 1字节错误标志 */
-    memcpy(resp, rx, 7);
-    resp[0] = 0;
-    resp[1] = (uint8_t)(n - 5); /* length 字段 */
-    resp[BLE1TO1_IDX_DATA] = 0x01; /* 不支持/错误 */
-    return n;
+    memset(out, 0, BLE1TO1_STATE_LEN);
+    out[0] = 0x01;              /* 通讯正常 */
+    out[1] = 0x01;              /* 在线 */
+    out[2] = s->power;
+    out[3] = s->mode;
+    out[4] = s->fan;
+    out[5] = s->room_temp;
+    out[6] = s->set_temp;
+    out[7] = s->swing;
+    out[8] = s->error_code;
+    out[9] = 0x00;              /* 保留 */
 }
 
-static uint16_t build_ac_setting_status(const uint8_t *rx,
-                                        uint8_t *resp, uint16_t resp_max)
+/* 将 10 字节状态块解包到 gateway_state_t（只取本模块关心的字段） */
+static void unpack_state(const uint8_t in[BLE1TO1_STATE_LEN], gateway_state_t *s)
+{
+    s->power      = in[2];
+    s->mode       = in[3];
+    s->fan        = in[4];
+    s->room_temp  = in[5];
+    s->set_temp   = in[6];
+    s->swing      = in[7];
+    s->error_code = in[8];
+}
+
+static uint16_t build_frame(uint8_t cmd, uint8_t param, const uint8_t *data,
+                            uint16_t data_len, uint8_t *resp, uint16_t resp_max,
+                            uint8_t dev_type)
+{
+    uint16_t total = 7 + data_len;
+
+    if (resp_max < total)
+        return 0;
+
+    memset(resp, 0, total);
+    resp[BLE1TO1_IDX_NUM_H] = (uint8_t)((total - 5) >> 8);
+    resp[BLE1TO1_IDX_NUM_L] = (uint8_t)((total - 5) & 0xFF);
+    resp[BLE1TO1_IDX_FLAG]       = 0x00;
+    resp[BLE1TO1_IDX_DEV_TYPE]   = dev_type;
+    resp[BLE1TO1_IDX_PARAM_TYPE] = param;
+    resp[BLE1TO1_IDX_ID_CODE]    = BLE1TO1_ID_CODE_GATEWAY;
+    resp[BLE1TO1_IDX_CMD]        = cmd;
+
+    if (data_len && data)
+        memcpy(&resp[BLE1TO1_IDX_DATA], data, data_len);
+
+    return total;
+}
+
+/* 0x21：查询模块状态 */
+static uint16_t handle_query_state(const uint8_t *rx, uint8_t dev_type,
+                                   uint8_t *resp, uint16_t resp_max)
 {
     gateway_state_t s;
-    uint16_t n = 15;
+    uint8_t st[BLE1TO1_STATE_LEN];
+    uint8_t data[2 + BLE1TO1_STATE_LEN];
 
-    if (resp_max < n)
-        return 0;
-
-    memset(resp, 0, n);
-    memcpy(resp, rx, 7);
-
-    if (gateway_module_state_get(0, &s) == 0) {
-        resp[7]  = 0x01; /* 通讯正常 */
-        resp[8]  = 0x01; /* 在线 */
-        resp[9]  = s.power;
-        resp[10] = s.mode;
-        resp[11] = s.fan;
-        resp[12] = s.room_temp;
-        resp[13] = s.set_temp;
-        resp[14] = 0;    /* 主从 */
-    } else {
-        resp[7] = 0x00;
-        resp[8] = 0x00;
-    }
-
-    resp[0] = 0;
-    resp[1] = (uint8_t)(n - 5);
-    return n;
-}
-
-static uint16_t build_ac_run_status(const uint8_t *rx,
-                                    uint8_t *resp, uint16_t resp_max)
-{
-    gateway_state_t s;
-    uint16_t n = 10; /* step28_table 长度 */
-
-    if (resp_max < n)
-        return 0;
-
-    memset(resp, 0, n);
-    memcpy(resp, rx, 7);
-
-    if (gateway_module_state_get(0, &s) == 0) {
-        resp[7] = 0x01;
-        resp[8] = 0x01;
-        resp[9] = s.error_code;
-    }
-
-    resp[0] = 0;
-    resp[1] = (uint8_t)(n - 5);
-    return n;
-}
-
-static uint16_t build_ac_setting_permission(const uint8_t *rx,
-                                            uint8_t *resp, uint16_t resp_max)
-{
-    /* 先用 step24_table 的固定长度：0x12 数据 + 7 头 = 25? 实际数组长 23? 这里用 23 */
-    uint16_t n = 23;
-
-    if (resp_max < n)
-        return 0;
-
-    memset(resp, 0, n);
-    memcpy(resp, rx, 7);
-    resp[0] = 0;
-    resp[1] = (uint8_t)(n - 5);
-    return n;
-}
-
-static uint16_t handle_set_ac_parameter(const uint8_t *rx, uint16_t rx_len,
-                                        uint8_t *resp, uint16_t resp_max)
-{
-    gateway_state_t s;
-    uint16_t n;
-
-    if (rx_len < 16 || resp_max < 8)
-        return 0;
-
-    /* 原协议 0x22 数据在 index 7 开始，具体映射按后续协议文档细化 */
-    if (gateway_module_state_get(0, &s) != 0)
+    if (gateway_module_state_get(BLE1TO1_MODULE_ID, &s) != 0)
         memset(&s, 0, sizeof(s));
 
-    /* 这里先不实际修改状态，等确认协议数据位后补全 */
-    n = build_error_resp(rx, rx_len, resp, resp_max);
-    return n;
+    pack_state(&s, st);
+    data[0] = 0xFF;  /* AC Address 默认 0xFFFF */
+    data[1] = 0xFF;
+    memcpy(&data[2], st, BLE1TO1_STATE_LEN);
+
+    /* 0x21 响应 param_type 示例为 0xF0 */
+    return build_frame(BLE1TO1_CMD_21, 0xF0, data, sizeof(data),
+                       resp, resp_max, dev_type);
+}
+
+/* 0x22：设置模块状态 */
+static uint16_t handle_set_state(const uint8_t *rx, uint16_t rx_len,
+                                 uint8_t dev_type,
+                                 uint8_t *resp, uint16_t resp_max)
+{
+    const uint8_t *p = &rx[BLE1TO1_IDX_DATA];
+    uint16_t remain = rx_len - BLE1TO1_IDX_DATA;
+    uint8_t st[BLE1TO1_STATE_LEN];
+    gateway_state_t s;
+    uint8_t result = 0x00;
+    uint8_t data[1];
+
+    /* 请求数据：2字节地址 + 状态块（或只给状态块，兼容处理） */
+    if (remain >= 2 + BLE1TO1_STATE_LEN)
+        memcpy(st, &p[2], BLE1TO1_STATE_LEN);
+    else if (remain >= BLE1TO1_STATE_LEN)
+        memcpy(st, p, BLE1TO1_STATE_LEN);
+    else
+        result = 0x01; /* 数据解析错误 */
+
+    if (result == 0x00) {
+        if (gateway_module_state_get(BLE1TO1_MODULE_ID, &s) != 0)
+            memset(&s, 0, sizeof(s));
+        unpack_state(st, &s);
+        module_update_state(gateway_module(BLE1TO1_MODULE_ID), &s);
+    }
+
+    data[0] = result;
+    /* 0x22 响应 param_type 示例为 0xC7 */
+    return build_frame(BLE1TO1_CMD_22, 0xC7, data, sizeof(data),
+                       resp, resp_max, dev_type);
 }
 
 uint16_t ble_proto_1to1_on_rx(const uint8_t *data, uint16_t len,
                               uint8_t *resp, uint16_t resp_max)
 {
     uint16_t length;
+    uint8_t dev_type;
 
-    if (!data || len < 7 || !resp || resp_max < 8)
+    if (!data || len < 8 || !resp || resp_max < 8)
         return 0;
 
     length = ((uint16_t)data[BLE1TO1_IDX_NUM_H] << 8) | data[BLE1TO1_IDX_NUM_L];
@@ -135,25 +141,32 @@ uint16_t ble_proto_1to1_on_rx(const uint8_t *data, uint16_t len,
     if (data[BLE1TO1_IDX_ID_CODE] != BLE1TO1_ID_CODE_MASTER)
         return 0;
 
+    dev_type = data[BLE1TO1_IDX_DEV_TYPE];
+
     switch (data[BLE1TO1_IDX_CMD]) {
     case BLE1TO1_CMD_21:
-        return build_ac_setting_status(data, resp, resp_max);
+        return handle_query_state(data, dev_type, resp, resp_max);
     case BLE1TO1_CMD_22:
-        return handle_set_ac_parameter(data, len, resp, resp_max);
-    case BLE1TO1_CMD_24:
-        return build_ac_setting_permission(data, resp, resp_max);
-    case BLE1TO1_CMD_28:
-        return build_ac_run_status(data, resp, resp_max);
+        return handle_set_state(data, len, dev_type, resp, resp_max);
     default:
-        return build_error_resp(data, len, resp, resp_max);
+        return 0; /* 其他命令暂不处理 */
     }
 }
 
 uint16_t ble_proto_1to1_on_state_changed(const gateway_state_t *s,
                                          uint8_t *resp, uint16_t resp_max)
 {
-    (void)s;
-    (void)resp;
-    (void)resp_max;
-    return 0; /* 暂不主动上报，后续按需要实现 */
+    uint8_t st[BLE1TO1_STATE_LEN];
+    uint8_t data[2 + BLE1TO1_STATE_LEN];
+
+    if (!s || !resp || resp_max < 19)
+        return 0;
+
+    pack_state(s, st);
+    data[0] = 0xFF;
+    data[1] = 0xFF;
+    memcpy(&data[2], st, BLE1TO1_STATE_LEN);
+
+    return build_frame(BLE1TO1_CMD_21, 0xF0, data, sizeof(data),
+                       resp, resp_max, 0x2D);
 }
