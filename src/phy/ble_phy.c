@@ -45,8 +45,8 @@ static void ble_tmos_task(void *arg)
     log_printf("[ble] peri init ok\r\n");
 
     for (;;) {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        log_printf("[ble] wake\r\n");
+        /* 事件通知唤醒 + 1ms 超时兜底：保证 TMOS 持续被调度 */
+        ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1));
         TMOS_SystemProcess();
     }
 }
@@ -56,7 +56,7 @@ uint8_t ble_phy_init(void)
     if (ble_task_handle)
         return 0;
 
-    xTaskCreate(ble_tmos_task, "ble", 256, NULL, 3, &ble_task_handle);
+    xTaskCreate(ble_tmos_task, "ble", 256, NULL, 2, &ble_task_handle);
     return 0;
 }
 #else
