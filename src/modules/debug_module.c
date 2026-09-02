@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "debug_phy.h"
 #include "led.h"
 #include "bsp.h"
@@ -66,6 +67,7 @@ typedef struct {
 
 static debug_module_t     g_dbg;
 static debug_io_t        g_dbg_io;
+static SemaphoreHandle_t log_print_mutex;
 
 /* 每个任务独立的静态格式化缓冲区：不占任务栈，也不加锁 */
 static char s_log_send_buf[64];   /* AC send_task 文本日志 */
@@ -593,10 +595,16 @@ void log_vprintf(const char *fmt, va_list ap)
     if (!g_dbg.base.sender)
         return;
 
+    if (log_print_mutex)
+        xSemaphoreTake(log_print_mutex, portMAX_DELAY);
+
     n = vsnprintf(buf, size, fmt, ap);
     if (n > 0)
         sender_send(g_dbg.base.sender, (const uint8_t *)buf,
                     (uint16_t)n, SENDER_PRIO_CMD);
+
+    if (log_print_mutex)
+        xSemaphoreGive(log_print_mutex);
 }
 
 void log_printf(const char *fmt, ...)
@@ -668,6 +676,8 @@ void debug_module_start(void)
 #endif
 
     halLedInit();   /* 运行 LED 初始化 */
+
+    log_print_mutex = xSemaphoreCreateMutex();
 
     g_dbg.base.ops = &debug_module_ops;
     module_set_handler(&g_dbg.base, &debug_evt_table, NULL);
