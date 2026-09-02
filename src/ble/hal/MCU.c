@@ -71,8 +71,6 @@ void CH57X_BLEInit( void )
   R8_SAFE_ACCESS_SIG = SAFE_ACCESS_SIG2;
   R16_CLK_SYS_CFG = RB_CLK_OSC32M_XT|(2<<6)|0x08;			// 32M -> Fsys
   R8_SAFE_ACCESS_SIG = 0;
-  SysTick_Config( SysTick_LOAD_RELOAD_Msk );
-  SysTick->CTRL  &= ~SysTick_CTRL_TICKINT_Msk ;   /* disable SysTick IRQ */
   tmos_memset(&cfg,0,sizeof(bleConfig_t));
 	cfg.MEMAddr  		= (u32)MEM_BUF;
 	cfg.MEMLen   		= (u32)BLE_MEMHEAP_SIZE;
