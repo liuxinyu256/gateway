@@ -102,17 +102,8 @@ void gateway_module_state_update(uint8_t module_id,
     if (g_gw.state_mutex)
         xSemaphoreGive(g_gw.state_mutex);
 
-    GW_ENTER_CRITICAL();
-
-    if (!g_gw.state_pending[module_id]) {
-        g_gw.state_pending[module_id] = 1;
-        if (gateway_state_enqueue(module_id) != 0) {
-            g_gw.state_event_drop_cnt++;
-            g_gw.state_pending[module_id] = 0;
-        }
-    }
-
-    GW_EXIT_CRITICAL();
+    /* TODO: 临时同步通知，先解决 [gw] 延迟；后续再恢复异步 state_event_queue */
+    gateway_state_process_event(module_id);
 }
 
 uint8_t gateway_module_state_get(uint8_t module_id,
