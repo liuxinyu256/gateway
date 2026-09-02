@@ -682,6 +682,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>ble_proto</GroupName>
+          <Files>
+            <File>
+              <FileName>ble_proto_1to1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ble_proto\ble_proto_1to1.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>ble</GroupName>
           <Files>
             <File>
