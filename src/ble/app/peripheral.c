@@ -621,8 +621,7 @@ static void peripheralStateNotificationCB( gapRole_States_t newState, gapRoleEve
  */
 static void performPeriodicTask( void )
 {
-  uint8 notiData[SIMPLEPROFILE_CHAR4_LEN] = { 0x88 };
-  peripheralChar4Notify( notiData, SIMPLEPROFILE_CHAR4_LEN );
+  /* 协议响应由命令事件触发，这里不再周期发送占位数据 */
 }
 
 /*********************************************************************

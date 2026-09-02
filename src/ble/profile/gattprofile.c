@@ -733,7 +733,7 @@ static bStatus_t simpleProfile_WriteAttrCB( uint16 connHandle, gattAttribute_t *
 
       case GATT_CLIENT_CHAR_CFG_UUID:
         status = GATTServApp_ProcessCCCWriteReq( connHandle, pAttr, pValue, len,
-                                                 offset, GATT_CLIENT_CFG_NOTIFY );
+                                                 offset, GATT_CLIENT_CFG_NOTIFY | GATT_CLIENT_CFG_INDICATE );
         break;
         
       default:
