@@ -46,6 +46,7 @@ static void ble_tmos_task(void *arg)
 
     for (;;) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        log_printf("[ble] wake\r\n");
         TMOS_SystemProcess();
     }
 }
