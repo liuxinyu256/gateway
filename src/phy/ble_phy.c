@@ -11,6 +11,7 @@
 #include "CONFIG.h"
 #include "HAL.h"
 #include "peripheral.h"
+#include "debug_module.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -33,10 +34,15 @@ static void ble_tmos_task(void *arg)
 {
     (void)arg;
 
+    log_printf("[ble] task start\r\n");
     CH57X_BLEInit();
+    log_printf("[ble] ble init ok\r\n");
     HAL_Init();
+    log_printf("[ble] hal init ok\r\n");
     GAPRole_PeripheralInit();
+    log_printf("[ble] gap init ok\r\n");
     Peripheral_Init();
+    log_printf("[ble] peri init ok\r\n");
 
     for (;;) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
