@@ -64,8 +64,11 @@ static void gateway_state_process_event(uint8_t module_id)
     for (uint8_t i = 0; i < GATEWAY_MODULE_MAX; i++) {
         if (i == module_id)
             continue;
-        if (g_gw.modules[i])
-            module_send_state_sync(g_gw.modules[i], &g_gw.module_states[module_id]);
+        if (g_gw.modules[i]) {
+            uint8_t sync_ret = module_send_state_sync(g_gw.modules[i], &g_gw.module_states[module_id]);
+            if (i == 0)
+                log_printf("[gw] sync to ac ret=%u\r\n", (unsigned)sync_ret);
+        }
     }
 }
 
