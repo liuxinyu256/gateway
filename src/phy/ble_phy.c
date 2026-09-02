@@ -27,6 +27,7 @@ static void ble_tmos_task(void *arg)
 
     for (;;) {
         TMOS_SystemProcess();
+        vTaskDelay(pdMS_TO_TICKS(1));   /* 让出 CPU，避免饿死业务任务 */
     }
 }
 
@@ -37,7 +38,7 @@ uint8_t ble_phy_init(void)
     GAPRole_PeripheralInit();
     Peripheral_Init();
 
-    xTaskCreate(ble_tmos_task, "ble", 256, NULL, 4, NULL);
+    xTaskCreate(ble_tmos_task, "ble", 256, NULL, 2, NULL);
     return 0;
 }
 #else
