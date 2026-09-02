@@ -11,6 +11,7 @@
 #include "ble_proto_1to1.h"
 #include "gateway.h"
 #include "module.h"
+#include "debug_module.h"
 #include <string.h>
 
 #define BLE1TO1_QUERY_DATA_LEN  8   /* 0x21 响应数据长度 */
@@ -112,6 +113,9 @@ static uint16_t handle_set_state(const uint8_t *rx, uint16_t rx_len,
         if (gateway_module_state_get(BLE1TO1_MODULE_ID, &s) != 0)
             memset(&s, 0, sizeof(s));
         unpack_set_data(p, &s);
+        log_printf("[proto] set p=%u m=%u f=%u t=%u\r\n",
+                   (unsigned)s.power, (unsigned)s.mode,
+                   (unsigned)s.fan, (unsigned)s.set_temp);
         module_update_state(gateway_module(BLE1TO1_MODULE_ID), &s);
     }
 
