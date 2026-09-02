@@ -277,7 +277,7 @@
               <OCR_RVCT4>
                 <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x40000</Size>
+                <Size>0x22800</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -338,7 +338,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>__CH579__,DEBUG,BLE_ENABLE</Define>
+              <Define>__CH579__,DEBUG</Define>
               <Undefine></Undefine>
               <IncludePath>.\src\hal;.\src\hal\bus;.\src\hal\queue;.\src\hal\comm;.\src\hal\frame;.\src\hal\uart;.\src\hal\timer;.\src\hal\led;.\src\hal\rs485;.\src\hal\gpio;.\src\bsp;.\src\phy;.\src\core;.\src\modules;.\src\brands;.\app;.\csp\CH579\StdPeriphDriver\inc;.\lib\CMSIS\Include;.\lib\FreeRTOS\include;.\lib\FreeRTOS;.\lib\FreeRTOS\Portable\RVDS\ARM_CM0;.\src\ble\lib;.\src\ble\hal;.\src\ble\app;.\src\ble\profile</IncludePath>
             </VariousControls>
