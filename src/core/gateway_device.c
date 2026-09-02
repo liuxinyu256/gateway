@@ -5,6 +5,7 @@
 
 #include "gateway_device.h"
 #include "module.h"
+#include "debug_module.h"
 #include <string.h>
 
 #ifdef FAKE_FREERTOS
@@ -63,8 +64,10 @@ static void gateway_state_process_event(uint8_t module_id)
     for (uint8_t i = 0; i < GATEWAY_MODULE_MAX; i++) {
         if (i == module_id)
             continue;
-        if (g_gw.modules[i])
+        if (g_gw.modules[i]) {
+            log_printf("[gw] sync send to %u\r\n", (unsigned)i);
             module_send_state_sync(g_gw.modules[i], &s);
+        }
     }
 }
 
