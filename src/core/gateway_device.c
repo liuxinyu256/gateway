@@ -65,7 +65,7 @@ static void gateway_state_process_event(uint8_t module_id)
         if (i == module_id)
             continue;
         if (g_gw.modules[i])
-            module_send_state_sync(g_gw.modules[i], &s);
+            module_send_state_sync(g_gw.modules[i], &g_gw.module_states[module_id]);
     }
 }
 
