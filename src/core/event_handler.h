@@ -1,7 +1,8 @@
 #ifndef EVENT_HANDLER_H
 #define EVENT_HANDLER_H
 #include <stdint.h>
-#include "gateway_device.h"
+
+typedef struct gateway_state gateway_state_t;
 
 typedef enum {
     EVENT_PERIODIC_SEND,

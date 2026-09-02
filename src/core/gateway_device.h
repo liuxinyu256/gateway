@@ -22,7 +22,7 @@ typedef struct module module_t;
  *   - 协议只支持其中一部分字段，更新时“读当前完整状态 → 改支持字段 → 写回完整状态”
  *   - 不支持的字段保持不变，从而隔离不同协议差异
  */
-typedef struct {
+typedef struct gateway_state {
     /* 控制/状态 */
     uint8_t power;
     uint8_t mode;
