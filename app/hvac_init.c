@@ -69,4 +69,7 @@ void hvac_start(void)
 
     init_ac_module();       /* AC 模块注册/启动 */
     debug_module_start();   /* 调试模块 */
+#ifdef BLE_ENABLE
+    ble_phy_init();         /* BLE 物理层：事件驱动 TMOS 任务 */
+#endif
 }
