@@ -691,7 +691,6 @@ void debug_module_start(void)
 
     module_init(&g_dbg.base, &baudrate);
     gateway_set_module(1, &g_dbg.base);
-    log_printf("[dbg] registered gw1=%p\r\n", (void *)gateway_module(1));
 
     /* 注册网关状态观察者，验证状态发布/订阅链路 */
     gateway_on_state_change(debug_on_state_change, NULL);
