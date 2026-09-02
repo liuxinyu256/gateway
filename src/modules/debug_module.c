@@ -495,9 +495,10 @@ static void on_periodic_send(void *ctx)
     }
 }
 
-static void on_control_cmd(void *ctx, uint8_t cmd, uint8_t val)
+static void on_control_cmd(void *ctx, uint8_t cmd, uint8_t val,
+                            const gateway_state_t *state)
 {
-    (void)ctx; (void)cmd; (void)val;
+    (void)ctx; (void)cmd; (void)val; (void)state;
 }
 
 static const event_handler_t debug_evt_table = {

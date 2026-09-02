@@ -15,9 +15,36 @@ static int ble_on_rx(void *ctx, uint8_t *data, uint16_t len)
     return 1;
 }
 
+static void ble_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val,
+                                const gateway_state_t *state)
+{
+    ble_module_t *self = (ble_module_t *)ctx;
+
+    if (!self)
+        return;
+
+    /* 完整状态同步：BLE 模块镜像网关真相源 */
+    if (state) {
+        self->base.state = *state;
+        return;
+    }
+
+    /* 单字段 cmd：按标准命令映射更新 */
+    switch (cmd) {
+    case 0: self->base.state.power = val; break;
+    case 1: self->base.state.mode = val; break;
+    case 2: self->base.state.set_temp = val; break;
+    case 3: self->base.state.room_temp = val; break;
+    case 4: self->base.state.fan = val; break;
+    case 5: self->base.state.swing = val; break;
+    case 6: self->base.state.error_code = val; break;
+    default: break;
+    }
+}
+
 static const event_handler_t ble_evt_table = {
     .on_activate    = NULL,
-    .on_control_cmd = NULL,
+    .on_control_cmd = ble_on_control_cmd,
     .on_rx_frame    = ble_on_rx,
     .on_tick        = NULL,
 };
@@ -51,8 +78,10 @@ void ble_module_start(void)
     g_ble.base.ops = &ble_module_ops;
     module_set_handler(&g_ble.base, &ble_evt_table, &g_ble);
 
-    /* 只注册 BLE 模块状态，不创建额外任务，避免影响调度 */
     if (module_init(&g_ble.base, NULL) != 0)
         return;
     gateway_set_module(2, &g_ble.base);
+
+    /* BLE 模块需要 send_task 来接收异步 cmd 状态同步事件 */
+    module_start(&g_ble.base);
 }

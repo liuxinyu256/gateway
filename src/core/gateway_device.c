@@ -53,9 +53,18 @@ static void gateway_state_process_event(uint8_t module_id)
     if (gateway_module_state_get(module_id, &s) != 0)
         return;
 
+    /* 先通知观察者 */
     for (uint8_t i = 0; i < g_gw.observer_count; i++) {
         if (g_gw.on_change[i])
             g_gw.on_change[i](module_id, &s, g_gw.on_change_ctx[i]);
+    }
+
+    /* 把完整状态通过 cmd 事件异步同步给其他模块（排除来源模块，避免回声） */
+    for (uint8_t i = 0; i < GATEWAY_MODULE_MAX; i++) {
+        if (i == module_id)
+            continue;
+        if (g_gw.modules[i])
+            module_send_state_sync(g_gw.modules[i], &s);
     }
 }
 

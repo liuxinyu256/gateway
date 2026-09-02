@@ -76,7 +76,8 @@ static void module_handle_event(module_t *m, const event_t *ev)
         break;
     case EVENT_CONTROL_CMD:
         if (m->handler && m->handler->on_control_cmd)
-            m->handler->on_control_cmd(m->handler_ctx, ev->cmd_val, ev->cmd_arg);
+            m->handler->on_control_cmd(m->handler_ctx, ev->cmd_val, ev->cmd_arg,
+                                       (const gateway_state_t *)ev->state);
         break;
     case EVENT_NEED_ACK:
         if (m->handler && m->handler->on_need_ack)
@@ -319,6 +320,17 @@ uint8_t module_send_cmd(module_t *m, uint8_t cmd, uint8_t val)
         .cmd_arg = val,
     };
 
+    return module_enqueue_send_event(m, &ev);
+}
+
+uint8_t module_send_state_sync(module_t *m, const gateway_state_t *s)
+{
+    if (!m || !s) return 1;
+
+    event_t ev = {
+        .type  = EVENT_CONTROL_CMD,
+        .state = s,
+    };
     return module_enqueue_send_event(m, &ev);
 }
 

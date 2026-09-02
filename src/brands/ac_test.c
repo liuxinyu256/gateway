@@ -39,12 +39,17 @@ static int test_on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     return 1;
 }
 
-static void test_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val)
+static void test_on_control_cmd(void *ctx, uint8_t cmd, uint8_t val,
+                                 const gateway_state_t *state)
 {
     ac_module_t   *self = (ac_module_t *)ctx;
     gateway_state_t s;
 
     if (!self)
+        return;
+
+    /* 完整状态同步事件由网关广播给其他模块；AC 作为源/执行模块暂不直接镜像 */
+    if (state)
         return;
 
     if (gateway_module_state_get(0, &s) != 0)
