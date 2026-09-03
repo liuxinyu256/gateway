@@ -17,7 +17,7 @@
 #endif
 
 #define MODULE_MAX 5
-#define MODULE_EVENT_QUEUE_LEN 8   /* 日志/事件突发时减少丢事件 */
+#define MODULE_EVENT_QUEUE_LEN 4
 
 typedef struct module module_t;
 

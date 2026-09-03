@@ -19,8 +19,8 @@ static receiver_timeout_t s_rx;
 static uint8_t            s_rx_buf[128];   /* 物理层接收环形缓冲区 */
 
 /* Debug 日志/回显主要走 CMD，alive 走 NORM */
-static uint8_t s_cmd_ring_buf[1024];
-static uint8_t s_norm_ring_buf[512];
+static uint8_t s_cmd_ring_buf[512];
+static uint8_t s_norm_ring_buf[256];
 
 uint8_t debug_phy_init(bus_t *bus, debug_io_t *io)
 {

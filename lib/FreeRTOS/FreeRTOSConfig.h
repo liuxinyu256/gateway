@@ -43,7 +43,7 @@
 
 #define configUSE_IDLE_HOOK                     1
 #define configUSE_TICK_HOOK                     0
-#define configCHECK_FOR_STACK_OVERFLOW          0
+#define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_MALLOC_FAILED_HOOK            0
 
 /* 映射 FreeRTOS 函数名到 CMSIS 标准向量名 */

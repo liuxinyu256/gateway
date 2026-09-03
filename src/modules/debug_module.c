@@ -32,7 +32,7 @@ extern int Image$$RW_IRAM2$$ZI$$Limit;
 
 static uint32_t debug_app_ram_total(void)
 {
-    return 0x3000u + 0x2800u;   /* RAM1 12KB + RAM2 10KB */
+    return 0x3000u + 0x2800u;   /* RAM1 12KB + RAM2 10KB（实际链接 obj/gateway.sct） */
 }
 
 /* 实际占用 = 全局/静态（RW/ZI 减去堆数组） + 堆内已分配 */
@@ -60,6 +60,16 @@ void vApplicationIdleHook(void)
     }
 }
 
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    (void)xTask;
+    (void)pcTaskName;
+    /* 栈溢出：软件陷阱，便于 J-Link halt 查看任务名 */
+    __disable_irq();
+    for (;;) {
+    }
+}
+
 typedef struct {
     module_t base;
     uint8_t  rx_buf[128];   /* Debug 模块接收缓冲区 */
@@ -81,7 +91,7 @@ static uint8_t s_log_event_enabled     = 0;
 static uint8_t s_log_rx_enabled        = 0;
 
 /* ---- Debug TX 通过 send_queue 投递给 Debug send_task 发送 ---- */
-#define DEBUG_TX_SLOTS   8
+#define DEBUG_TX_SLOTS   4
 #define DEBUG_TX_MSG_MAX 128
 
 typedef struct {
@@ -451,18 +461,26 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     while (len > 0 && (data[len - 1] == '\r' || data[len - 1] == '\n' || data[len - 1] == ' '))
         len--;
 
-    if (debug_cmd_hb(data, len))    return 1;
-    if (debug_cmd_evt(data, len))   return 1;
-    if (debug_cmd_rxlog(data, len)) return 1;
-    if (debug_cmd_perf(data, len)) return 1;
-    if (debug_cmd_stat(data, len)) return 1;
-    if (debug_cmd_ack(data, len))  return 1;
-    if (debug_cmd_tick(data, len)) return 1;
-    if (debug_cmd_idle(data, len)) return 1;
-    if (debug_cmd_ctrl(data, len)) return 1;
-    if (debug_cmd_state(data, len)) return 1;
-    if (debug_cmd_tx(data, len))   return 1;
-    if (debug_cmd_brand(data, len)) return 1;
+
+    uint8_t handled = 0;
+    if (debug_cmd_hb(data, len))         handled = 1;
+    else if (debug_cmd_evt(data, len))   handled = 1;
+    else if (debug_cmd_rxlog(data, len)) handled = 1;
+    else if (debug_cmd_perf(data, len))  handled = 1;
+    else if (debug_cmd_stat(data, len))  handled = 1;
+    else if (debug_cmd_ack(data, len))   handled = 1;
+    else if (debug_cmd_tick(data, len))  handled = 1;
+    else if (debug_cmd_idle(data, len))  handled = 1;
+    else if (debug_cmd_ctrl(data, len))  handled = 1;
+    else if (debug_cmd_state(data, len)) handled = 1;
+    else if (debug_cmd_tx(data, len))    handled = 1;
+    else if (debug_cmd_brand(data, len)) handled = 1;
+
+    if (handled) {
+        /* 让低优先级 send_task / 定时器任务有机会运行，避免 RX 刷屏饿死心跳 */
+        taskYIELD();
+        return 1;
+    }
 
     /* 未识别命令：HEX 回显 */
     pos = snprintf((char *)buf, sizeof(s_dbg_rx_buf), "[rx]");

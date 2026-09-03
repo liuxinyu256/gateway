@@ -89,18 +89,24 @@ uint8_t sender_send(sender_t *tx,
     ring = priority ? &tx->cmd_ring : &tx->norm_ring;
     q    = priority ? &tx->cmd_jobs : &tx->norm_jobs;
 
+    S_ENTER_CRITICAL();
+
     if (ring_free(ring) < len || q->count >= TX_JOB_QUEUE_LEN) {
         tx->drop_cnt++;
+        S_EXIT_CRITICAL();
         return 1;   /* ring 或任务队列满：本次不入队，由调用方决定 */
     }
 
     if (ring_write(ring, frame, len) != len) {
         /* 理论上不会发生，上面已经检查过空间 */
+        S_EXIT_CRITICAL();
         return 1;
     }
 
     /* q->count 已在上面检查，任务入队不会再失败 */
     (void)job_queue_push(q, len);
+
+    S_EXIT_CRITICAL();
 
     sender_pump(tx);
     return 0;
@@ -111,11 +117,17 @@ void sender_pump(sender_t *tx)
     if (!tx)
         return;
 
-    if (tx->sending)
-        return;
+    S_ENTER_CRITICAL();
 
-    if (!bus_is_idle(tx->bus))
+    if (tx->sending) {
+        S_EXIT_CRITICAL();
         return;
+    }
+
+    if (!bus_is_idle(tx->bus)) {
+        S_EXIT_CRITICAL();
+        return;
+    }
 
     tx_job_t job;
     uint8_t  prio;
@@ -126,6 +138,7 @@ void sender_pump(sender_t *tx)
     } else if (job_queue_pop(&tx->norm_jobs, &job) == 0) {
         prio = 0;
     } else {
+        S_EXIT_CRITICAL();
         return;
     }
 
@@ -136,6 +149,8 @@ void sender_pump(sender_t *tx)
 
     bus_mark_busy(tx->bus);           /* bus 负责方向控制: 进入发送方向 */
     encoder_tx_enable(tx->encoder);   /* 只开中断/定时器，ISR/tick 自己取字节 */
+
+    S_EXIT_CRITICAL();
 }
 
 /* 一帧数据已经全部写入 THR，不需要等 TX_COMPLETE 的情况 */
