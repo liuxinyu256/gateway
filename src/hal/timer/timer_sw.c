@@ -23,12 +23,12 @@ static uint64_t get_us(void)
     return (uint64_t)((c.QuadPart * 1000000ULL) / f.QuadPart);
 }
 #else
-#include <time.h>
+#include <sys/time.h>
 static uint64_t get_us(void)
 {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
 }
 #endif
 

@@ -11,21 +11,24 @@
 #define FQ_EXIT_CRITICAL()  taskEXIT_CRITICAL()
 #endif
 
-void frame_queue_init(frame_queue_t *q)
+void frame_queue_init(frame_queue_t *q,
+                      tx_frame_t *pool, uint8_t capacity)
 {
     if (!q) return;
     memset(q, 0, sizeof(*q));
+    q->pool     = pool;
+    q->capacity = capacity;
 }
 
 uint8_t frame_queue_push(frame_queue_t *q,
                          const uint8_t *data, uint16_t len)
 {
-    if (!q || !data || len == 0 || len > TX_FRAME_MAX)
+    if (!q || !q->pool || !q->capacity || !data || len == 0 || len > TX_FRAME_MAX)
         return 1;
 
     FQ_ENTER_CRITICAL();
 
-    if (q->count >= TX_FRAME_QUEUE_LEN) {
+    if (q->count >= q->capacity) {
         q->drop_cnt++;            /* 队列满: 整帧丢弃，不写半帧 */
         FQ_EXIT_CRITICAL();
         return 1;
@@ -35,7 +38,7 @@ uint8_t frame_queue_push(frame_queue_t *q,
     memcpy(slot->data, data, len);
     slot->len = len;
 
-    q->tail = (uint8_t)((q->tail + 1) % TX_FRAME_QUEUE_LEN);
+    q->tail = (uint8_t)((q->tail + 1) % q->capacity);
     q->count++;
 
     FQ_EXIT_CRITICAL();
@@ -56,7 +59,7 @@ uint8_t frame_queue_pop(frame_queue_t *q, tx_frame_t *out)
 
     *out = q->pool[q->head];
 
-    q->head = (uint8_t)((q->head + 1) % TX_FRAME_QUEUE_LEN);
+    q->head = (uint8_t)((q->head + 1) % q->capacity);
     q->count--;
 
     FQ_EXIT_CRITICAL();

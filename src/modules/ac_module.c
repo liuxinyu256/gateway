@@ -67,8 +67,17 @@ static const char *ac_event_name(event_type_t type)
 
 static void ac_ops_on_event(module_t *m, const event_t *ev)
 {
-    (void)m;
     if (!ev) return;
+
+    /* 通用投帧事件：由 AC send_task 统一调用 sender_send */
+    if (ev->type == EVENT_SEND_FRAME) {
+        if (m && m->sender && ev->data && ev->len) {
+            uint8_t prio = ev->cmd_arg ? SENDER_PRIO_CMD : SENDER_PRIO_NORM;
+            sender_send(m->sender, (const uint8_t *)ev->data,
+                        ev->len, prio);
+        }
+        return;
+    }
 
     if (!log_event_enabled())
         return;

@@ -334,6 +334,20 @@ uint8_t module_send_state_sync(module_t *m, const gateway_state_t *s)
     return module_enqueue_send_event(m, &ev);
 }
 
+uint8_t module_send_frame(module_t *m, const uint8_t *data, uint16_t len,
+                           uint8_t priority)
+{
+    if (!m || !data || !len) return 1;
+
+    event_t ev = {
+        .type    = EVENT_SEND_FRAME,
+        .len     = len,
+        .cmd_arg = priority,
+        .data    = data,
+    };
+    return module_enqueue_send_event(m, &ev);
+}
+
 uint8_t module_send_event(module_t *m, event_type_t type)
 {
     if (!m) return 1;

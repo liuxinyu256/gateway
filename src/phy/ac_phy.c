@@ -8,7 +8,7 @@
 static const ac_phy_ops_t *phy_ops(ac_phy_type_t type)
 {
     switch (type) {
-    case AC_PHY_UART:     return &ac_phy_uart_ops;
+    /* AC_PHY_UART 暂时不参与编译以节省 RAM；需要时恢复 ac_phy_uart.c */
     case AC_PHY_RS485:    return &ac_phy_rs485_ops;
     case AC_PHY_HBS:      return NULL;   /* 预留 */
     default:              return NULL;

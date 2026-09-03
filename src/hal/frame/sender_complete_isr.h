@@ -12,6 +12,8 @@ typedef struct {
     /* 中断策略私有数据（如中断使能标志） */
 } sender_isr_t;
 
+extern const sender_ops_t sender_isr_ops;
+
 uint8_t sender_isr_init(sender_isr_t *tx, const sender_cfg_t *cfg);
 
 #endif /* SENDER_COMPLETE_ISR_H */

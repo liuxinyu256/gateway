@@ -32,7 +32,7 @@ extern int Image$$RW_IRAM2$$ZI$$Limit;
 
 static uint32_t debug_app_ram_total(void)
 {
-    return 0x3000u + 0x2000u;   /* RAM1 12KB + RAM2 8KB */
+    return 0x3000u + 0x2800u;   /* RAM1 12KB + RAM2 10KB */
 }
 
 /* 实际占用 = 全局/静态（RW/ZI 减去堆数组） + 堆内已分配 */
@@ -80,6 +80,24 @@ static uint8_t s_log_heartbeat_enabled = 1;
 static uint8_t s_log_event_enabled     = 0;
 static uint8_t s_log_rx_enabled        = 0;
 
+/* ---- Debug TX 通过 send_queue 投递给 Debug send_task 发送 ---- */
+#define DEBUG_TX_SLOTS   8
+#define DEBUG_TX_MSG_MAX 128
+
+typedef struct {
+    uint8_t  data[DEBUG_TX_MSG_MAX];
+    uint16_t len;
+    uint8_t  prio;
+} debug_tx_msg_t;
+
+static debug_tx_msg_t g_dbg_tx_slots[DEBUG_TX_SLOTS];
+static uint8_t        g_dbg_tx_slot_used[DEBUG_TX_SLOTS];
+static QueueHandle_t  g_dbg_tx_free_queue;
+
+static uint8_t debug_tx_enqueue_ex(const uint8_t *data, uint16_t len, uint8_t prio);
+static void    debug_ops_on_event(module_t *m, const event_t *ev);
+static uint8_t ac_send_test_frame(const uint8_t *data, uint16_t len);
+
 uint8_t log_event_enabled(void) { return s_log_event_enabled; }
 uint8_t log_rx_enabled(void)    { return s_log_rx_enabled; }
 
@@ -125,8 +143,7 @@ static int debug_cmd_perf(uint8_t *data, uint16_t len)
                      (unsigned long)heap_free,
                      (unsigned long)heap_min);
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -139,15 +156,14 @@ static int debug_cmd_stat(uint8_t *data, uint16_t len)
         return 0;
 
     n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
-                 "[st] s=%u r=%u st=%u cmd=%u norm=%u\r\n",
+                 "[st] s=%u r=%u st=%u tx=%u rx=%u\r\n",
                  g_dbg.base.send_queue_drop_cnt,
                  g_dbg.base.receive_queue_drop_cnt,
                  gateway_state_event_drop_count(),
-                 frame_queue_drop_count(&g_dbg.base.sender->cmd_q),
-                 frame_queue_drop_count(&g_dbg.base.sender->norm_q));
+                 sender_drop_count(g_dbg.base.sender),
+                 receiver_frame_drop_count(g_dbg.base.receiver));
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -164,8 +180,7 @@ static int debug_cmd_ack(uint8_t *data, uint16_t len)
     n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                  "[evt] need_ack ret=%u\r\n", (unsigned)ret);
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -183,8 +198,7 @@ static int debug_cmd_tick(uint8_t *data, uint16_t len)
     n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                  "[evt] tick ret=%u\r\n", (unsigned)ret);
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -201,8 +215,7 @@ static int debug_cmd_idle(uint8_t *data, uint16_t len)
     n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                  "[evt] bus_idle ret=%u\r\n", (unsigned)ret);
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -233,8 +246,7 @@ static int debug_cmd_ctrl(uint8_t *data, uint16_t len)
                  "[evt] cmd=%u val=%u ret=%u\r\n",
                  (unsigned)cmd, (unsigned)val, (unsigned)ret);
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -259,8 +271,7 @@ static int debug_cmd_state(uint8_t *data, uint16_t len)
                      "[ac st] unavailable\r\n");
     }
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -285,11 +296,10 @@ static int debug_cmd_tx(uint8_t *data, uint16_t len)
                           (void *)ac->bus.set_dir,
                           (unsigned)ac->bus.need_tx_complete);
         if (dn > 0)
-            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                        (uint16_t)dn, SENDER_PRIO_CMD);
+            debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)dn, SENDER_PRIO_CMD);
 
-        uint8_t ret = sender_send(ac->sender, test_frame,
-                                  sizeof(test_frame), SENDER_PRIO_CMD);
+        uint8_t ret = ac_send_test_frame(test_frame,
+                                  sizeof(test_frame));
         n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                      "[test] tx:");
         for (uint16_t i = 0; i < sizeof(test_frame) &&
@@ -302,14 +312,12 @@ static int debug_cmd_tx(uint8_t *data, uint16_t len)
                       sizeof(s_dbg_rx_buf) - (size_t)n,
                       " ret=%u\r\n", (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                        (uint16_t)n, SENDER_PRIO_CMD);
+            debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     } else {
         n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                      "[test] ac not ready\r\n");
         if (n > 0)
-            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                        (uint16_t)n, SENDER_PRIO_CMD);
+            debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     }
     return 1;
 }
@@ -355,8 +363,8 @@ static int debug_cmd_brand(uint8_t *data, uint16_t len)
 
     ac = gateway_module(0);
     if (ac && ac->sender) {
-        uint8_t ret = sender_send(ac->sender, test_frame,
-                                  sizeof(test_frame), SENDER_PRIO_CMD);
+        uint8_t ret = ac_send_test_frame(test_frame,
+                                  sizeof(test_frame));
         n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                      "[test] brand=%s tx:", brand_name);
         for (uint16_t i = 0; i < sizeof(test_frame) &&
@@ -369,14 +377,12 @@ static int debug_cmd_brand(uint8_t *data, uint16_t len)
                       sizeof(s_dbg_rx_buf) - (size_t)n,
                       " ret=%u\r\n", (unsigned)ret);
         if (n > 0)
-            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                        (uint16_t)n, SENDER_PRIO_CMD);
+            debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     } else {
         n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
                      "[test] ac not ready\r\n");
         if (n > 0)
-            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                        (uint16_t)n, SENDER_PRIO_CMD);
+            debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     }
     return 1;
 }
@@ -394,8 +400,7 @@ static int debug_cmd_hb(uint8_t *data, uint16_t len)
                  "[log] heartbeat %s\r\n",
                  s_log_heartbeat_enabled ? "on" : "off");
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -412,8 +417,7 @@ static int debug_cmd_evt(uint8_t *data, uint16_t len)
                  "[log] event %s\r\n",
                  s_log_event_enabled ? "on" : "off");
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -430,8 +434,7 @@ static int debug_cmd_rxlog(uint8_t *data, uint16_t len)
                  "[log] rx %s\r\n",
                  s_log_rx_enabled ? "on" : "off");
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -475,8 +478,7 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     } else {
         buf[sizeof(s_dbg_rx_buf) - 1] = 0;
     }
-    sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                (uint16_t)pos, SENDER_PRIO_CMD);
+    debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)pos, SENDER_PRIO_CMD);
     return 1;
 }
 
@@ -491,9 +493,8 @@ static void on_periodic_send(void *ctx)
     /* 心跳 5s 一跳（默认 poll 200ms，5s/200ms = 25 次），可用 hb 命令开关 */
     if (++alive_div >= 25) {
         alive_div = 0;
-        if (s_log_heartbeat_enabled && g_dbg.base.sender)
-            sender_send(g_dbg.base.sender, (const uint8_t *)alive,
-                        sizeof(alive) - 1, SENDER_PRIO_NORM);
+        if (s_log_heartbeat_enabled)
+            debug_tx_enqueue_ex((const uint8_t *)alive, sizeof(alive) - 1, SENDER_PRIO_NORM);
     }
 }
 
@@ -552,6 +553,7 @@ static const module_ops_t debug_module_ops = {
     .start                 = NULL,
     .get_rx_buf            = debug_ops_get_rx_buf,
     .register_io_callbacks = debug_ops_register_io_callbacks,
+    .on_event              = debug_ops_on_event,
 };
 
 /* Debug 模块自己注册的接收/发送完成回调 */
@@ -585,7 +587,73 @@ static char *log_get_buffer(uint16_t *size)
     return s_log_other_buf;
 }
 
-/* 公共发送：直接交给 debug 模块自己的 sender，由帧队列异步发送 */
+/* Debug send_task 处理 EVENT_DEBUG_TX：真正调用 sender_send */
+static uint8_t debug_tx_slot_send(uint8_t idx)
+{
+    uint8_t ret;
+
+    if (idx >= DEBUG_TX_SLOTS || !g_dbg_tx_slot_used[idx])
+        return 1;
+
+    ret = g_dbg.base.sender ?
+          sender_send(g_dbg.base.sender,
+                      g_dbg_tx_slots[idx].data,
+                      g_dbg_tx_slots[idx].len,
+                      g_dbg_tx_slots[idx].prio) : 1;
+
+    g_dbg_tx_slot_used[idx] = 0;
+    if (g_dbg_tx_free_queue)
+        xQueueSend(g_dbg_tx_free_queue, &idx, 0);
+    return ret;
+}
+
+static void debug_ops_on_event(module_t *m, const event_t *ev)
+{
+    (void)m;
+    if (ev && ev->type == EVENT_DEBUG_TX)
+        debug_tx_slot_send(ev->cmd_val);
+}
+
+/* 把测试帧通过模块级 API 投递给 AC send_task，由它统一发送 */
+static uint8_t ac_send_test_frame(const uint8_t *data, uint16_t len)
+{
+    module_t *ac = gateway_module(0);
+    if (!ac)
+        return 1;
+    return module_send_frame(ac, data, len, SENDER_PRIO_CMD);
+}
+
+/* 把 Debug TX 文本投入 send_queue，由 Debug send_task 统一 sender_send */
+static uint8_t debug_tx_enqueue_ex(const uint8_t *data, uint16_t len, uint8_t prio)
+{
+    uint8_t idx;
+    event_t ev;
+
+    if (!g_dbg.base.sender || !g_dbg_tx_free_queue ||
+        !data || len == 0 || len > DEBUG_TX_MSG_MAX)
+        return 1;
+
+    if (xQueueReceive(g_dbg_tx_free_queue, &idx, 0) != pdPASS)
+        return 1;   /* 槽满，丢弃本次日志 */
+
+    g_dbg_tx_slot_used[idx] = 1;
+    g_dbg_tx_slots[idx].len  = len;
+    g_dbg_tx_slots[idx].prio = prio;
+    memcpy(g_dbg_tx_slots[idx].data, data, len);
+
+    memset(&ev, 0, sizeof(ev));
+    ev.type    = EVENT_DEBUG_TX;
+    ev.cmd_val = idx;
+
+    if (xQueueSend(g_dbg.base.send_queue, &ev, 0) != pdPASS) {
+        g_dbg_tx_slot_used[idx] = 0;
+        xQueueSend(g_dbg_tx_free_queue, &idx, 0);
+        return 1;
+    }
+    return 0;
+}
+
+/* 公共发送：投递到 Debug send_queue，由 send_task 统一发送 */
 void log_vprintf(const char *fmt, va_list ap)
 {
     uint16_t size;
@@ -600,8 +668,7 @@ void log_vprintf(const char *fmt, va_list ap)
 
     n = vsnprintf(buf, size, fmt, ap);
     if (n > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)n, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
 
     if (log_print_mutex)
         xSemaphoreGive(log_print_mutex);
@@ -628,8 +695,7 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
     pos = snprintf(buf, sizeof(s_log_rx_buf), "[%s] rx:", tag);
     for (uint16_t i = 0; i < len; i++) {
         if (pos + 4 >= (int)sizeof(s_log_rx_buf)) {
-            sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                        (uint16_t)pos, SENDER_PRIO_CMD);
+            debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)pos, SENDER_PRIO_CMD);
             pos = 0;
         }
         pos += snprintf(buf + pos,
@@ -640,8 +706,7 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len)
         pos += snprintf(buf + pos,
                         sizeof(s_log_rx_buf) - (size_t)pos, "\r\n");
     if (pos > 0)
-        sender_send(g_dbg.base.sender, (const uint8_t *)buf,
-                    (uint16_t)pos, SENDER_PRIO_CMD);
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)pos, SENDER_PRIO_CMD);
 }
 
 /* 调试模块挂接 AC 模块的 RX 日志：AC 模块自身不感知日志 */
@@ -690,6 +755,16 @@ void debug_module_start(void)
     g_dbg.base.receiver = g_dbg_io.receiver;
 
     module_init(&g_dbg.base, &baudrate);
+
+    /* Debug TX 空闲槽队列：避免用临界区分配槽 */
+    g_dbg_tx_free_queue = xQueueCreate(DEBUG_TX_SLOTS, sizeof(uint8_t));
+    if (!g_dbg_tx_free_queue)
+        return;
+    for (uint8_t i = 0; i < DEBUG_TX_SLOTS; i++) {
+        uint8_t idx = i;
+        xQueueSend(g_dbg_tx_free_queue, &idx, 0);
+    }
+
     gateway_set_module(1, &g_dbg.base);
 
     /* 注册网关状态观察者，验证状态发布/订阅链路 */

@@ -13,6 +13,8 @@ typedef struct {
     void    *timer;   /* TimerHandle_t：1ms 轮询定时器 */
 } sender_poll_t;
 
+extern const sender_ops_t sender_poll_ops;
+
 uint8_t sender_poll_init(sender_poll_t *tx, const sender_cfg_t *cfg);
 
 #endif /* SENDER_COMPLETE_POLL_H */

@@ -85,21 +85,21 @@ uint16_t ring_peek(ring_t *r, uint8_t *d, uint16_t m)
     return _cp(r, d, m);
 }
 
-/* 暂不使用，保留备用
-int ring_peek_at(const ring_t *r, uint16_t o)
+uint16_t ring_skip(ring_t *r, uint16_t n)
 {
-    if (!r || o >= ring_count(r))
-        return -1;
-    return r->buf[(r->rdidx + o) & r->mask];
+    if (!r) return 0;
+    uint16_t cnt = ring_count(r);
+    if (n > cnt) n = cnt;
+    r->rdidx = (r->rdidx + n) & r->mask;
+    return n;
 }
-*/
 
-void ring_skip(ring_t *r, uint16_t n)
+void ring_unwrite(ring_t *r, uint16_t n)
 {
     if (!r) return;
     uint16_t cnt = ring_count(r);
-    if (n > cnt) n = cnt; /* 不允许跳过超过实际数据量 */
-    r->rdidx = (r->rdidx + n) & r->mask;
+    if (n > cnt) n = cnt;
+    r->wridx = (r->wridx - n) & r->mask;
 }
 
 void ring_commit(ring_t *r)

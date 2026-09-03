@@ -20,9 +20,7 @@ uint16_t ring_write(ring_t *r, const uint8_t *src, uint16_t len);
 uint8_t  ring_get(ring_t *r, uint8_t *out);
 uint16_t ring_read(ring_t *r, uint8_t *dst, uint16_t max);
 uint16_t ring_peek(ring_t *r, uint8_t *dst, uint16_t max);
-/* 暂不使用，保留备用
-int      ring_peek_at(const ring_t *r, uint16_t offset);
-*/
-void     ring_skip(ring_t *r, uint16_t n);
+uint16_t ring_skip(ring_t *r, uint16_t n);
+void     ring_unwrite(ring_t *r, uint16_t n);   /* 丢弃最近写入的 n 字节 */
 void     ring_commit(ring_t *r);
 #endif

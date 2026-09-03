@@ -12,6 +12,8 @@ typedef enum {
     EVENT_SCAN_AC,
     EVENT_TICK,
     EVENT_BUS_IDLE,
+    EVENT_DEBUG_TX,   /* Debug 模块内部：日志/回显投递到 send_task 发送 */
+    EVENT_SEND_FRAME, /* 测试/通用：把一帧投递给 AC send_task 发送 */
 } event_type_t;
 
 typedef struct {
@@ -20,6 +22,7 @@ typedef struct {
     uint8_t      cmd_val;
     uint8_t      cmd_arg;
     const gateway_state_t *state;   /* cmd 事件携带完整状态时使用 */
+    const void            *data;    /* 通用事件携带外部数据指针（必须指向持久内存） */
 } event_t;
 
 typedef struct {

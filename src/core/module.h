@@ -17,7 +17,7 @@
 #endif
 
 #define MODULE_MAX 5
-#define MODULE_EVENT_QUEUE_LEN 4
+#define MODULE_EVENT_QUEUE_LEN 8   /* 日志/事件突发时减少丢事件 */
 
 typedef struct module module_t;
 
@@ -88,6 +88,8 @@ void    module_tx_done(module_t *m);                     /* 发送完成启动 g
 void    module_tx_done_from_isr(module_t *m);          /* 发送完成启动 gap (ISR 上下文) */
 uint8_t module_send_gateway_cmd(module_t *m, uint8_t cmd, uint8_t val);
 uint8_t module_send_state_sync(module_t *m, const gateway_state_t *s); /* 完整状态同步 cmd 事件 */
+uint8_t module_send_frame(module_t *m, const uint8_t *data, uint16_t len,
+                          uint8_t priority); /* 模块级投帧：由该模块 send_task 发送 */
 uint8_t module_send_event(module_t *m, event_type_t type); /* 测试/通用：投递指定事件 */
 void    module_set_poll_period(module_t *m, uint16_t period_ms);
 

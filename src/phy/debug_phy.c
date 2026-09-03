@@ -1,7 +1,8 @@
 /**
  * debug_phy.c —— Debug 模块物理层装配：固定 UART1 115200
  *
- * 具体对象由本文件静态持有，装配后只暴露抽象指针。
+ * Debug 也使用重构后的 sender（帧任务 + 双 ring），
+ * 只是 ring 给得比 AC 大一些，避免日志突发丢弃。
  */
 #include "debug_phy.h"
 #include "hal_io.h"
@@ -15,7 +16,11 @@ static uart_encoder_t     s_enc;
 static uart_decoder_t     s_dec;
 static sender_poll_t      s_sender;
 static receiver_timeout_t s_rx;
-static uint8_t            s_rx_buf[128];   /* 物理层接收环形缓冲区，独立于模块 rx_buf */
+static uint8_t            s_rx_buf[128];   /* 物理层接收环形缓冲区 */
+
+/* Debug 日志/回显主要走 CMD，alive 走 NORM */
+static uint8_t s_cmd_ring_buf[1024];
+static uint8_t s_norm_ring_buf[512];
 
 uint8_t debug_phy_init(bus_t *bus, debug_io_t *io)
 {
@@ -32,8 +37,12 @@ uint8_t debug_phy_init(bus_t *bus, debug_io_t *io)
         return 1;
 
     sender_cfg_t sender_cfg = {
-        .encoder = &s_enc.base,
-        .bus     = bus,
+        .encoder        = &s_enc.base,
+        .bus            = bus,
+        .cmd_ring_buf   = s_cmd_ring_buf,
+        .cmd_ring_size  = sizeof(s_cmd_ring_buf),
+        .norm_ring_buf  = s_norm_ring_buf,
+        .norm_ring_size = sizeof(s_norm_ring_buf),
     };
     if (sender_poll_init(&s_sender, &sender_cfg) != 0)
         return 1;

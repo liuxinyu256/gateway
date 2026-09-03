@@ -123,6 +123,9 @@ if(PC_SIM)
         ${CMAKE_SOURCE_DIR}/app
     )
     target_link_libraries(sim_app PRIVATE hal_core gateway_core gateway_brands)
+
+    enable_testing()
+    add_test(NAME sim_app COMMAND sim_app)
 endif()
 
 # ============================================================
@@ -138,7 +141,6 @@ if(CH579)
         src/bsp/bsp_board.c
         src/bsp/bsp_a07s.c
         src/phy/ac_phy.c
-        src/phy/ac_phy_uart.c
         src/phy/ac_phy_rs485.c
         src/phy/debug_phy.c
         src/phy/ble_phy.c

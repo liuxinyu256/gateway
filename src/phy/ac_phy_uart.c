@@ -15,6 +15,8 @@ static uart_decoder_t     s_dec;
 static sender_poll_t      s_sender;
 static receiver_timeout_t s_rx;
 static uint8_t            s_rx_buf[128];
+static uint8_t            s_cmd_ring_buf[256];  /* CMD 帧字节环 */
+static uint8_t            s_norm_ring_buf[256]; /* 普通帧字节环 */
 
 static uint8_t uart_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
 {
@@ -36,8 +38,12 @@ static uint8_t uart_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
         return 1;
 
     sender_cfg_t sender_cfg = {
-        .encoder = &s_enc.base,
-        .bus     = bus,
+        .encoder        = &s_enc.base,
+        .bus            = bus,
+        .cmd_ring_buf   = s_cmd_ring_buf,
+        .cmd_ring_size  = sizeof(s_cmd_ring_buf),
+        .norm_ring_buf  = s_norm_ring_buf,
+        .norm_ring_size = sizeof(s_norm_ring_buf),
     };
     if (sender_poll_init(&s_sender, &sender_cfg) != 0)
         return 1;
