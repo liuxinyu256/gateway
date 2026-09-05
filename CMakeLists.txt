@@ -45,6 +45,7 @@ add_library(hal_core STATIC
     src/hal/frame/sender_complete_isr.c
     src/hal/timer/timer.c
     src/hal/timer/timer_instance.c
+    src/hal/timer/timer_soft.c
     src/hal/rs485/rs485.c
     src/hal/gpio/gpio.c
     src/hal/gpio/gpio_instance.c

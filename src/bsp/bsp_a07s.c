@@ -8,6 +8,9 @@
 #include "bsp_a07s.h"
 #include "gpio_instance.h"
 #include <stddef.h>
+#ifdef __CH579__
+#include "CH57x_common.h"
+#endif
 
 static void ch579_ac_select(bsp_t *hw, bsp_ac_brand_t brand);
 
@@ -30,6 +33,58 @@ static void cfg_pin(gpio_t **slot, uint8_t port, uint8_t pin,
         *slot = g;
 }
 
+/* AC 物理层板级配置：串口/DE/RE 引脚都集中在这里，物理层只读这份配置 */
+static const bsp_ac_phy_cfg_t *ch579_get_ac_phy_cfg(bsp_t *hw)
+{
+    (void)hw;
+#ifdef __CH579__
+    static const bsp_ac_phy_cfg_t cfg = {
+        .uart_id       = 0,           /* UART0 */
+        .rs485_port    = 1,           /* GPIOB */
+        .de_pin        = GPIO_Pin_5,  /* DE=PB5 */
+        .re_pin        = GPIO_Pin_6,  /* RE=PB6 */
+        .rs485_invert  = 0,
+    };
+    return &cfg;
+#else
+    return NULL;
+#endif
+}
+
+/* 兼容旧架构 halGpioInit（A07B HARDWARE_TYPE=0602） */
+static void a07b_0602_gpio_init(void)
+{
+#ifdef __CH579__
+    /* RS485 默认接收：PB18 高 */
+    GPIOB_SetBits(GPIO_Pin_18);
+    GPIOB_ModeCfg(GPIO_Pin_18, GPIO_ModeOut_PP_5mA);
+
+    /* VccBoost 关闭 */
+    GPIOB_ResetBits(GPIO_Pin_19);
+    GPIOB_ModeCfg(GPIO_Pin_19, GPIO_ModeOut_PP_5mA);
+
+    /* 0602 相关电路关闭 */
+    GPIOB_ResetBits(GPIO_Pin_15);
+    GPIOB_ModeCfg(GPIO_Pin_15, GPIO_ModeOut_PP_5mA);
+    GPIOB_ResetBits(GPIO_Pin_12);
+    GPIOB_ModeCfg(GPIO_Pin_12, GPIO_ModeOut_PP_5mA);
+    GPIOB_ResetBits(GPIO_Pin_13);
+    GPIOB_ModeCfg(GPIO_Pin_13, GPIO_ModeOut_PP_5mA);
+    GPIOB_ResetBits(GPIO_Pin_10);
+    GPIOB_ModeCfg(GPIO_Pin_10, GPIO_ModeOut_PP_5mA);
+
+    /* 公共关闭项 */
+    GPIOB_ResetBits(GPIO_Pin_0);
+    GPIOB_ModeCfg(GPIO_Pin_0, GPIO_ModeOut_PP_5mA);
+    GPIOB_SetBits(GPIO_Pin_20);  /* 关 HBS 电路 */
+    GPIOB_ModeCfg(GPIO_Pin_20, GPIO_ModeOut_PP_5mA);
+    GPIOA_SetBits(GPIO_Pin_1);   /* 关 x1x2 电路 */
+    GPIOA_ModeCfg(GPIO_Pin_1, GPIO_ModeOut_PP_5mA);
+    GPIOB_ResetBits(GPIO_Pin_3); /* 关 x1x2 电路 */
+    GPIOB_ModeCfg(GPIO_Pin_3, GPIO_ModeOut_PP_5mA);
+#endif
+}
+
 static uint8_t ch579_init(bsp_t *hw, const void *cfg)
 {
     bsp_a07s_t *self = (bsp_a07s_t *)hw;
@@ -45,8 +100,8 @@ static uint8_t ch579_init(bsp_t *hw, const void *cfg)
     cfg_pin(&self->pb8, GPIO_PORT_B, 8,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);   /* 海尔电路 */
     cfg_pin(&self->pb1, GPIO_PORT_B, 1,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);   /* 120 电阻 */
     cfg_pin(&self->pb9, GPIO_PORT_B, 9,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_HIGH);  /* 东芝/美的电源 */
-    cfg_pin(&self->pa14, GPIO_PORT_A, 14, GPIO_MODE_INPUT, GPIO_LEVEL_LOW);      /* 接收口选择 */
-    cfg_pin(&self->pa15, GPIO_PORT_A, 15, GPIO_MODE_INPUT, GPIO_LEVEL_LOW);      /* 接收口选择 */
+    cfg_pin(&self->pa14, GPIO_PORT_A, 14, GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);  /* 接收口选择：必须推挽低，不能浮空 */
+    cfg_pin(&self->pa15, GPIO_PORT_A, 15, GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);  /* 接收口选择：必须推挽低，不能浮空 */
     cfg_pin(&self->pb11, GPIO_PORT_B, 11, GPIO_MODE_INPUT, GPIO_LEVEL_LOW);      /* 浮空输入 */
     cfg_pin(&self->pb21, GPIO_PORT_B, 21, GPIO_MODE_INPUT, GPIO_LEVEL_LOW);      /* 浮空输入 */
 
@@ -56,6 +111,9 @@ static uint8_t ch579_init(bsp_t *hw, const void *cfg)
     /* 打开 485 电路 */
     cfg_pin(&self->pb6, GPIO_PORT_B, 6,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_LOW);
     cfg_pin(&self->pb5, GPIO_PORT_B, 5,  GPIO_MODE_OUTPUT_PP, GPIO_LEVEL_HIGH);
+
+    /* A07B 0602：旧 halGpioInit 兼容初始化 */
+    a07b_0602_gpio_init();
 
     return 0;
 }
@@ -107,9 +165,10 @@ static void ch579_rs485_enable(bsp_t *hw, uint8_t enable)
 }
 
 const bsp_ops_t bsp_a07s_ops = {
-    .init          = ch579_init,
-    .rs485_enable  = ch579_rs485_enable,
-    .ac_select     = ch579_ac_select,
+    .init             = ch579_init,
+    .rs485_enable     = ch579_rs485_enable,
+    .ac_select        = ch579_ac_select,
+    .get_ac_phy_cfg   = ch579_get_ac_phy_cfg,
 };
 
 uint8_t bsp_a07s_init(bsp_a07s_t *self,

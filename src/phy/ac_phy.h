@@ -6,7 +6,7 @@
  */
 #ifndef AC_PHY_H
 #define AC_PHY_H
-#include "ac_module.h"
+#include "../brands/ac_brand.h"
 #include "encoder.h"
 #include "decoder.h"
 #include "sender.h"

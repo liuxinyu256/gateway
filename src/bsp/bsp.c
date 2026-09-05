@@ -30,3 +30,10 @@ uint8_t bsp_capable(const bsp_t *hw, uint8_t cap)
         return 0;
     return (hw->caps & cap) ? 1 : 0;
 }
+
+const bsp_ac_phy_cfg_t *bsp_ac_phy_cfg(bsp_t *hw)
+{
+    if (!hw || !hw->ops || !hw->ops->get_ac_phy_cfg)
+        return 0;
+    return hw->ops->get_ac_phy_cfg(hw);
+}

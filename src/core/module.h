@@ -91,6 +91,8 @@ uint8_t module_send_state_sync(module_t *m, const gateway_state_t *s); /* 完整
 uint8_t module_send_frame(module_t *m, const uint8_t *data, uint16_t len,
                           uint8_t priority); /* 模块级投帧：由该模块 send_task 发送 */
 uint8_t module_send_event(module_t *m, event_type_t type); /* 测试/通用：投递指定事件 */
+uint8_t module_send_event_ex(module_t *m, event_type_t type,
+                             uint8_t cmd_val, uint8_t cmd_arg); /* 投递带参数事件 */
 void    module_set_poll_period(module_t *m, uint16_t period_ms);
 
 /* 模块状态更新/上报：统一走网关状态事件队列 */

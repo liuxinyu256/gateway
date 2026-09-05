@@ -40,10 +40,20 @@ typedef enum {
 
 typedef struct bsp bsp_t;
 
+/* AC 物理层使用的板级 IO 配置：换板/换口时只改这里 */
+typedef struct {
+    uint8_t  uart_id;       /* AC 使用的 UART 编号 (0=UART0, 1=UART1...) */
+    uint8_t  rs485_port;    /* DE/RE 所在 GPIO 口: 0=GPIOA, 1=GPIOB */
+    uint32_t de_pin;        /* DE 引脚掩码, 0 表示无 */
+    uint32_t re_pin;        /* RE 引脚掩码, 0 表示无 */
+    uint8_t  rs485_invert;  /* 1=低电平发送/高电平接收（反相硬件） */
+} bsp_ac_phy_cfg_t;
+
 typedef struct bsp_ops {
     uint8_t (*init)(bsp_t *hw, const void *cfg);
     void    (*rs485_enable)(bsp_t *hw, uint8_t enable); /* 可选: 1=打开, 0=关闭 */
     void    (*ac_select)(bsp_t *hw, bsp_ac_brand_t brand); /* 可选: 品牌电路切换 */
+    const bsp_ac_phy_cfg_t *(*get_ac_phy_cfg)(bsp_t *hw); /* 可选: AC 物理层引脚/串口配置 */
 } bsp_ops_t;
 
 struct bsp {
@@ -56,6 +66,7 @@ uint8_t bsp_init(bsp_t *hw, const void *cfg);
 void    bsp_rs485_enable(bsp_t *hw, uint8_t enable);
 void    bsp_ac_select(bsp_t *hw, bsp_ac_brand_t brand);
 uint8_t bsp_capable(const bsp_t *hw, uint8_t cap);
+const bsp_ac_phy_cfg_t *bsp_ac_phy_cfg(bsp_t *hw);
 
 /* 根据 BSP_BOARD_SELECT 初始化和获取当前板子实例 */
 uint8_t bsp_board_init(void);

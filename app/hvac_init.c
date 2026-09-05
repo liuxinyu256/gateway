@@ -11,7 +11,6 @@
 #include "hvac_init.h"
 #include "gateway.h"
 #include "ac_module.h"
-#include "ac_test.h"
 #include "ac_phy.h"
 #include "debug_module.h"
 #include "ble_module.h"
@@ -50,7 +49,6 @@ static void init_ac_module(void)
     gateway_set_module(0, &g_ac.base);
 
     module_start(&g_ac.base);
-    module_set_poll_period(&g_ac.base, 1000);   /* 测试：1s 周期发读请求 */
     ac_module_start_scan(&g_ac);
 }
 

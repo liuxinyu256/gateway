@@ -56,10 +56,26 @@ static uint8_t module_enqueue_receive_event(module_t *m, const event_t *ev)
 }
 #endif
 
-/* ---- 事件分发 (任务 / PC 轮询共用) ---- */
+/* ---- 事件分发：接收任务 / 发送任务独立 ---- */
 static void module_handle_rx(module_t *m);
 
-static void module_handle_event(module_t *m, const event_t *ev)
+static void module_handle_receive_event(module_t *m, const event_t *ev)
+{
+    if (!m || !ev) return;
+
+    if (m->ops && m->ops->on_event)
+        m->ops->on_event(m, ev);
+
+    switch (ev->type) {
+    case EVENT_RX_FRAME:
+        module_handle_rx(m);
+        break;
+    default:
+        break;
+    }
+}
+
+static void module_handle_send_event(module_t *m, const event_t *ev)
 {
     if (!m || !ev) return;
 
@@ -70,9 +86,6 @@ static void module_handle_event(module_t *m, const event_t *ev)
     case EVENT_PERIODIC_SEND:
         if (m->handler && m->handler->on_periodic_send)
             m->handler->on_periodic_send(m->handler_ctx);
-        break;
-    case EVENT_RX_FRAME:
-        module_handle_rx(m);
         break;
     case EVENT_GATEWAY_CMD:
         if (m->handler && m->handler->on_gateway_cmd)
@@ -185,7 +198,7 @@ static void receive_task_fn(void *pv)
 
     for (;;) {
         if (xQueueReceive(m->receive_queue, &ev, portMAX_DELAY) == pdPASS)
-            module_handle_event(m, &ev);
+            module_handle_receive_event(m, &ev);
     }
 }
 
@@ -196,7 +209,7 @@ static void send_task_fn(void *pv)
 
     for (;;) {
         if (xQueueReceive(m->send_queue, &ev, portMAX_DELAY) == pdPASS)
-            module_handle_event(m, &ev);
+            module_handle_send_event(m, &ev);
     }
 }
 
@@ -339,6 +352,15 @@ uint8_t module_send_frame(module_t *m, const uint8_t *data, uint16_t len,
 {
     if (!m || !data || !len) return 1;
 
+#ifndef FAKE_FREERTOS
+    /* 已经在本模块 send_task 里：直接发送，避免再绕一次 send_queue */
+    if (m->send_task && xTaskGetCurrentTaskHandle() == m->send_task) {
+        if (!m->sender)
+            return 1;
+        return sender_send(m->sender, data, len, priority);
+    }
+#endif
+
     event_t ev = {
         .type    = EVENT_SEND_FRAME,
         .len     = len,
@@ -353,6 +375,19 @@ uint8_t module_send_event(module_t *m, event_type_t type)
     if (!m) return 1;
 
     event_t ev = { .type = type };
+    return module_enqueue_send_event(m, &ev);
+}
+
+uint8_t module_send_event_ex(module_t *m, event_type_t type,
+                             uint8_t cmd_val, uint8_t cmd_arg)
+{
+    if (!m) return 1;
+
+    event_t ev = {
+        .type    = type,
+        .cmd_val = cmd_val,
+        .cmd_arg = cmd_arg,
+    };
     return module_enqueue_send_event(m, &ev);
 }
 
@@ -373,7 +408,7 @@ uint8_t module_poll(module_t *m)
         event_t ev = m->receive_q_data[m->receive_q_head];
         m->receive_q_head = (uint8_t)((m->receive_q_head + 1) % MODULE_EVENT_QUEUE_LEN);
         m->receive_q_count--;
-        module_handle_event(m, &ev);
+        module_handle_receive_event(m, &ev);
         processed = 1;
     }
 
@@ -381,7 +416,7 @@ uint8_t module_poll(module_t *m)
         event_t ev = m->send_q_data[m->send_q_head];
         m->send_q_head = (uint8_t)((m->send_q_head + 1) % MODULE_EVENT_QUEUE_LEN);
         m->send_q_count--;
-        module_handle_event(m, &ev);
+        module_handle_send_event(m, &ev);
         processed = 1;
     }
 

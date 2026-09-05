@@ -48,7 +48,8 @@ void bus_set_need_tx_complete(bus_t *la, uint8_t enable)
 
 void bus_mark_busy(bus_t *la) {
     if (!la) return;
-    la->busy = 1;
+    la->busy      = 1;
+    la->tx_active = 1;                 /* 本机正在发送 */
     if (la->set_dir)
         la->set_dir(1, la->dir_ctx);   /* 进入发送方向 */
 }
@@ -56,7 +57,8 @@ void bus_mark_busy(bus_t *la) {
 /* 真正的空闲：释放方向(回接收)并开始静默计时 */
 void bus_mark_idle(bus_t *la) {
     if (!la) return;
-    la->busy = 0;
+    la->busy      = 0;
+    la->tx_active = 0;                 /* 发送/接收结束 */
     if (la->set_dir)
         la->set_dir(0, la->dir_ctx);   /* 释放方向，转回接收 */
 #ifdef FAKE_FREERTOS
@@ -70,6 +72,8 @@ void bus_mark_idle(bus_t *la) {
 /* 接收侧占用总线：标记忙，保持接收方向 */
 void bus_mark_rx_busy(bus_t *la) {
     if (!la) return;
+    if (la->tx_active)
+        return;                        /* 发送中忽略回环/噪声，防止抢方向截断帧 */
     la->busy = 1;
     if (la->set_dir)
         la->set_dir(0, la->dir_ctx);   /* 保持/切回接收方向 */

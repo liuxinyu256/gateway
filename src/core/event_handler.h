@@ -12,6 +12,7 @@ typedef enum {
     EVENT_SCAN_AC,
     EVENT_TICK,
     EVENT_BUS_IDLE,
+    EVENT_AC_RX,      /* AC 模块内部：接收侧解析后通知发送状态机 */
     EVENT_DEBUG_TX,   /* Debug 模块内部：日志/回显投递到 send_task 发送 */
     EVENT_SEND_FRAME, /* 测试/通用：把一帧投递给 AC send_task 发送 */
 } event_type_t;

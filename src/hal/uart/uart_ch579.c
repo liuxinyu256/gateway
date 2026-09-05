@@ -182,7 +182,7 @@ static void ch579_irq_rx_enable(uart_t *u)
     uint8_t id = ch579_id(u);
     ch579_nvic_enable(id);
     switch (id) {
-    case 0: UART0_INTCfg(ENABLE, RB_IER_RECV_RDY); break;
+    case 0: UART0_INTCfg(ENABLE, RB_IER_RECV_RDY | RB_IER_LINE_STAT); break;
     case 1: UART1_INTCfg(ENABLE, RB_IER_RECV_RDY); break;
     case 2: UART2_INTCfg(ENABLE, RB_IER_RECV_RDY); break;
     case 3: UART3_INTCfg(ENABLE, RB_IER_RECV_RDY); break;
@@ -194,7 +194,7 @@ static void ch579_irq_rx_disable(uart_t *u)
 {
     uint8_t id = ch579_id(u);
     switch (id) {
-    case 0: UART0_INTCfg(DISABLE, RB_IER_RECV_RDY); break;
+    case 0: UART0_INTCfg(DISABLE, RB_IER_RECV_RDY | RB_IER_LINE_STAT); break;
     case 1: UART1_INTCfg(DISABLE, RB_IER_RECV_RDY); break;
     case 2: UART2_INTCfg(DISABLE, RB_IER_RECV_RDY); break;
     case 3: UART3_INTCfg(DISABLE, RB_IER_RECV_RDY); break;
@@ -270,16 +270,36 @@ const uart_ops_t ch579_uart_ops = {
 void ch579_uart_irq_handler(uint8_t id)
 {
     uart_t *u = uart_get(id);
+    uint8_t it_flag = 0;
+
     if (!u)
         return;
 
     /* 读 IIR 清中断标志，即使没有回调也不会挂死 */
     switch (id) {
-    case 0: (void)UART0_GetITFlag(); break;
-    case 1: (void)UART1_GetITFlag(); break;
-    case 2: (void)UART2_GetITFlag(); break;
-    case 3: (void)UART3_GetITFlag(); break;
+    case 0: it_flag = (uint8_t)UART0_GetITFlag(); break;
+    case 1: it_flag = (uint8_t)UART1_GetITFlag(); break;
+    case 2: it_flag = (uint8_t)UART2_GetITFlag(); break;
+    case 3: it_flag = (uint8_t)UART3_GetITFlag(); break;
     default: break;
+    }
+
+    /* 行状态中断必须读 LSR 清除，否则会持续触发（与旧工程一致） */
+    if (it_flag == UART_II_LINE_STAT) {
+        switch (id) {
+        case 0: (void)UART0_GetLinSTA(); break;
+        case 1: (void)UART1_GetLinSTA(); break;
+        case 2: (void)UART2_GetLinSTA(); break;
+        case 3: (void)UART3_GetLinSTA(); break;
+        default: break;
+        }
+
+        /* 出错时清空 RX FIFO，避免残留错误数据/溢出数据持续被当有效帧 */
+        while (uart_irq_rx_ready(u)) {
+            uint8_t dummy;
+            if (uart_read(u, &dummy) != 0)
+                break;
+        }
     }
 
     if (u->irq_cb)

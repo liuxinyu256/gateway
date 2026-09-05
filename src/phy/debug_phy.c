@@ -10,6 +10,7 @@
 #include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
+#include "timer_soft.h"
 #include <stddef.h>
 
 static uart_encoder_t     s_enc;
@@ -44,8 +45,12 @@ uint8_t debug_phy_init(bus_t *bus, debug_io_t *io)
         .norm_ring_buf  = s_norm_ring_buf,
         .norm_ring_size = sizeof(s_norm_ring_buf),
     };
+
     if (sender_poll_init(&s_sender, &sender_cfg) != 0)
         return 1;
+
+    /* 共享硬件 tick（1ms）；多个 sender_poll 复用 timer2，只绑定一次 */
+    soft_timer_bind_tick(timer_get(2));
 
     uart_decoder_cfg_t dec_cfg = {
         .port = &uart1,

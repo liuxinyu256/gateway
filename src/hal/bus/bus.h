@@ -18,6 +18,7 @@ typedef void (*bus_dir_cb)(uint8_t tx, void *ctx);
 
 typedef struct {
     volatile uint8_t  busy;
+    volatile uint8_t  tx_active; /* 1=本机正在发送，接收不得抢占方向 */
     uint16_t          gap_ms;
     volatile uint32_t gap_until;
 

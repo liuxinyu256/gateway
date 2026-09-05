@@ -5,10 +5,14 @@
  * 需要 RS485 请使用 ac_phy_rs485。
  */
 #include "ac_phy.h"
+#include "bsp.h"
 #include "hal_io.h"
 #include "sender_complete_poll.h"
+#include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
+#include "timer_soft.h"
+#include <stddef.h>
 
 static uart_encoder_t     s_enc;
 static uart_decoder_t     s_dec;
@@ -25,8 +29,21 @@ static uint8_t uart_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
     if (!u || !bus || !io)
         return 1;
 
+    /* UART 口由板级配置决定，物理层不硬编码 uart0 */
+    const bsp_ac_phy_cfg_t *bc = bsp_ac_phy_cfg(bsp_board_get());
+    uart_t *port = &uart0;
+#ifdef __CH579__
+    if (!bc)
+        return 1;
+    port = uart_get(bc->uart_id);
+    if (!port)
+        return 1;
+#else
+    (void)bc;
+#endif
+
     uart_encoder_cfg_t enc_cfg = {
-        .port = &uart0,
+        .port = port,
         .uart_cfg = {
             .baudrate  = u->baudrate,
             .data_bits = u->data_bits,
@@ -45,11 +62,15 @@ static uint8_t uart_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
         .norm_ring_buf  = s_norm_ring_buf,
         .norm_ring_size = sizeof(s_norm_ring_buf),
     };
+
     if (sender_poll_init(&s_sender, &sender_cfg) != 0)
         return 1;
 
+    /* 共享硬件 tick（1ms）；多个 sender_poll 复用 timer2，只绑定一次 */
+    soft_timer_bind_tick(timer_get(2));
+
     uart_decoder_cfg_t dec_cfg = {
-        .port = &uart0,
+        .port = port,
         .uart_cfg = {
             .baudrate  = u->baudrate,
             .data_bits = u->data_bits,

@@ -289,7 +289,7 @@ static int debug_cmd_tx(uint8_t *data, uint16_t len)
 {
     char *buf = s_dbg_rx_buf;
     static const uint8_t test_frame[] = {
-        0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
+        0x01, 0x03, 0x00, 0x00, 0x00, 0x07, 0x04, 0x08
     };
     module_t *ac;
     int n;
@@ -368,7 +368,7 @@ static int debug_cmd_brand(uint8_t *data, uint16_t len)
     bsp_ac_select(bsp_board_get(), brand);
 
     static const uint8_t test_frame[] = {
-        0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x84, 0x0A
+        0x01, 0x03, 0x00, 0x00, 0x00, 0x07, 0x04, 0x08
     };
 
     ac = gateway_module(0);
@@ -584,7 +584,8 @@ static void dbg_frame_done(receiver_t *rx, uint16_t len)
 static void dbg_tx_done(sender_t *tx)
 {
     (void)tx;
-    module_tx_done(&g_dbg.base);
+    /* sender_poll 软定时器回调运行在硬件定时器 ISR 上下文 */
+    module_tx_done_from_isr(&g_dbg.base);
 }
 
 /* 根据当前任务选择独立格式化缓冲区：无锁 */

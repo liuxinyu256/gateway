@@ -4,14 +4,15 @@
  * 485 是独立物理层：基于 UART 编码/解码，外加 DE 方向控制。
  */
 #include "ac_phy.h"
+#include "bsp.h"
 #include "hal_io.h"
 #include "sender_complete_poll.h"
+#include "receiver_timeout.h"
 #include "timer.h"
 #include "timer_instance.h"
+#include "timer_soft.h"
 #include "rs485_ch579.h"
-#ifdef __CH579__
-#include "CH57x_common.h"
-#endif
+#include <stddef.h>
 
 static uart_encoder_t     s_enc;
 static uart_decoder_t     s_dec;
@@ -23,8 +24,18 @@ static uint8_t            s_cmd_ring_buf[256];  /* CMD 帧字节环 */
 static uint8_t            s_norm_ring_buf[256]; /* 普通帧字节环 */
 
 /* bus 方向回调适配：bus 层调用 (tx, ctx)，转给 rs485 HAL */
+volatile uint32_t g_rs485_dir_tx_cnt;
+volatile uint32_t g_rs485_dir_rx_cnt;
+
+uint32_t ac_phy_rs485_tx_dir_count(void) { return g_rs485_dir_tx_cnt; }
+uint32_t ac_phy_rs485_rx_dir_count(void) { return g_rs485_dir_rx_cnt; }
+
 static void rs485_bus_dir(uint8_t tx, void *ctx)
 {
+    if (tx)
+        g_rs485_dir_tx_cnt++;
+    else
+        g_rs485_dir_rx_cnt++;
     rs485_set_dir((rs485_t *)ctx, tx);
 }
 
@@ -35,8 +46,22 @@ static uint8_t rs485_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
     if (!u || !bus || !io)
         return 1;
 
+    /* 板级引脚/通路选择由 bsp_board_init() 提前完成。
+     * 这里只读板级配置拿到 UART 编号与 DE/RE 引脚，不再硬编码 CH579 GPIO。 */
+    const bsp_ac_phy_cfg_t *bc = bsp_ac_phy_cfg(bsp_board_get());
+    uart_t *port = &uart0;
+#ifdef __CH579__
+    if (!bc || !bc->de_pin)
+        return 1;
+    port = uart_get(bc->uart_id);
+    if (!port)
+        return 1;
+#else
+    (void)bc;
+#endif
+
     uart_encoder_cfg_t enc_cfg = {
-        .port = &uart0,
+        .port = port,
         .uart_cfg = {
             .baudrate  = u->baudrate,
             .data_bits = u->data_bits,
@@ -55,11 +80,15 @@ static uint8_t rs485_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
         .norm_ring_buf  = s_norm_ring_buf,
         .norm_ring_size = sizeof(s_norm_ring_buf),
     };
+
     if (sender_poll_init(&s_sender, &sender_cfg) != 0)
         return 1;
 
+    /* 共享硬件 tick（1ms）；多个 sender_poll 复用 timer2，只绑定一次 */
+    soft_timer_bind_tick(timer_get(2));
+
     uart_decoder_cfg_t dec_cfg = {
-        .port = &uart0,
+        .port = port,
         .uart_cfg = {
             .baudrate  = u->baudrate,
             .data_bits = u->data_bits,
@@ -77,11 +106,13 @@ static uint8_t rs485_create_io(const void *cfg, bus_t *bus, ac_io_t *io)
     uart_decoder_attach_receiver(&s_dec, &s_rx.base);
 
 #ifdef __CH579__
-    /* RS485 方向控制：DE=PA1（A07S 板） */
+    /* RS485 方向引脚从板级配置读取：换板/换口只改 bsp_a07s.c */
     {
         rs485_ch579_cfg_t rs_cfg = {
-            .port   = 0,
-            .de_pin = GPIO_Pin_1,
+            .port   = bc->rs485_port,
+            .de_pin = bc->de_pin,
+            .re_pin = bc->re_pin,
+            .invert = bc->rs485_invert,
         };
         if (rs485_ch579_init(&s_rs485, &rs_cfg) != 0)
             return 1;

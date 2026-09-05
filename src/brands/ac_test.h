@@ -7,8 +7,6 @@
  */
 #ifndef AC_TEST_H
 #define AC_TEST_H
-#include "ac_module.h"
-
-extern const ac_brand_config_t ac_test_cfg;
+#include "ac_brand.h"
 
 #endif /* AC_TEST_H */

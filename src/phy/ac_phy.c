@@ -4,6 +4,7 @@
  * 根据品牌 phy_cfg 的 phy_type 找到对应物理层类，调用其 create_io。
  */
 #include "ac_phy.h"
+#include <stddef.h>
 
 static const ac_phy_ops_t *phy_ops(ac_phy_type_t type)
 {

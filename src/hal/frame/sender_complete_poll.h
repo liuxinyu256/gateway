@@ -1,16 +1,17 @@
 /**
  * sender_complete_poll.h —— 发送完成策略：轮询子类
  *
- * 对应 receiver_timeout_t（接收超时子类），
- * 一个策略一个类。
+ * 多个 sender_poll 实例共享一个硬件定时器 tick，
+ * 每个实例用 soft_timer_t 独立启停。
  */
 #ifndef SENDER_COMPLETE_POLL_H
 #define SENDER_COMPLETE_POLL_H
 #include "sender.h"
+#include "timer_soft.h"
 
 typedef struct {
-    sender_t base;
-    void    *timer;   /* TimerHandle_t：1ms 轮询定时器 */
+    sender_t      base;
+    soft_timer_t  soft;   /* 共享硬件 tick 上的软定时器实例 */
 } sender_poll_t;
 
 extern const sender_ops_t sender_poll_ops;
