@@ -246,7 +246,8 @@ static void ac_module_on_periodic_send(void *ctx)
     {
         static uint16_t diag_cnt;
         if ((++diag_cnt % 20) == 0) {
-            log_printf("[diag] rs485 dir tx=%u rx=%u\r\n",
+            log_printf("[diag] up=%lu s rs485 dir tx=%u rx=%u\r\n",
+                       (unsigned long)debug_uptime_s(),
                        (unsigned)ac_phy_rs485_tx_dir_count(),
                        (unsigned)ac_phy_rs485_rx_dir_count());
         }

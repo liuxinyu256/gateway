@@ -5,9 +5,29 @@
  */
 #include "CH57x_common.h"
 #include "timer.h"
+#include "timer_instance.h"
 #include "uart_ch579.h"
 #include "gateway.h"
 #include "sender.h"
+
+/* FreeRTOS Run Time Stats 计数：TMR3 1ms 中断累加 */
+volatile unsigned long g_rtos_run_time_ticks = 0UL;
+
+static void rtos_run_time_tick(void *ctx)
+{
+    (void)ctx;
+    g_rtos_run_time_ticks++;
+}
+
+void rtos_run_time_stats_init(void)
+{
+    timer_t *t = timer_get(3);
+    if (!t)
+        return;
+
+    timer_set_callback(t, rtos_run_time_tick, NULL);
+    timer_init(t);   /* 启动 TMR3 作为运行时间统计时基 */
+}
 
 /* ---- generic timer: TMR0-3 ---- */
 void TMR0_IRQHandler(void) { timer_hw_isr(0); }

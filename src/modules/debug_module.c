@@ -111,6 +111,11 @@ static uint8_t ac_send_test_frame(const uint8_t *data, uint16_t len);
 uint8_t log_event_enabled(void) { return s_log_event_enabled; }
 uint8_t log_rx_enabled(void)    { return s_log_rx_enabled; }
 
+uint32_t debug_uptime_s(void)
+{
+    return (uint32_t)(xTaskGetTickCount() / configTICK_RATE_HZ);
+}
+
 static int cmd_is(const uint8_t *d, uint16_t len, const char *s)
 {
     size_t n = strlen(s);
@@ -174,6 +179,71 @@ static int debug_cmd_stat(uint8_t *data, uint16_t len)
                  receiver_frame_drop_count(g_dbg.base.receiver));
     if (n > 0)
         debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
+    return 1;
+}
+
+static int debug_cmd_uptime(uint8_t *data, uint16_t len)
+{
+    char *buf = s_dbg_rx_buf;
+    int n;
+
+    if (!cmd_is(data, len, "up") && !cmd_is(data, len, "uptime"))
+        return 0;
+
+    uint32_t s = debug_uptime_s();
+    n = snprintf((char *)buf, sizeof(s_dbg_rx_buf),
+                 "[up] %lu s (%02lu:%02lu:%02lu)\r\n",
+                 (unsigned long)s,
+                 (unsigned long)(s / 3600),
+                 (unsigned long)((s % 3600) / 60),
+                 (unsigned long)(s % 60));
+    if (n > 0)
+        debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
+    return 1;
+}
+
+static int debug_cmd_task(uint8_t *data, uint16_t len)
+{
+    char *buf = s_dbg_rx_buf;
+    UBaseType_t i;
+    UBaseType_t count;
+    TaskStatus_t *arr;
+    configRUN_TIME_COUNTER_TYPE total = 0;
+    configRUN_TIME_COUNTER_TYPE total_div100;
+    int n;
+
+    if (!cmd_is(data, len, "task") && !(len == 1 && (data[0] == 'T' || data[0] == 't')))
+        return 0;
+
+    count = uxTaskGetNumberOfTasks();
+    if (count == 0)
+        return 1;
+
+    arr = pvPortMalloc(count * sizeof(TaskStatus_t));
+    if (!arr) {
+        n = snprintf(buf, sizeof(s_dbg_rx_buf), "[task] no mem\r\n");
+        if (n > 0)
+            debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
+        return 1;
+    }
+
+    count = uxTaskGetSystemState(arr, count, &total);
+    total_div100 = total / 100U;
+
+    for (i = 0; i < count; i++) {
+        unsigned long pct = 0;
+        if (total_div100 > 0)
+            pct = (unsigned long)(arr[i].ulRunTimeCounter / total_div100);
+        n = snprintf(buf, sizeof(s_dbg_rx_buf),
+                     "[task] %-12s run=%lu %lu%%\r\n",
+                     arr[i].pcTaskName,
+                     (unsigned long)arr[i].ulRunTimeCounter,
+                     pct);
+        if (n > 0)
+            debug_tx_enqueue_ex((const uint8_t *)buf, (uint16_t)n, SENDER_PRIO_CMD);
+    }
+
+    vPortFree(arr);
     return 1;
 }
 
@@ -468,6 +538,8 @@ static int on_rx_frame(void *ctx, uint8_t *data, uint16_t len)
     else if (debug_cmd_rxlog(data, len)) handled = 1;
     else if (debug_cmd_perf(data, len))  handled = 1;
     else if (debug_cmd_stat(data, len))  handled = 1;
+    else if (debug_cmd_uptime(data, len)) handled = 1;
+    else if (debug_cmd_task(data, len))   handled = 1;
     else if (debug_cmd_ack(data, len))   handled = 1;
     else if (debug_cmd_tick(data, len))  handled = 1;
     else if (debug_cmd_idle(data, len))  handled = 1;

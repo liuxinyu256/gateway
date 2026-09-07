@@ -46,6 +46,17 @@
 #define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_MALLOC_FAILED_HOOK            0
 
+/* FreeRTOS Run Time Stats：统计每个任务运行时间/CPU 占比 */
+#define configUSE_TRACE_FACILITY                1
+#define configUSE_STATS_FORMATTING_FUNCTIONS    1
+#define configGENERATE_RUN_TIME_STATS           1
+
+/* 运行时间计数：由 TMR3 1ms 中断驱动（见 app/isr.c） */
+extern volatile unsigned long g_rtos_run_time_ticks;
+void rtos_run_time_stats_init(void);
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()    rtos_run_time_stats_init()
+#define portGET_RUN_TIME_COUNTER_VALUE()            ( g_rtos_run_time_ticks )
+
 /* 映射 FreeRTOS 函数名到 CMSIS 标准向量名 */
 #define vPortSVCHandler         SVC_Handler
 #define xPortPendSVHandler      PendSV_Handler

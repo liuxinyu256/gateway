@@ -17,4 +17,7 @@ void log_hex_dump(const char *tag, const uint8_t *data, uint16_t len);
 uint8_t log_event_enabled(void);
 uint8_t log_rx_enabled(void);
 
+/* 系统运行时长：FreeRTOS tick 换算为秒 */
+uint32_t debug_uptime_s(void);
+
 #endif /* DEBUG_MODULE_H */
